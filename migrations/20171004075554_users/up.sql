@@ -8,10 +8,11 @@ CREATE TABLE ruser (
   password VARCHAR NOT NULL,
   salt VARCHAR NOT NULL,
   nickname VARCHAR NOT NULL,
-  groups smallint not null default 2,
   avatar VARCHAR,
   wx_openid VARCHAR,
   say VARCHAR,
-  signup_time timestamp not null default current_timestamp
+  signup_time timestamp not null default current_timestamp,
+  role smallint not null default 2,
+  status smallint not null default 0
 );
 

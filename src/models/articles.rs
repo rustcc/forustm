@@ -18,7 +18,8 @@ struct RawArticles {
     section_id: Uuid,
     author_id: Uuid,
     tags: String,
-    created_time: NaiveDateTime
+    created_time: NaiveDateTime,
+    status: i16 // 0 normal, 1 frozen, 2 deleted
 }
 
 impl RawArticles {
@@ -30,7 +31,8 @@ impl RawArticles {
             section_id: self.section_id,
             author_id: self.author_id,
             tags: self.tags,
-            created_time: self.created_time
+            created_time: self.created_time,
+            status: self.status
         }
     }
 
@@ -42,7 +44,8 @@ impl RawArticles {
             section_id: self.section_id,
             author_id: self.author_id,
             tags: self.tags,
-            created_time: self.created_time
+            created_time: self.created_time,
+            status: self.status
         }
     }
 }
@@ -55,12 +58,16 @@ pub struct Articles {
     section_id: Uuid,
     author_id: Uuid,
     tags: String,
-    created_time: NaiveDateTime
+    created_time: NaiveDateTime,
+    status: i16
 }
 
 impl Articles {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Articles, String> {
-        let res = all_articles.filter(article::id.eq(id)).get_result::<RawArticles>(conn);
+        let res = all_articles
+            .filter(article::status.eq(0))
+            .filter(article::id.eq(id))
+            .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => {
                 Ok(data.into_html())
@@ -70,7 +77,10 @@ impl Articles {
     }
 
     pub fn query_raw_article(conn: &PgConnection, id: Uuid) -> Result<Articles, String> {
-        let res = all_articles.filter(article::id.eq(id)).get_result::<RawArticles>(conn);
+        let res = all_articles
+            .filter(article::status.eq(0))
+            .filter(article::id.eq(id))
+            .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => {
                 Ok(data.into_markdown())
@@ -80,7 +90,8 @@ impl Articles {
     }
 
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
-        let res = diesel::delete(all_articles.filter(article::id.eq(id)))
+        let res = diesel::update(all_articles.filter(article::id.eq(id)))
+            .set(article::status.eq(2))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),

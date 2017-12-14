@@ -19,11 +19,12 @@ struct RawUser {
     pub password: String,
     pub salt: String,
     pub nickname: String,
-    pub groups: i16,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
     pub say: Option<String>,
-    pub signup_time: NaiveDateTime
+    pub signup_time: NaiveDateTime,
+    pub role: i16, // member => 2, manager => 1, admin => 0
+    pub status: i16 // 0 normal, 1 frozen, 2 deleted
 }
 
 impl RawUser {
@@ -32,11 +33,11 @@ impl RawUser {
             id: self.id,
             account: self.account,
             nickname: self.nickname,
-            groups: self.groups,
             say: self.say,
             avatar: self.avatar,
             wx_openid: self.wx_openid,
-            signup_time: self.signup_time
+            signup_time: self.signup_time,
+            role: self.role,
         }
     }
 }
@@ -46,16 +47,17 @@ pub struct RUser {
     pub id: Uuid,
     pub account: String,
     pub nickname: String,
-    pub groups: i16,
     pub say: Option<String>,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
-    pub signup_time: NaiveDateTime
+    pub signup_time: NaiveDateTime,
+    pub role: i16
 }
 
 impl RUser {
     pub fn delete(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
-        let res = diesel::delete(all_rusers.find(id))
+        let res = diesel::update(all_rusers.find(id))
+            .set(ruser::status.eq(2))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),
@@ -65,7 +67,7 @@ impl RUser {
 
     pub fn change_permission(conn: &PgConnection, data: ChangePermission) -> Result<usize, String> {
         let res = diesel::update(all_rusers.filter(ruser::id.eq(data.id)))
-            .set((ruser::groups.eq(data.permission)))
+            .set((ruser::role.eq(data.permission)))
             .execute(conn);
         match res {
             Ok(num_update) => Ok(num_update),
@@ -89,7 +91,10 @@ pub struct LoginUser {
 
 impl LoginUser {
     pub fn verification(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, max_age: &Option<i64>) -> Result<String, String> {
-        let res = all_rusers.filter(ruser::account.eq(self.account.to_owned())).get_result::<RawUser>(conn);
+        let res = all_rusers
+            .filter(ruser::status.eq(0))
+            .filter(ruser::account.eq(self.account.to_owned()))
+            .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
                 if data.password == sha3_256_encode(self.password.to_owned() + &data.salt) {
@@ -98,7 +103,7 @@ impl LoginUser {
                         &None => 24 * 60 * 60
                     };
 
-                    match data.groups {
+                    match data.role {
                         0 => {
                             let cookie = sha3_256_encode(random_string(8));
                             let redis_key = "admin_".to_string() + &cookie;

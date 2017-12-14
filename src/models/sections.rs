@@ -15,12 +15,14 @@ pub struct Section {
     description: String,
     stype: i32,
     suser: Uuid,
-    created_time: NaiveDateTime
+    created_time: NaiveDateTime,
+    status: i16  // 0 normal, 1 frozen, 2 deleted
 }
 
 impl Section {
     pub fn query(conn: &PgConnection) -> Result<Vec<Self>, String> {
         let res = all_sections
+            .filter(section::status.eq(0))
             .order(section::created_time.desc())
             .get_results::<Self>(conn);
         match res {
@@ -32,7 +34,8 @@ impl Section {
     }
 
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::delete(all_sections.filter(section::id.eq(id)))
+        diesel::update(all_sections.filter(section::id.eq(id)))
+            .set(section::status.eq(2))
             .execute(conn).is_ok()
     }
 }
@@ -53,4 +56,3 @@ impl InsertSection {
             .execute(conn).is_ok()
     }
 }
-
