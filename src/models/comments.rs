@@ -17,12 +17,15 @@ pub struct Comment {
     content: String,
     article_id: Uuid,
     author_id: Uuid,
-    created_time: NaiveDateTime
+    created_time: NaiveDateTime,
+    status: i16 // 0 normal, 1 frozen, 2 deleted
 }
 
 impl Comment {
     pub fn query(conn: &PgConnection, limit: i64, offset: i64, article_id: Uuid) -> Result<Vec<Self>, String> {
-        let res = all_comments.filter(comment::article_id.eq(article_id))
+        let res = all_comments
+            .filter(comment::status.eq(0))
+            .filter(comment::article_id.eq(article_id))
             .order(comment::created_time)
             .limit(limit)
             .offset(offset)
@@ -36,11 +39,13 @@ impl Comment {
     }
 
     pub fn delete_with_comment_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::delete(all_comments.filter(comment::id.eq(id)))
+        diesel::update(all_comments.filter(comment::id.eq(id)))
+            .set(comment::status.eq(2))
             .execute(conn).is_ok()
     }
     pub fn delete_with_author_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::delete(all_comments.filter(comment::author_id.eq(id)))
+        diesel::update(all_comments.filter(comment::author_id.eq(id)))
+            .set(comment::status.eq(2))
             .execute(conn).is_ok()
     }
 }
@@ -76,10 +81,11 @@ impl NewComment {
         }
     }
 
-    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &bool) -> bool {
+    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> bool {
         let redis_key = match admin {
-            &true => { "admin_".to_string() + cookie }
-            &false => { "user_".to_string() + cookie }
+            &0 => { "admin_".to_string() + cookie }
+            &1 => { "manager_".to_string() + cookie }
+            _ => { "user_".to_string() + cookie }
         };
         let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&redis_key, "info")).unwrap();
         self.into_insert_comments(info.id).insert(conn)
@@ -95,7 +101,7 @@ pub struct DeleteComment {
 impl DeleteComment {
     pub fn delete(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> bool {
         match admin {
-            &0 => {
+            &0 | &1 => {
                 Comment::delete_with_comment_id(conn, self.comment_id)
             }
             _ => {

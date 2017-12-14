@@ -6,5 +6,6 @@ CREATE TABLE section (
   description VARCHAR NOT NULL,
   stype INTEGER NOT NULL,
   suser uuid references ruser (id) not null,
-  created_time timestamp not null default current_timestamp
+  created_time timestamp not null default current_timestamp,
+  status smallint not null default 0
 );

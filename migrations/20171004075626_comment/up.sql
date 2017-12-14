@@ -5,5 +5,6 @@ CREATE TABLE comment (
   content VARCHAR NOT NULL,
   article_id uuid references article (id) not null,
   author_id uuid references ruser (id) not null,
-  created_time timestamp not null default current_timestamp
+  created_time timestamp not null default current_timestamp,
+  status smallint not null default 0
 )
