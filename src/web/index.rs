@@ -7,14 +7,12 @@ pub struct Index;
 impl Index {
     fn index(req: &mut Request) -> SapperResult<Response> {
         let mut web = Context::new();
-        web.add("name", &"forustmer");
-        res_html!("modules/hello.html", web)
+        res_html!("index.html", web)
     }
 }
 
 impl SapperModule for Index {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
-        // http get /
         router.get("/", Index::index);
 
         Ok(())
