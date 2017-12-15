@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ sectionName }} - Rust语言中文社区
+{% endblock title %}
+
+{% block content %}
+<style>
+    .body-content {
+        padding: 10px;
+    }
+    .body-content .notice {
+        border: gray 1px solid;
+        padding: 4px;
+        min-height: 50px;
+        text-align: center;
+        margin-top: 5px;
+    }
+
+    .body-content .border {
+        border: gray 1px solid;
+        margin-top: 15px;
+    }
+
+    .body-content .padding-square {
+        padding: 15px;
+    }
+
+    .body-content .padding-rectangle {
+        padding: 10px 15px;
+    }
+
+    .body-content .margin-top {
+        margin-top: 15px;
+    }
+
+    .body-content .margin-bottom {
+        margin-bottom: 15px;
+    }
+
+    .body-content .underline {
+        border-bottom: gray 1px solid;
+    }
+
+    .body-content .nodot {
+        list-style: none;
+    }
+
+    .body-content .paging {
+        display: inline-block;
+        border: gray 1px solid;
+        margin: 0;
+        width: 22px;
+        height: 22px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .body-content * {
+        box-sizing: border-box;
+    }
+</style>
+
+
+
+<div class="body-content">
+    <div class="notice">
+        <p>论坛说明及公告</p>
+    </div>
+
+    <div class="border">
+        <div class="underline padding-rectangle">
+            {{ sectionName }}
+            <button class="right">发表新回复</button>
+        </div>
+        <div class="detail padding-square">
+            <div class="title border">
+                <div class="detail-title underline padding-rectangle">
+                    <span>{{ title }}</span>
+                    <span class="right">weaming 发表于2017 12 15</span>
+                </div>
+                <div class="detail-body">
+                    <ul class="nodot">
+                        <li class="underline"> 帖子标题 </li>
+                        <li class="underline"> 帖子标题 </li>
+                        <li class="underline"> 帖子标题 </li>
+                        <li class="underline"> 帖子标题 </li>
+                        <li class="underline"> 帖子标题 </li>
+                        <li class="underline"> 帖子标题 </li>
+                        <li> 帖子标题 </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
+            <div class="paginator right">
+                <a class="paging">1</a>
+                <a class="paging">2</a>
+                <a class="paging">3</a>
+                <strong>4</strong>
+                <a class="paging">5</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

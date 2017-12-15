@@ -37,4 +37,3 @@ pub(crate) use models::{ Articles, EditArticle, NewArticle };
 pub(crate) use models::{ RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword, EditUser };
 pub(crate) use models::{ Comment, NewComment, DeleteComment };
 pub(crate) use models::{ InsertSection, Section };
-pub use web::{ Index };
