@@ -5,9 +5,13 @@ pub use self::redis_pool::{ create_redis_pool, RedisPool, Redis };
 pub use self::postgresql_pool::{ create_pg_pool, Postgresql };
 
 use rand::{ thread_rng, Rng };
+use serde_json;
 use tiny_keccak::Keccak;
 use std::fmt::Write;
 use comrak::{ markdown_to_html, ComrakOptions };
+use sapper::{ Key, Request };
+use sapper_std::SessionVal;
+use super::RUser;
 
 /// Get random value
 #[inline]
@@ -40,4 +44,29 @@ pub fn markdown_render(md: &str) -> String {
         ..ComrakOptions::default()
     };
     markdown_to_html(md, &option)
+}
+
+#[inline]
+pub fn get_identity(req: &Request) -> Option<i16> {
+    let cookie = req.ext().get::<SessionVal>();
+    let redis_pool = req.ext().get::<Redis>().unwrap();
+    match cookie {
+        Some(cookie) => {
+            if redis_pool.exists(cookie) {
+                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                Some(info.role)
+            } else {
+                None
+            }
+        }
+        None => {
+            None
+        }
+    }
+}
+
+pub struct Permissions;
+
+impl Key for Permissions {
+    type Value = Option<i16>;
 }
