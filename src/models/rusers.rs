@@ -234,10 +234,9 @@ impl NewUser {
 
     fn set_cookies(&self, redis_pool: &Arc<RedisPool>, info: RUser) -> Result<String, String> {
         let cookie = sha3_256_encode(random_string(8));
-        let redis_key = "user_".to_string() + &cookie;
-        redis_pool.hset(&("user_".to_string() + &cookie), "login_time", Local::now().timestamp());
-        redis_pool.hset(&redis_key, "info", json!(info).to_string());
-        redis_pool.expire(&redis_key, 24 * 3600);
+        redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+        redis_pool.hset(&cookie, "info", json!(info).to_string());
+        redis_pool.expire(&cookie, 24 * 3600);
         Ok(cookie)
     }
 }

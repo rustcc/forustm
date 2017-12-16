@@ -36,9 +36,9 @@ fn main() {
                 Ok(())
             })
         )
+        .with_shell(Box::new(ApiApp))
         .add_module(Box::new(Visitor))
         .add_module(Box::new(User))
-        .with_shell(Box::new(ApiApp))
         .static_service(false);
 
     println!("Start listen on {}", "127.0.0.1:8888");

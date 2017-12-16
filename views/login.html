@@ -40,7 +40,7 @@
         var password = $("#login_password").val();
         var remember = $(".checkbox").children().is(':checked');
         $(".text-danger").remove();
-        if (emailVerification(account) && password.length > 5) {
+        if (emailVerification(account) && password.length >= 5) {
             $.ajax({
                 url: "/api/v1/user/login",
                 type: "post",
@@ -60,7 +60,7 @@
                 }
             })
         } else {
-            $("#login").prev().before("<span class='text-danger'>Email无效或密码小于6位</span>")
+            $("#login").prev().before("<span class='text-danger'>Email无效或密码小于5位</span>")
         }
     }
 
@@ -69,7 +69,7 @@
         var password = $("#register_password").val();
         var nickname = $("#nickname").val();
         $(".text-danger").remove();
-        if (emailVerification(account) && password.length > 5 && nickname !== "") {
+        if (emailVerification(account) && password.length >= 5 && nickname !== "") {
             $.ajax({
                 url: "/api/v1/user/sign_up",
                 type: "post",
@@ -85,7 +85,7 @@
                 }
             })
         } else {
-            $("#sign_up").prev().before("<span class='text-danger'>Email无效或密码小于6位</span>")
+            $("#sign_up").prev().before("<span class='text-danger'>Email无效或密码小于5位</span>")
         }
     }
 
