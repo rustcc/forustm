@@ -25,9 +25,14 @@ impl WebSection {
 
         let id = id.unwrap();
         let res = Section::query_with_id(&pg_conn, id);
-        // TODO: verify type
+
         match res {
             Ok(r) => {
+                if r.stype != SectionTypes::Section as i32 {
+                    // return res_400!(format!("section not found {}, it's type is blog", r.id))
+                    return res_redirect!(format!("/blog/{}", r.id))
+                }
+
                 web.add("res", &r);
 
                 let articles = Articles::query_articles_with_section_id(&pg_conn, id);
@@ -66,12 +71,22 @@ impl WebSection {
         let res = Section::query_with_id(&pg_conn, id);
         match res {
             Ok(r) => {
+                if r.stype != SectionTypes::Blog as i32 {
+                    // return res_400!(format!("section not found {}, it's type is section", r.id))
+                    return res_redirect!(format!("/section/{}", r.id))
+                }
+
                 web.add("res", &r);
+
                 let articles = Articles::query_articles_with_section_id(&pg_conn, id);
                 match articles {
                     Ok(arts) => {
                         //println!("articles: {:?}", &arts);
                         web.add("articles", &arts);
+
+                        let manager = RUser::query_with_id(&pg_conn, r.suser).unwrap();
+                        web.add("manager", &manager);
+
                         res_html!("detailSection.html", web)
                     }
                     Err(e) => {

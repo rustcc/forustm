@@ -40,7 +40,7 @@ impl Section {
             .first::<Self>(conn);
         match res {
             Ok(data) => {
-                println!("data {:?}", data);
+                //println!("data {:?}", data);
                 Ok(data)
             },
             Err(err) => Err(format!("{}", err))
