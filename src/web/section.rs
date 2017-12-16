@@ -21,7 +21,7 @@ impl SectionDetail {
                 res_html!("sectionDetail.html", web)
             }
             Err(e) => {
-                res_500!("section not found")
+                res_500!(format!("section not found: {}", e))
             }
         }
     }
