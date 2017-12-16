@@ -85,15 +85,19 @@
                     <span class="right">weaming 发表于2017 12 15</span>
                 </div>
                 <div class="detail-body">
-                    <ul class="nodot">
-                        <li class="underline"> 帖子标题 </li>
-                        <li class="underline"> 帖子标题 </li>
-                        <li class="underline"> 帖子标题 </li>
-                        <li class="underline"> 帖子标题 </li>
-                        <li class="underline"> 帖子标题 </li>
-                        <li class="underline"> 帖子标题 </li>
-                        <li> 帖子标题 </li>
-                    </ul>
+                    {% if articles | length == 0 %}
+                        <p>这里还没有内容哦..</p>
+                    {% else %}
+                        <ul class="nodot">
+                            {% for article in articles %}
+                                {% if not loop.last %}
+                                <li class="underline"> {{ article.title }}</li>
+                                {% else %}
+                                <li class=""> {{ article.title }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -89,6 +89,28 @@ impl Articles {
         }
     }
 
+    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Articles>, String> {
+        let res = all_articles
+            .filter(article::status.eq(0))
+            .filter(article::section_id.eq(id))
+            .get_results::<RawArticles>(conn);
+        match res {
+            Ok(data) => {
+                Ok(
+                    data.into_iter()
+                        .map(|art| art.into_html())
+                        .collect::<Vec<Articles>>()
+                )
+            },
+            Err(err) => Err(format!("{}", err))
+        }
+    }
+
+    /*
+    pub fn query_raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Articles>, String> {
+    }
+    */
+
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
         let res = diesel::update(all_articles.filter(article::id.eq(id)))
             .set(article::status.eq(2))

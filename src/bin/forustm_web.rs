@@ -5,12 +5,10 @@ extern crate uuid;
 extern crate forustm;
 
 use std::sync::Arc;
-use std::str::FromStr;
 use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
 use uuid::Uuid;
 use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql };
 use forustm::web::*;
-use forustm::models::sections::{ InsertSection, Section };
 
 struct WebApp;
 
@@ -42,7 +40,7 @@ fn main() {
         )
         .with_shell(Box::new(WebApp))
         .add_module(Box::new(Index))
-        .add_module(Box::new(SectionDetail))
+        .add_module(Box::new(WebSection))
         .static_service(true);
 
     println!("Start listen on http://{}:{}", "127.0.0.1", port);
