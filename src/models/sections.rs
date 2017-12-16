@@ -10,13 +10,13 @@ use diesel;
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct Section {
-    id: Uuid,
-    title: String,
-    description: String,
-    stype: i32, // 0 section, 1 blog
-    suser: Uuid,
-    created_time: NaiveDateTime,
-    status: i16  // 0 normal, 1 frozen, 2 deleted
+    pub id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub stype: i32, // 0 section, 1 blog
+    pub suser: Uuid,
+    pub created_time: NaiveDateTime,
+    pub status: i16  // 0 normal, 1 frozen, 2 deleted
 }
 
 impl Section {
@@ -33,7 +33,7 @@ impl Section {
         }
     }
 
-    pub fn query_by_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
+    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
         let res = all_sections
             .filter(section::status.eq(0))
             .filter(section::id.eq(id))

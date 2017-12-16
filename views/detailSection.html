@@ -70,10 +70,11 @@
 
     <div class="border">
         <div class="underline padding-rectangle">
-            <p>
-                {{ res.title }}
+            <div>
+                <h3>{{ res.title }}</h3>
+                <small>管理员：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
                 <button class="right">发表新回复</button>
-            </p>
+            </div>
             <p>
                 <small>{{ res.description }}</small>
             </p>
@@ -87,9 +88,9 @@
                         <ul class="nodot">
                             {% for article in articles %}
                                 {% if not loop.last %}
-                                <li class="underline"> {{ article.title }}</li>
+                                <li class="underline"><a href="/article/{{ article.id }}">{{ article.title }}</a></li>
                                 {% else %}
-                                <li class=""> {{ article.title }}</li>
+                                <li class=""><a href="/article/{{ article.id }}">{{ article.title }}</a></li>
                                 {% endif %}
                             {% endfor %}
                         </ul>

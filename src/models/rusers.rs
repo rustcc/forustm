@@ -55,6 +55,16 @@ pub struct RUser {
 }
 
 impl RUser {
+    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<RUser, String> {
+        let res = all_rusers
+            .filter(ruser::id.eq(id))
+            .first::<RawUser>(conn);
+        match res {
+            Ok(data) => Ok(data.into_user_info()),
+            Err(e) => Err(format!("{}", e))
+        }
+    }
+
     pub fn delete(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
         let res = diesel::update(all_rusers.find(id))
             .set(ruser::status.eq(2))
