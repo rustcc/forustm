@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ sectionName }} - Rust语言中文社区
+{{ res.title }} - Rust语言中文社区
 {% endblock title %}
 
 {% block content %}
@@ -70,13 +70,18 @@
 
     <div class="border">
         <div class="underline padding-rectangle">
-            {{ sectionName }}
-            <button class="right">发表新回复</button>
+            <p>
+                {{ res.title }}
+                <button class="right">发表新回复</button>
+            </p>
+            <p>
+                <small>{{ res.description }}</small>
+            </p>
         </div>
         <div class="detail padding-square">
             <div class="title border">
                 <div class="detail-title underline padding-rectangle">
-                    <span>{{ title }}</span>
+                    <span>{{ res.title }}</span>
                     <span class="right">weaming 发表于2017 12 15</span>
                 </div>
                 <div class="detail-body">

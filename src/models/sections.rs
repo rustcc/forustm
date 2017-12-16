@@ -13,7 +13,7 @@ pub struct Section {
     id: Uuid,
     title: String,
     description: String,
-    stype: i32,
+    stype: i32, // 0 section, 1 blog
     suser: Uuid,
     created_time: NaiveDateTime,
     status: i16  // 0 normal, 1 frozen, 2 deleted
@@ -27,6 +27,20 @@ impl Section {
             .get_results::<Self>(conn);
         match res {
             Ok(data) => {
+                Ok(data)
+            },
+            Err(err) => Err(format!("{}", err))
+        }
+    }
+
+    pub fn query_by_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
+        let res = all_sections
+            .filter(section::status.eq(0))
+            .filter(section::id.eq(id))
+            .first::<Self>(conn);
+        match res {
+            Ok(data) => {
+                println!("data {:?}", data);
                 Ok(data)
             },
             Err(err) => Err(format!("{}", err))
