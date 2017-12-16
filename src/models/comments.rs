@@ -38,7 +38,7 @@ impl Comment {
         }
     }
 
-    pub fn delete_with_comment_id(conn: &PgConnection, id: Uuid) -> bool {
+    fn delete_with_comment_id(conn: &PgConnection, id: Uuid) -> bool {
         diesel::update(all_comments.filter(comment::id.eq(id)))
             .set(comment::status.eq(2))
             .execute(conn).is_ok()
@@ -81,13 +81,8 @@ impl NewComment {
         }
     }
 
-    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> bool {
-        let redis_key = match admin {
-            &0 => { "admin_".to_string() + cookie }
-            &1 => { "manager_".to_string() + cookie }
-            _ => { "user_".to_string() + cookie }
-        };
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&redis_key, "info")).unwrap();
+    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> bool {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         self.into_insert_comments(info.id).insert(conn)
     }
 }
@@ -99,14 +94,13 @@ pub struct DeleteComment {
 }
 
 impl DeleteComment {
-    pub fn delete(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> bool {
-        match admin {
-            &0 | &1 => {
+    pub fn delete(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, permission: &Option<i16>) -> bool {
+        match permission {
+            &Some(0) | &Some(1) => {
                 Comment::delete_with_comment_id(conn, self.comment_id)
             }
             _ => {
-                let redis_key = "user_".to_string() + cookie;
-                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&redis_key, "info")).unwrap();
+                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
                 match self.author_id == info.id {
                     true => Comment::delete_with_comment_id(conn, self.comment_id),
                     false => false

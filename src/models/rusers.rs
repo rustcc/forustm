@@ -74,6 +74,10 @@ impl RUser {
             Err(err) => Err(format!("{}", err))
         }
     }
+
+    pub fn view_with_cookie(redis_pool: &Arc<RedisPool>, cookie: &str) -> String {
+        redis_pool.hget::<String>(cookie, "info")
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -217,7 +221,7 @@ impl NewUser {
                     title: info.nickname.clone(),
                     description: format!("{}的博客", info.nickname),
                     stype: 1,
-                    suser: info.id,
+                    suser: Some(info.id),
                 };
                 section.insert(conn);
                 self.set_cookies(redis_pool, info.into_user_info())

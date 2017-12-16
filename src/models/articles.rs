@@ -1,12 +1,14 @@
 use super::super::article::dsl::article as all_articles;
 use super::super::article;
-use super::super::{ markdown_render };
+use super::super::{ markdown_render, RUser, RedisPool };
 
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 use diesel;
 use diesel::prelude::*;
 use diesel::PgConnection;
+use std::sync::Arc;
+use serde_json;
 
 
 #[derive(Queryable)]
@@ -89,7 +91,7 @@ impl Articles {
         }
     }
 
-    pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
+    fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
         let res = diesel::update(all_articles.filter(article::id.eq(id)))
             .set(article::status.eq(2))
             .execute(conn);
@@ -167,6 +169,29 @@ impl EditArticle {
         match res {
             Ok(data) => Ok(data),
             Err(err) => Err(format!("{}", err))
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct DeleteArticle {
+    article_id: Uuid,
+    user_id: Uuid
+}
+
+impl DeleteArticle {
+    pub fn delete(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, permission: &Option<i16>) -> bool {
+        match permission {
+            &Some(0) | &Some(1) => {
+                Articles::delete_with_id(conn, self.article_id).is_ok()
+            }
+            _ => {
+                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                match self.user_id == info.id {
+                    true => Articles::delete_with_id(conn, self.article_id).is_ok(),
+                    false => false
+                }
+            }
         }
     }
 }
