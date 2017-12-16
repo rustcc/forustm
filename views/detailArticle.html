@@ -70,44 +70,23 @@
 
     <div class="border">
         <div class="underline padding-rectangle">
-            <p>
-                {{ res.title }}
+            <div>
+                <h3>{{ res.title }}</h3>
                 <button class="right">发表新回复</button>
+            </div>
+            <p>
+                <a href="/user/{{ manager.id }}">{{ manager.nickname }}</a>
+                发表于 {{ res.created_time }}
             </p>
             <p>
-                <small>{{ res.description }}</small>
+                <small>标签：{{ res.tags }}</small>
             </p>
         </div>
         <div class="detail padding-square">
             <div class="title border">
-                <div class="detail-title underline padding-rectangle">
-                    <h3>{{ res.title }}</h3>
-                    <span class="right">weaming 发表于2017 12 15</span>
+                <div class="detail-body padding-square">
+                    {{ res.content }}
                 </div>
-                <div class="detail-body">
-                    {% if articles | length == 0 %}
-                        <p>这里还没有内容哦..</p>
-                    {% else %}
-                        <ul class="nodot">
-                            {% for article in articles %}
-                                {% if not loop.last %}
-                                <li class="underline"> {{ article.title }}</li>
-                                {% else %}
-                                <li class=""> {{ article.title }}</li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
-            <div class="paginator right">
-                <a class="paging">1</a>
-                <a class="paging">2</a>
-                <a class="paging">3</a>
-                <strong>4</strong>
-                <a class="paging">5</a>
             </div>
         </div>
     </div>

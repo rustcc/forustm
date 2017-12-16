@@ -52,14 +52,14 @@ impl RawArticles {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Articles {
-    id: Uuid,
-    title: String,
-    content: String,
-    section_id: Uuid,
-    author_id: Uuid,
-    tags: String,
-    created_time: NaiveDateTime,
-    status: i16
+    pub id: Uuid,
+    pub title: String,
+    pub content: String,
+    pub section_id: Uuid,
+    pub author_id: Uuid,
+    pub tags: String,
+    pub created_time: NaiveDateTime,
+    pub status: i16
 }
 
 impl Articles {
