@@ -29,7 +29,7 @@ impl Visitor {
 
                 response.write_body(serde_json::to_string(&res).unwrap());
 
-                let _ = set_cookie(&mut response, "blog_session".to_string(), cookies,
+                let _ = set_cookie(&mut response, "forustm_session".to_string(), cookies,
                                    None, Some("/".to_string()), None, max_age);
             }
             Err(err) => {
@@ -61,7 +61,7 @@ impl Visitor {
 
                 response.write_body(serde_json::to_string(&res).unwrap());
 
-                let _ = set_cookie(&mut response, "blog_session".to_string(), cookies,
+                let _ = set_cookie(&mut response, "forustm_session".to_string(), cookies,
                                    None, Some("/".to_string()), None, Some(24));
             }
             Err(err) => {
