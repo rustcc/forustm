@@ -1,9 +1,10 @@
-use sapper::{ SapperModule, SapperRouter, Response, Request, Result as SapperResult, Error as SapperError };
-use sapper_std::{ JsonParams, SessionVal };
+use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult,
+             Error as SapperError};
+use sapper_std::{JsonParams, SessionVal};
 use serde_json;
 
-use super::super::{ LoginUser, Permissions, Redis, ChangePassword, EditUser,
-                    Postgresql, RUser, NewComment, DeleteComment, NewArticle, DeleteArticle };
+use super::super::{LoginUser, Permissions, Redis, ChangePassword, EditUser, Postgresql, RUser,
+                   NewComment, DeleteComment, NewArticle, DeleteArticle};
 
 pub struct User;
 
@@ -24,14 +25,18 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let res = match body.edit_user(&pg_pool, redis_pool, cookie) {
-            Ok(num_edit) => json!({
+            Ok(num_edit) => {
+                json!({
                 "status": true,
                 "num_edit": num_edit
-            }),
-            Err(err) => json!({
+            })
+            }
+            Err(err) => {
+                json!({
                 "status": false,
                 "error": err
             })
+            }
         };
         res_json!(res)
     }
@@ -71,12 +76,16 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let res = match body.insert(&pg_pool, redis_pool, cookie) {
-            true => json!({
+            true => {
+                json!({
                 "status": true
-            }),
-            false => json!({
+            })
+            }
+            false => {
+                json!({
                 "status": false
             })
+            }
         };
         res_json!(res)
     }
@@ -88,12 +97,16 @@ impl User {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let permission = req.ext().get::<Permissions>().unwrap();
         let res = match body.delete(&pg_pool, redis_pool, cookie, permission) {
-            true => json!({
+            true => {
+                json!({
                 "status": true
-            }),
-            false => json!({
+            })
+            }
+            false => {
+                json!({
                 "status": false
             })
+            }
         };
         res_json!(res)
     }
@@ -116,12 +129,16 @@ impl User {
         let permission = req.ext().get::<Permissions>().unwrap();
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let res = match body.delete(&pg_pool, redis_pool, cookie, permission) {
-            true => json!({
+            true => {
+                json!({
                 "status": true
-            }),
-            false => json!({
+            })
+            }
+            false => {
+                json!({
                 "status": false
             })
+            }
         };
         res_json!(res)
     }

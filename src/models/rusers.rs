@@ -1,9 +1,9 @@
 use super::super::ruser;
 use super::super::ruser::dsl::ruser as all_rusers;
-use super::super::{ sha3_256_encode, random_string, RedisPool, InsertSection };
+use super::super::{sha3_256_encode, random_string, RedisPool, InsertSection};
 
 use uuid::Uuid;
-use chrono::{ NaiveDateTime, Local };
+use chrono::{NaiveDateTime, Local};
 use diesel;
 use diesel::prelude::*;
 use diesel::PgConnection;
@@ -24,7 +24,7 @@ struct RawUser {
     pub say: Option<String>,
     pub signup_time: NaiveDateTime,
     pub role: i16, // member => 2, manager => 1, admin => 0
-    pub status: i16 // 0 normal, 1 frozen, 2 deleted
+    pub status: i16, // 0 normal, 1 frozen, 2 deleted
 }
 
 impl RawUser {
@@ -51,17 +51,26 @@ pub struct RUser {
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
     pub signup_time: NaiveDateTime,
-    pub role: i16
+    pub role: i16,
 }
 
 impl RUser {
+    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<RUser, String> {
+        let res = all_rusers.filter(ruser::id.eq(id))
+            .first::<RawUser>(conn);
+        match res {
+            Ok(data) => Ok(data.into_user_info()),
+            Err(e) => Err(format!("{}", e)),
+        }
+    }
+
     pub fn delete(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
         let res = diesel::update(all_rusers.find(id))
             .set(ruser::status.eq(2))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),
-            Err(err) => Err(format!("{}", err))
+            Err(err) => Err(format!("{}", err)),
         }
     }
 
@@ -71,7 +80,7 @@ impl RUser {
             .execute(conn);
         match res {
             Ok(num_update) => Ok(num_update),
-            Err(err) => Err(format!("{}", err))
+            Err(err) => Err(format!("{}", err)),
         }
     }
 
@@ -90,13 +99,16 @@ pub struct ChangePermission {
 pub struct LoginUser {
     account: String,
     password: String,
-    remember: bool
+    remember: bool,
 }
 
 impl LoginUser {
-    pub fn verification(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, max_age: &Option<i64>) -> Result<String, String> {
-        let res = all_rusers
-            .filter(ruser::status.eq(0))
+    pub fn verification(&self,
+                        conn: &PgConnection,
+                        redis_pool: &Arc<RedisPool>,
+                        max_age: &Option<i64>)
+                        -> Result<String, String> {
+        let res = all_rusers.filter(ruser::status.eq(0))
             .filter(ruser::account.eq(self.account.to_owned()))
             .get_result::<RawUser>(conn);
         match res {
@@ -104,7 +116,7 @@ impl LoginUser {
                 if data.password == sha3_256_encode(self.password.to_owned() + &data.salt) {
                     let ttl = match max_age {
                         &Some(t) => t * 3600,
-                        &None => 24 * 60 * 60
+                        &None => 24 * 60 * 60,
                     };
 
                     let cookie = sha3_256_encode(random_string(8));
@@ -116,9 +128,7 @@ impl LoginUser {
                     Err(format!("用户或密码错误"))
                 }
             }
-            Err(err) => {
-                Err(format!("{}", err))
-            }
+            Err(err) => Err(format!("{}", err)),
         }
     }
 
@@ -140,17 +150,25 @@ pub struct EditUser {
 }
 
 impl EditUser {
-    pub fn edit_user(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+    pub fn edit_user(self,
+                     conn: &PgConnection,
+                     redis_pool: &Arc<RedisPool>,
+                     cookie: &str)
+                     -> Result<usize, String> {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
+            .unwrap();
         let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
-            .set((ruser::nickname.eq(self.nickname), ruser::say.eq(self.say), ruser::avatar.eq(self.avatar), ruser::wx_openid.eq(self.wx_openid)))
+            .set((ruser::nickname.eq(self.nickname),
+                  ruser::say.eq(self.say),
+                  ruser::avatar.eq(self.avatar),
+                  ruser::wx_openid.eq(self.wx_openid)))
             .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
                 redis_pool.hset(cookie, "info", json!(data.into_user_info()).to_string());
                 Ok(1)
             }
-            Err(err) => Err(format!("{}", err))
+            Err(err) => Err(format!("{}", err)),
         }
     }
 }
@@ -158,15 +176,20 @@ impl EditUser {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChangePassword {
     pub old_password: String,
-    pub new_password: String
+    pub new_password: String,
 }
 
 impl ChangePassword {
-    pub fn change_password(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+    pub fn change_password(&self,
+                           conn: &PgConnection,
+                           redis_pool: &Arc<RedisPool>,
+                           cookie: &str)
+                           -> Result<usize, String> {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
+            .unwrap();
 
         if !self.verification(conn, &info.id) {
-            return Err("Verification error".to_string())
+            return Err("Verification error".to_string());
         }
 
         let salt = random_string(6);
@@ -176,7 +199,7 @@ impl ChangePassword {
             .execute(conn);
         match res {
             Ok(num_update) => Ok(num_update),
-            Err(err) => Err(format!("{}", err))
+            Err(err) => Err(format!("{}", err)),
         }
     }
 
@@ -186,9 +209,11 @@ impl ChangePassword {
             Ok(old) => {
                 if old.password == sha3_256_encode(self.old_password.to_owned() + &old.salt) {
                     true
-                } else { false }
+                } else {
+                    false
+                }
             }
-            Err(_) => false
+            Err(_) => false,
         }
     }
 }
@@ -207,7 +232,7 @@ impl NewUser {
         NewUser {
             account: reg.account,
             password: reg.password,
-            salt,
+            salt: salt,
             nickname: reg.nickname,
         }
     }
@@ -226,9 +251,7 @@ impl NewUser {
                 section.insert(conn);
                 self.set_cookies(redis_pool, info.into_user_info())
             }
-            Err(err) => {
-                Err(format!("{}", err))
-            }
+            Err(err) => Err(format!("{}", err)),
         }
     }
 
@@ -249,7 +272,10 @@ pub struct RegisteredUser {
 }
 
 impl RegisteredUser {
-    pub fn register(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
+    pub fn register(self,
+                    conn: &PgConnection,
+                    redis_pool: &Arc<RedisPool>)
+                    -> Result<String, String> {
         NewUser::new(self, random_string(6)).insert(conn, redis_pool)
     }
 }

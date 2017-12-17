@@ -1,15 +1,15 @@
 pub mod redis_pool;
 pub mod postgresql_pool;
 
-pub use self::redis_pool::{ create_redis_pool, RedisPool, Redis };
-pub use self::postgresql_pool::{ create_pg_pool, Postgresql };
+pub use self::redis_pool::{create_redis_pool, RedisPool, Redis};
+pub use self::postgresql_pool::{create_pg_pool, Postgresql};
 
-use rand::{ thread_rng, Rng };
+use rand::{thread_rng, Rng};
 use serde_json;
 use tiny_keccak::Keccak;
 use std::fmt::Write;
-use comrak::{ markdown_to_html, ComrakOptions };
-use sapper::{ Key, Request };
+use comrak::{markdown_to_html, ComrakOptions};
+use sapper::{Key, Request};
 use sapper_std::SessionVal;
 use super::RUser;
 
@@ -53,15 +53,15 @@ pub fn get_identity(req: &Request) -> Option<i16> {
     match cookie {
         Some(cookie) => {
             if redis_pool.exists(cookie) {
-                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                let info =
+                    serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
+                        .unwrap();
                 Some(info.role)
             } else {
                 None
             }
         }
-        None => {
-            None
-        }
+        None => None,
     }
 }
 
