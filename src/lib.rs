@@ -30,11 +30,13 @@ pub mod models;
 pub mod web;
 pub mod web_wechat;
 
-pub use util::{ Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool,
-                sha3_256_encode, random_string, markdown_render };
+pub(crate) use util::{ sha3_256_encode, random_string, markdown_render };
 pub(crate) use schema::{ article, ruser, section, comment };
-pub(crate) use models::{ Articles, EditArticle, NewArticle };
+pub(crate) use models::{ Articles, EditArticle, NewArticle, DeleteArticle };
 pub(crate) use models::{ RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword, EditUser };
 pub(crate) use models::{ Comment, NewComment, DeleteComment };
 pub(crate) use models::{ InsertSection, Section };
+
+pub use util::{ Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity, Permissions};
 pub use web::{ Index };
+pub use api::{ Visitor, User };

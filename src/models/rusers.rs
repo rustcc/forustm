@@ -74,6 +74,10 @@ impl RUser {
             Err(err) => Err(format!("{}", err))
         }
     }
+
+    pub fn view_with_cookie(redis_pool: &Arc<RedisPool>, cookie: &str) -> String {
+        redis_pool.hget::<String>(cookie, "info")
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -103,32 +107,11 @@ impl LoginUser {
                         &None => 24 * 60 * 60
                     };
 
-                    match data.role {
-                        0 => {
-                            let cookie = sha3_256_encode(random_string(8));
-                            let redis_key = "admin_".to_string() + &cookie;
-                            redis_pool.hset(&redis_key, "login_time", Local::now().timestamp());
-                            redis_pool.hset(&redis_key, "info", json!(data.into_user_info()).to_string());
-                            redis_pool.expire(&redis_key, ttl);
-                            Ok(cookie)
-                        }
-                        1 => {
-                            let cookie = sha3_256_encode(random_string(8));
-                            let redis_key = "manager_".to_string() + &cookie;
-                            redis_pool.hset(&redis_key, "login_time", Local::now().timestamp());
-                            redis_pool.hset(&redis_key, "info", json!(data.into_user_info()).to_string());
-                            redis_pool.expire(&redis_key, ttl);
-                            Ok(cookie)
-                        }
-                        _ => {
-                            let cookie = sha3_256_encode(random_string(8));
-                            let redis_key = "user_".to_string() + &cookie;
-                            redis_pool.hset(&("user_".to_string() + &cookie), "login_time", Local::now().timestamp());
-                            redis_pool.hset(&redis_key, "info", json!(data.into_user_info()).to_string());
-                            redis_pool.expire(&redis_key, ttl);
-                            Ok(cookie)
-                        }
-                    }
+                    let cookie = sha3_256_encode(random_string(8));
+                    redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+                    redis_pool.hset(&cookie, "info", json!(data.into_user_info()).to_string());
+                    redis_pool.expire(&cookie, ttl);
+                    Ok(cookie)
                 } else {
                     Err(format!("用户或密码错误"))
                 }
@@ -143,14 +126,8 @@ impl LoginUser {
         self.remember
     }
 
-    pub fn sign_out(redis_pool: &Arc<RedisPool>, cookies: &str, admin: &i16) -> bool {
-        let redis_key = match admin {
-            &0 => { "admin_".to_string() + cookies },
-            &1 => { "manager_".to_string() + &cookies },
-            _ => { "user_".to_string() + cookies }
-        };
-
-        redis_pool.del(&redis_key)
+    pub fn sign_out(redis_pool: &Arc<RedisPool>, cookies: &str) -> bool {
+        redis_pool.del(cookies)
     }
 }
 
@@ -163,19 +140,14 @@ pub struct EditUser {
 }
 
 impl EditUser {
-    pub fn edit_user(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> Result<usize, String> {
-        let redis_key = match admin {
-            &0 => { "admin_".to_string() + cookie },
-            &1 => { "manager_".to_string() + &cookie },
-            _ => { "user_".to_string() + cookie }
-        };
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&redis_key, "info")).unwrap();
+    pub fn edit_user(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
             .set((ruser::nickname.eq(self.nickname), ruser::say.eq(self.say), ruser::avatar.eq(self.avatar), ruser::wx_openid.eq(self.wx_openid)))
             .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
-                redis_pool.hset(&redis_key, "info", json!(data.into_user_info()).to_string());
+                redis_pool.hset(cookie, "info", json!(data.into_user_info()).to_string());
                 Ok(1)
             }
             Err(err) => Err(format!("{}", err))
@@ -190,13 +162,8 @@ pub struct ChangePassword {
 }
 
 impl ChangePassword {
-    pub fn change_password(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str, admin: &i16) -> Result<usize, String> {
-        let redis_key = match admin {
-            &0 => { "admin_".to_string() + cookie },
-            &1 => { "manager_".to_string() + &cookie },
-            _ => { "user_".to_string() + cookie }
-        };
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&redis_key, "info")).unwrap();
+    pub fn change_password(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
 
         if !self.verification(conn, &info.id) {
             return Err("Verification error".to_string())
@@ -254,7 +221,7 @@ impl NewUser {
                     title: info.nickname.clone(),
                     description: format!("{}的博客", info.nickname),
                     stype: 1,
-                    suser: info.id,
+                    suser: Some(info.id),
                 };
                 section.insert(conn);
                 self.set_cookies(redis_pool, info.into_user_info())
@@ -267,10 +234,9 @@ impl NewUser {
 
     fn set_cookies(&self, redis_pool: &Arc<RedisPool>, info: RUser) -> Result<String, String> {
         let cookie = sha3_256_encode(random_string(8));
-        let redis_key = "user_".to_string() + &cookie;
-        redis_pool.hset(&("user_".to_string() + &cookie), "login_time", Local::now().timestamp());
-        redis_pool.hset(&redis_key, "info", json!(info).to_string());
-        redis_pool.expire(&redis_key, 24 * 3600);
+        redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+        redis_pool.hset(&cookie, "info", json!(info).to_string());
+        redis_pool.expire(&cookie, 24 * 3600);
         Ok(cookie)
     }
 }

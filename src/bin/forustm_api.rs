@@ -3,7 +3,8 @@ extern crate sapper_std;
 extern crate forustm;
 
 use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
-use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql };
+use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity, Permissions,
+               Visitor, User };
 use std::sync::Arc;
 
 struct ApiApp;
@@ -11,6 +12,8 @@ struct ApiApp;
 impl SapperAppShell for ApiApp {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
         sapper_std::init(req, Some("forustm_session"))?;
+        let identity = get_identity(req);
+        req.ext_mut().insert::<Permissions>(identity);
         Ok(())
     }
 
@@ -34,6 +37,8 @@ fn main() {
             })
         )
         .with_shell(Box::new(ApiApp))
+        .add_module(Box::new(Visitor))
+        .add_module(Box::new(User))
         .static_service(false);
 
     println!("Start listen on {}", "127.0.0.1:8888");

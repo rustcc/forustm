@@ -5,7 +5,7 @@ CREATE TABLE section (
   title VARCHAR NOT NULL,
   description VARCHAR NOT NULL,
   stype INTEGER NOT NULL,
-  suser uuid references ruser (id) not null,
+  suser uuid references ruser (id),
   created_time timestamp not null default current_timestamp,
   status smallint not null default 0
 );

@@ -9,11 +9,18 @@ impl Index {
         let mut web = Context::new();
         res_html!("index.html", web)
     }
+
+    fn login(_req: &mut Request) -> SapperResult<Response> {
+        let web = Context::new();
+        res_html!("login.html", web)
+    }
 }
 
 impl SapperModule for Index {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
         router.get("/", Index::index);
+
+        router.get("/login", Index::login);
 
         Ok(())
     }

@@ -13,8 +13,8 @@ pub struct Section {
     id: Uuid,
     title: String,
     description: String,
-    stype: i32,
-    suser: Uuid,
+    stype: i32,  // 0 section, 1 user blog
+    suser: Option<Uuid>,
     created_time: NaiveDateTime,
     status: i16  // 0 normal, 1 frozen, 2 deleted
 }
@@ -46,7 +46,7 @@ pub struct InsertSection {
     pub title: String,
     pub description: String,
     pub stype: i32,
-    pub suser: Uuid,
+    pub suser: Option<Uuid>,
 }
 
 impl InsertSection {
