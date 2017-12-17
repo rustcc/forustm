@@ -3,9 +3,9 @@ extern crate sapper_std;
 extern crate forustm;
 
 use std::sync::Arc;
-use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
-use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity, Permissions };
-use forustm::{Index};
+use sapper::{SapperApp, SapperAppShell, Request, Response, Result as SapperResult};
+use forustm::{Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity, Permissions};
+use forustm::web::*;
 
 struct WebApp;
 
@@ -30,15 +30,15 @@ fn main() {
     let port = 8081;
     app.address("127.0.0.1")
         .port(port)
-        .init_global(
-            Box::new(move |req: &mut Request| {
-                req.ext_mut().insert::<Redis>(redis_pool.clone());
-                req.ext_mut().insert::<Postgresql>(pg_pool.clone());
-                Ok(())
-            })
-        )
+        .init_global(Box::new(move |req: &mut Request| {
+            req.ext_mut().insert::<Redis>(redis_pool.clone());
+            req.ext_mut().insert::<Postgresql>(pg_pool.clone());
+            Ok(())
+        }))
         .with_shell(Box::new(WebApp))
         .add_module(Box::new(Index))
+        .add_module(Box::new(WebSection))
+        .add_module(Box::new(WebArticle))
         .static_service(true);
 
     println!("Start listen on http://{}:{}", "127.0.0.1", port);

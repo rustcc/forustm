@@ -1,9 +1,9 @@
-use sapper::{ SapperModule, SapperRouter, Response, Request, Result as SapperResult };
+use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper::header::ContentType;
-use sapper_std::{ set_cookie, JsonParams };
+use sapper_std::{set_cookie, JsonParams};
 use serde_json;
 
-use super::super::{ LoginUser, RegisteredUser, Redis, Postgresql };
+use super::super::{LoginUser, RegisteredUser, Redis, Postgresql};
 
 pub struct Visitor;
 
@@ -18,7 +18,7 @@ impl Visitor {
 
         let max_age: Option<i64> = match body.get_remember() {
             true => Some(24 * 90),
-            false => None
+            false => None,
         };
 
         match body.verification(&pg_pool, redis_pool, &max_age) {
@@ -29,8 +29,13 @@ impl Visitor {
 
                 response.write_body(serde_json::to_string(&res).unwrap());
 
-                let _ = set_cookie(&mut response, "forustm_session".to_string(), cookies,
-                                   None, Some("/".to_string()), None, max_age);
+                let _ = set_cookie(&mut response,
+                                   "forustm_session".to_string(),
+                                   cookies,
+                                   None,
+                                   Some("/".to_string()),
+                                   None,
+                                   max_age);
             }
             Err(err) => {
                 let res = json!({
@@ -61,8 +66,13 @@ impl Visitor {
 
                 response.write_body(serde_json::to_string(&res).unwrap());
 
-                let _ = set_cookie(&mut response, "forustm_session".to_string(), cookies,
-                                   None, Some("/".to_string()), None, Some(24));
+                let _ = set_cookie(&mut response,
+                                   "forustm_session".to_string(),
+                                   cookies,
+                                   None,
+                                   Some("/".to_string()),
+                                   None,
+                                   Some(24));
             }
             Err(err) => {
                 let res = json!({

@@ -1,5 +1,5 @@
-use sapper::{ SapperModule, SapperRouter, Response, Request, Result as SapperResult };
-use sapper_std::{ Context, render, SessionVal, PathParams };
+use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
+use sapper_std::{Context, render, SessionVal, PathParams};
 use uuid::Uuid;
 
 pub struct Index;
