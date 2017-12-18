@@ -106,8 +106,7 @@ impl Articles {
         }
     }
 
-    pub fn query_articles_with_section_id(conn: &PgConnection,
-                                          id: Uuid)
+    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid)
                                           -> Result<Vec<Articles>, String> {
         match Articles::raw_articles_with_section_id(conn, id) {
             Ok(raw_articles) => {
