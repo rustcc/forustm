@@ -10,7 +10,6 @@ use diesel;
 use std::sync::Arc;
 use serde_json;
 
-
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct Comment {
     id: Uuid,
@@ -19,6 +18,13 @@ pub struct Comment {
     author_id: Uuid,
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
+}
+
+#[derive(Debug)]
+pub struct CommentsWithTotal<T> {
+    pub comments: Vec<T>,
+    pub total: i64,
+    pub max_page: i64,
 }
 
 impl Comment {
@@ -35,6 +41,35 @@ impl Comment {
             .get_results::<Self>(conn);
         match res {
             Ok(data) => Ok(data),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn comments_with_article_id_paging(conn: &PgConnection, id: Uuid, page: i64, page_size: i64)
+        -> Result<CommentsWithTotal<Comment>, String> {
+        let _res = all_comments
+            .filter(comment::article_id.eq(id))
+            .filter(comment::status.eq(0));
+
+        let res = _res.order(comment::created_time.desc())
+            .offset(page_size * (page - 1) as i64)
+            .limit(page_size)
+            .get_results::<Comment>(conn);
+
+        let all_count: i64 = _res
+            .count()
+            .get_result(conn).unwrap();
+
+        match res {
+            Ok(data) => {
+                Ok(
+                    CommentsWithTotal {
+                        comments: data,
+                        total: all_count,
+                        max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+                    }
+                )
+            }
             Err(err) => Err(format!("{}", err)),
         }
     }

@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="/css/gruvbox-light.css">
 <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <style>
-    .body-content {
+    .article-detail {
         padding: 10px;
     }
-    .body-content .notice {
+    .article-detail .notice {
         border: gray 1px solid;
         padding: 4px;
         min-height: 50px;
@@ -20,36 +20,40 @@
         margin-top: 5px;
     }
 
-    .body-content .border {
+    .article-detail .border {
         border: gray 1px solid;
         margin-top: 15px;
     }
 
-    .body-content .padding-square {
+    .article-detail .padding-square {
         padding: 15px;
     }
 
-    .body-content .padding-rectangle {
+    .article-detail .padding-rectangle {
         padding: 10px 15px;
     }
 
-    .body-content .margin-top {
+    .article-detail .margin-top {
         margin-top: 15px;
     }
 
-    .body-content .margin-bottom {
+    .article-detail .margin-bottom {
         margin-bottom: 15px;
     }
 
-    .body-content .underline {
+    .article-detail .underline {
         border-bottom: gray 1px solid;
     }
 
-    .body-content .nodot {
+    .article-detail .topline {
+        border-top: gray 1px solid;
+    }
+
+    .article-detail .nodot {
         list-style: none;
     }
 
-    .body-content .paging {
+    .article-detail .paging {
         display: inline-block;
         border: gray 1px solid;
         margin: 0;
@@ -59,7 +63,13 @@
         vertical-align: middle;
     }
 
-    .body-content * {
+    .article-detail textarea {
+        width: 50%;
+        min-height: 100px;
+        font-size: 15px;
+    }
+
+    .article-detail * {
         box-sizing: border-box;
     }
 
@@ -91,9 +101,7 @@
     }
 </style>
 
-
-
-<div class="body-content">
+<div class="article-detail">
     <div class="notice">
         <p>论坛说明及公告</p>
     </div>
@@ -102,7 +110,6 @@
         <div class="underline padding-rectangle">
             <div>
                 <h3>{{ res.title }}</h3>
-                <button class="right">发表新回复</button>
             </div>
             <p>
                 <a href="/user/{{ manager.id }}">{{ manager.nickname }}</a>
@@ -119,10 +126,187 @@
                 </div>
             </div>
         </div>
+
+        <div id="comments" class="padding-rectangle topline">
+            <div class="margin-bottom">
+                <h3>评论区
+                    <button class="right new-comment">发表新回复</button>
+                </h3>
+            </div>
+
+            {% if comments | length == 0 %}
+            <p class="useless">还没有评论</p>
+            {% else %}
+                {% for comment in comments %}
+                <div class="item border">
+                    <div class="comment-title padding-rectangle" style="background: #eee;">
+                        <a class="author-id">{{ comment.author_id }}</a> 发表于
+                        <span class="created-time">{{ comment.created_time }}</span>
+                    </div>
+                    <div class="comment-content padding-rectangle">
+                        {{ comment.content | safe }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="template item border" style="display: none;">
+                <div class="comment-title padding-rectangle" style="background: #eee;">
+                    <a class="author-id"></a> 发表于 <span class="created-time"></span>
+                </div>
+                <div class="comment-content padding-rectangle"></div>
+            </div>
+        </div>
+
+        <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
+            <div class="paginator right">
+                {% for _ in range(end=max_page) %}
+                    {% if loop.index == page %}
+                    <a data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% else %}
+                    <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% endif %}
+                {% endfor %}
+                共 {{ total }} 评论, 共 {{ max_page }} 页
+            </div>
+        </div>
+
+        <div id="new-comment" class="padding-rectangle topline" style="display: none;">
+            <div>
+                <h3>添加新评论</h3>
+                <textarea name="content" placeholder="有何高见？"></textarea>
+                <br> <br>
+                <button name="submit" data-api="/api/v1/comment/new">Bui！发送！</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script type="application/javascript">
+    "use strict";
     hljs.initHighlightingOnLoad();
+
+    function hightlight($doms) {
+        $doms.each(function(i, block) {
+            hljs.highlightBlock(block);
+        });
+    }
+
+    // load new page
+    function loadPage(id, page) {
+        var limit = 20;
+        var offset = limit * (page - 1);
+
+        if (PAGE.page === page) return;
+
+        $.getJSON("/api/v1/comment/query?id=" + id + "&offset=" + offset + "&limit=" + limit, function (response) {
+            $(".item").not(".template").remove();
+
+            for(var i=0, l=response.comments.length; i < l; i++) {
+                var comment = response.comments[i];
+                updateItem(i, comment, i === l-1);
+            }
+            hightlight($(".comment-content pre code"));
+        });
+
+        activePageBtn(page);
+    }
+
+    // update one article DOM
+    function updateItem(index, content, isLast) {
+        // clone template
+        var $newNode = $(".template").clone();
+        $newNode.removeClass("template");
+        $newNode.show();
+
+        // put data in
+        $newNode.data("index", index);
+        $newNode.find("a")
+            .attr("href", "/user/"+content.author_id)
+            .text(content.author_id);
+        $newNode.find(".created-time")
+            .text(content.created_time);
+        $newNode.find(".comment-content")
+            .html(content.content);
+
+        if (isLast) {
+            $newNode.removeClass("underline");
+        }
+        $newNode.appendTo($("#comments"));
+    }
+
+    // change activated page button
+    function activePageBtn(page) {
+        // transform pagination
+        $(".paginator a[data-page='"+PAGE.page+"']").addClass("paging");
+        $(".paging[data-page='"+page+"']").removeClass("paging");
+        PAGE.update(page);
+    }
+
+    function getArticleID() {
+        return window.location.pathname.split('/')[2];
+    }
+
+    $(function() {
+        // page button click event
+        $(".paginator a").on("click", function() {
+            loadPage(getArticleID(), $(this).data("page"));
+        });
+
+        // new article
+        $("button.new-comment").on("click", function () {
+            function run_if_logged_in() {
+                // show DOM
+                $("div#new-comment").show();
+                var $textarea = $("textarea[name='content']");
+                $textarea.focus();
+            }
+
+            $.getJSON("/api/v1/user/view", function(response){
+                if (window.user !== undefined) {
+                    run_if_logged_in();
+                    return;
+                }
+
+                if (response.status === false) {
+                    // need login
+                    window.location.pathname = '/login';
+                } else {
+                    // logged in
+                    // save global user data
+                    window.user = response.data;
+                    run_if_logged_in();
+                }
+            });
+        });
+
+        // new article button event
+        $("button[name='submit']").on("click", function() {
+            var content = $("textarea[name='content']").val();
+
+            if (content.trim().length === 0) {
+                alert("请输入评论内容！");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: $("button[name='submit']").data("api"),
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                data: JSON.stringify({
+                    content: content,
+                    article_id: getArticleID()
+                }),
+                success: function (response) {
+                    if (response.status === true) {
+                        window.location.reload();
+                    } else {
+                        alert("发射失败...???");
+                    }
+                }
+            })
+        });
+    });
 </script>
 {% endblock content %}

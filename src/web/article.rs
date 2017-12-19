@@ -1,7 +1,7 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper_std::{Context, render, PathParams};
 use super::super::{Postgresql};
-use super::super::{Articles, RUser};
+use super::super::{Article, RUser, Comment};
 use uuid::Uuid;
 
 pub struct WebArticle;
@@ -18,17 +18,34 @@ impl WebArticle {
         }
 
         let id = id.unwrap();
-        let res = Articles::query_article(&pg_conn, id);
+        let res = Article::query_article(&pg_conn, id);
         match res {
             Ok(r) => {
+                // article
                 web.add("res", &r);
 
+                // author
                 let manager = RUser::query_with_id(&pg_conn, r.author_id).unwrap();
                 web.add("manager", &manager);
 
-                res_html!("detailArticle.html", web)
+                // comments
+                let page = 1;
+                let comments = Comment::comments_with_article_id_paging(&pg_conn, id, page, 20);
+                match comments {
+                    Ok(coms) => {
+                        web.add("page", &page);
+
+                        web.add("comments", &coms.comments);
+                        web.add("total", &coms.total);
+                        web.add("max_page", &coms.max_page);
+
+                        println!("{:?}", coms);
+                        res_html!("detailArticle.html", web)
+                    },
+                    Err(e) => res_500!(e),
+                }
             }
-            Err(e) => res_500!(format!("section not found: {}", e)),
+            Err(e) => res_400!(format!("article not found: {}", e)),
         }
     }
 }

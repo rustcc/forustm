@@ -84,6 +84,13 @@
     .body-content .input {
         width: 500px;
         height: 30px;
+        font-size: 18px;
+    }
+
+    .body-content textarea {
+        width: 100%;
+        min-height: 300px;
+        font-size: 15px;
     }
 </style>
 
@@ -166,8 +173,9 @@
                 <input class="input" type="text" name="tags" placeholder="这里输入标签 以英文逗号分隔">
                 <br>
                 <h3>正文</h3>
-                <textarea style="width: 100%; min-height: 300px;" name="raw-content" placeholder="支持MarkDown哦，快来试试吧"></textarea>
-                <input type="submit" value="Bui！发送！" data-api="/api/v1/article/new">
+                <textarea name="raw-content" placeholder="支持 Markdown 哦，快来试试吧"></textarea>
+                <br> <br>
+                <button name="submit" data-api="/api/v1/article/new">Bui！发送！</button>
             </div>
         </div>
     </div>
@@ -186,6 +194,8 @@
 
     // load new page
     function loadPage(sectionID, page) {
+        if (PAGE.page === page) return;
+
         $.getJSON("/api/v1/article/paging?id=" + sectionID + "&page=" + page, function (response) {
             $("li.item").not("li.template").remove();
 
@@ -233,62 +243,62 @@
     }
 
     $(function () {
-        // page button click event
-        $(".paginator a").on("click", function() {
-          loadPage(getSectionID(), $(this).data("page"));
-        });
+            // page button click event
+            $(".paginator a").on("click", function() {
+                loadPage(getSectionID(), $(this).data("page"));
+            });
 
-        // new article
-        $("button.new-article").on("click", function () {
-          $.getJSON("/api/v1/user/view", function(response){
-            if (response.status === false) {
-              // need login
-              window.location.pathname = '/login';
-            } else {
-              // logged in
-              // save global user data
-              window.user = response.data;
+            // new article
+            $("button.new-article").on("click", function () {
+                $.getJSON("/api/v1/user/view", function(response){
+                    if (response.status === false) {
+                        // need login
+                        window.location.pathname = '/login';
+                    } else {
+                        // logged in
+                        // save global user data
+                        window.user = response.data;
 
-              // show DOM
-              $("div#new-article").show();
-              var $textarea = $("textarea[name='raw-content']");
-              $textarea.focus();
-            }
-          });
-        })
+                        // show DOM
+                        $("div#new-article").show();
+                        var $textarea = $("textarea[name='raw-content']");
+                        $textarea.focus();
+                    }
+                });
+            })
 
-        // new article button event
-        $("input[type='submit']").on("click", function() {
-          var title = $("input[name='title']").val();
-          var tags = $("input[name='tags']").val();
-          var rawContent = $("textarea[name='raw-content']").val();
+            // new article button event
+            $("button[name='submit']").on("click", function() {
+                var title = $("input[name='title']").val();
+                var tags = $("input[name='tags']").val();
+                var rawContent = $("textarea[name='raw-content']").val();
 
-          if (title.trim().length === 0 || rawContent.trim().length === 0) {
-            alert("请输入文章标题和内容！");
-            return;
-          }
+                if (title.trim().length === 0 || rawContent.trim().length === 0) {
+                    alert("请输入文章标题和内容！");
+                    return;
+                }
 
-          $.ajax({
-            type: "POST",
-            url: $("input[type='submit']").data("api"),
-            contentType: 'application/json; charset=utf-8',
-            dataType: "json",
-            data: JSON.stringify({
-              title: title,
-              tags: tags,
-              raw_content: rawContent,
-              section_id: getSectionID()
-            }),
-            success: function (response) {
-              if (response.status === true) {
-                window.location.reload();
-              } else {
-                alert("新增失败，请检查输入是否完整！");
-              }
-            }
-          })
-        })
-      }
+                $.ajax({
+                    type: "POST",
+                    url: $("button[name='submit']").data("api"),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: "json",
+                    data: JSON.stringify({
+                        title: title,
+                        tags: tags,
+                        raw_content: rawContent,
+                        section_id: getSectionID()
+                    }),
+                    success: function (response) {
+                        if (response.status === true) {
+                            window.location.reload();
+                        } else {
+                            alert("发射失败，请检查输入是否完整！");
+                        }
+                    }
+                })
+            })
+        }
     );
 </script>
 {% endblock content %}
