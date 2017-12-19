@@ -42,6 +42,10 @@
         margin-bottom: 15px;
     }
 
+    .body-content .topline {
+        border-top: gray 1px solid;
+    }
+
     .body-content .underline {
         border-bottom: gray 1px solid;
     }
@@ -76,6 +80,11 @@
     .body-content .tags {
         color: gray;
     }
+
+    .body-content .input {
+        width: 500px;
+        height: 30px;
+    }
 </style>
 
 
@@ -90,7 +99,7 @@
             <div>
                 <h3>{{ res.title }}</h3>
                 <small>管理员：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
-                <button class="right">发表新回复</button>
+                <button class="right new-article">发表新文章</button>
             </div>
             <p>
                 <small>{{ res.description }}</small>
@@ -147,8 +156,23 @@
                 共 {{ total }} 篇, 共 {{ max_page }} 页
             </div>
         </div>
+
+        <div id="new-article" class="padding-rectangle topline" style="display: none;">
+            <div>
+                <h3>帖子标题</h3>
+                <input class="input" type="text" name="title" placeholder="这里输入标题">
+                <br>
+                <h3>标签</h3>
+                <input class="input" type="text" name="tags" placeholder="这里输入标签 以英文逗号分隔">
+                <br>
+                <h3>正文</h3>
+                <textarea style="width: 100%; min-height: 300px;" name="raw-content" placeholder="支持MarkDown哦，快来试试吧"></textarea>
+                <input type="submit" value="Bui！发送！" data-api="/api/v1/article/new">
+            </div>
+        </div>
     </div>
 </div>
+
 <script type="application/javascript">
     "use strict";
     function Page() {
@@ -160,6 +184,7 @@
 
     var PAGE = new Page();
 
+    // load new page
     function loadPage(sectionID, page) {
         $.getJSON("/api/v1/article/paging?id=" + sectionID + "&page=" + page, function (response) {
             $("li.item").not("li.template").remove();
@@ -172,6 +197,7 @@
         });
     }
 
+    // update one article DOM
     function updateItem(index, content, isLast) {
         // clone template
         var $newNode = $("li.template").clone();
@@ -194,6 +220,7 @@
         $newNode.appendTo($("ul.items"));
     }
 
+    // change activated page button
     function activePageBtn(page) {
         // transform pagination
         $(".paginator a[data-page='"+PAGE.page+"']").addClass("paging");
@@ -201,9 +228,67 @@
         PAGE.update(page);
     }
 
-    $(".paginator a").on("click", function() {
-        var sectionID = window.location.pathname.split('/')[2];
-        loadPage(sectionID, $(this).data("page"));
-    });
+    function getSectionID() {
+      return window.location.pathname.split('/')[2];
+    }
+
+    $(function () {
+        // page button click event
+        $(".paginator a").on("click", function() {
+          loadPage(getSectionID(), $(this).data("page"));
+        });
+
+        // new article
+        $("button.new-article").on("click", function () {
+          $.getJSON("/api/v1/user/view", function(response){
+            if (response.status === false) {
+              // need login
+              window.location.pathname = '/login';
+            } else {
+              // logged in
+              // save global user data
+              window.user = response.data;
+
+              // show DOM
+              $("div#new-article").show();
+              var $textarea = $("textarea[name='raw-content']");
+              $textarea.focus();
+            }
+          });
+        })
+
+        // new article button event
+        $("input[type='submit']").on("click", function() {
+          var title = $("input[name='title']").val();
+          var tags = $("input[name='tags']").val();
+          var rawContent = $("textarea[name='raw-content']").val();
+
+          if (title.trim().length === 0 || rawContent.trim().length === 0) {
+            alert("请输入文章标题和内容！");
+            return;
+          }
+
+          $.ajax({
+            type: "POST",
+            url: $("input[type='submit']").data("api"),
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+              title: title,
+              tags: tags,
+              raw_content: rawContent,
+              section_id: getSectionID()
+            }),
+            success: function (response) {
+              if (response.status === true) {
+                window.location.reload();
+              } else {
+                alert("新增失败，请检查输入是否完整！");
+              }
+            }
+          })
+        })
+      }
+    );
 </script>
 {% endblock content %}
