@@ -10,6 +10,7 @@ use diesel::PgConnection;
 use std::sync::Arc;
 use serde_json;
 
+const PAGE_SIZE: i64 = 20;
 
 #[derive(Queryable)]
 struct RawArticles {
@@ -64,6 +65,12 @@ pub struct Articles {
     pub status: i16,
 }
 
+pub struct ArticlesWithTotal<T> {
+    pub articles: Vec<T>,
+    pub total: i64,
+    pub max_page: i64,
+}
+
 impl Articles {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Articles, String> {
         let res = all_articles.filter(article::status.eq(0))
@@ -85,26 +92,78 @@ impl Articles {
         }
     }
 
-    pub fn query_articles_with_section_id(conn: &PgConnection,
-                                          id: Uuid)
-                                          -> Result<Vec<Articles>, String> {
+    fn raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<RawArticles>, String> {
         let res = all_articles.filter(article::status.eq(0))
             .filter(article::section_id.eq(id))
+            .filter(article::status.eq(0))
+            .order(article::created_time.desc())
             .get_results::<RawArticles>(conn);
         match res {
             Ok(data) => {
-                Ok(data.into_iter()
-                    .map(|art| art.into_html())
-                    .collect::<Vec<Articles>>())
+                Ok(data)
             }
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    /*
-    pub fn query_raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Articles>, String> {
+    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid)
+                                          -> Result<Vec<Articles>, String> {
+        match Articles::raw_articles_with_section_id(conn, id) {
+            Ok(raw_articles) => {
+                Ok(raw_articles.into_iter()
+                    .map(|art| art.into_html())
+                    .collect::<Vec<Articles>>())
+            }
+            Err(err) => Err(err)
+        }
     }
-    */
+
+
+    fn raw_articles_with_section_id_paging(conn: &PgConnection, id: Uuid, page: i64)
+            -> Result<ArticlesWithTotal<RawArticles>, String> {
+        let _res = all_articles
+            .filter(article::section_id.eq(id))
+            .filter(article::status.eq(0));
+
+        let res = _res
+            .order(article::created_time.desc())
+            .offset(PAGE_SIZE * (page - 1) as i64)
+            .limit(PAGE_SIZE)
+            .get_results::<RawArticles>(conn);
+
+        let all_count: i64 = _res
+            .count()
+            .get_result(conn).unwrap();
+
+        match res {
+            Ok(data) => {
+                Ok(ArticlesWithTotal {
+                    articles: data,
+                    total: all_count,
+                    max_page: (all_count as f64 / PAGE_SIZE as f64).ceil() as i64,
+                })
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn query_articles_with_section_id_paging(conn: &PgConnection, id: Uuid, page: i64)
+          -> Result<ArticlesWithTotal<Articles>, String> {
+        match Articles::raw_articles_with_section_id_paging(conn, id, page) {
+            Ok(raw_articles) => {
+                Ok(
+                    ArticlesWithTotal{
+                        articles: raw_articles.articles.into_iter()
+                            .map(|art| art.into_html())
+                            .collect::<Vec<Articles>>(),
+                        total: raw_articles.total,
+                        max_page: raw_articles.max_page,
+                    }
+                )
+            }
+            Err(err) => Err(err)
+        }
+    }
 
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
         let res = diesel::update(all_articles.filter(article::id.eq(id)))

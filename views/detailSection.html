@@ -30,6 +30,10 @@
         padding: 10px 15px;
     }
 
+    .body-content .padding-samll-rectangle {
+        padding: 5px 10px;
+    }
+
     .body-content .margin-top {
         margin-top: 15px;
     }
@@ -59,6 +63,19 @@
     .body-content * {
         box-sizing: border-box;
     }
+
+    .body-content a {
+        text-decoration-line: none;
+    }
+
+    .body-content a:hover {
+        color: cornflowerblue;
+        cursor: pointer;
+    }
+
+    .body-content .tags {
+        color: gray;
+    }
 </style>
 
 
@@ -85,14 +102,34 @@
                     {% if articles | length == 0 %}
                         <p>这里还没有内容哦..</p>
                     {% else %}
-                        <ul class="nodot">
+                        <ul class="nodot items">
                             {% for article in articles %}
                                 {% if not loop.last %}
-                                <li class="underline"><a href="/article/{{ article.id }}">{{ article.title }}</a></li>
+                                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                    <span class="right">
+                                        <span class="tags">{{ article.tags }}</span>
+                                        <span class="createdTime">{{ article.created_time }}</span>
+                                    </span>
+                                </li>
                                 {% else %}
-                                <li class=""><a href="/article/{{ article.id }}">{{ article.title }}</a></li>
+                                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
+                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                    <span class="right">
+                                        <span class="tags">{{ article.tags }}</span>
+                                        <span class="createdTime">{{ article.created_time }}</span>
+                                    </span>
+                                </li>
                                 {% endif %}
                             {% endfor %}
+
+                            <li class="item padding-samll-rectangle underline template" data-index="" style="display: none">
+                                <a href=""></a>
+                                <span class="right">
+                                    <span class="tags"></span>
+                                    <span class="createdTime"></span>
+                                </span>
+                            </li>
                         </ul>
                     {% endif %}
                 </div>
@@ -100,13 +137,73 @@
         </div>
         <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
             <div class="paginator right">
-                <a class="paging">1</a>
-                <a class="paging">2</a>
-                <a class="paging">3</a>
-                <strong>4</strong>
-                <a class="paging">5</a>
+                {% for _ in range(end=max_page) %}
+                    {% if loop.index == page %}
+                    <a data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% else %}
+                    <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% endif %}
+                {% endfor %}
+                共 {{ total }} 篇, 共 {{ max_page }} 页
             </div>
         </div>
     </div>
 </div>
+<script type="application/javascript">
+    "use strict";
+    function Page() {
+        this.page = 1;
+        this.update = function (page) {
+            this.page = page
+        };
+    }
+
+    var PAGE = new Page();
+
+    function loadPage(sectionID, page) {
+        $.getJSON("/api/v1/article/paging?id=" + sectionID + "&page=" + page, function (response) {
+            $("li.item").not("li.template").remove();
+
+            for(var i=0, l=response.articles.length; i < l; i++) {
+                var article = response.articles[i];
+                updateItem(i, article, i === l-1);
+            }
+            activePageBtn(page);
+        });
+    }
+
+    function updateItem(index, content, isLast) {
+        // clone template
+        var $newNode = $("li.template").clone();
+        $newNode.removeClass("template");
+        $newNode.show();
+
+        // put data in
+        $newNode.data("index", index);
+        $newNode.find("a")
+            .attr("href", "/article/"+content.id)
+            .text(content.title);
+        $newNode.find(".tags")
+            .text(content.tags);
+        $newNode.find(".createdTime")
+            .text(content.created_time);
+
+        if (isLast) {
+            $newNode.removeClass("underline");
+        }
+        $newNode.appendTo($("ul.items"));
+    }
+
+    function activePageBtn(page) {
+        // transform pagination
+        $(".paginator a[data-page='"+PAGE.page+"']").addClass("paging");
+        $(".paging[data-page='"+page+"']").removeClass("paging");
+        PAGE.update(page);
+    }
+
+    $(".paginator a").on("click", function() {
+        var sectionID = window.location.pathname.split('/')[2];
+        loadPage(sectionID, $(this).data("page"));
+    });
+</script>
 {% endblock content %}

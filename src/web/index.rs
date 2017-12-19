@@ -6,7 +6,7 @@ pub struct Index;
 
 impl Index {
     fn index(req: &mut Request) -> SapperResult<Response> {
-        let mut web = Context::new();
+        let web = Context::new();
         res_html!("index.html", web)
     }
 
