@@ -1,6 +1,6 @@
 use super::super::ruser;
 use super::super::ruser::dsl::ruser as all_rusers;
-use super::super::{sha3_256_encode, random_string, RedisPool, InsertSection};
+use super::super::{sha3_256_encode, random_string, RedisPool, InsertSection, send_reset_password_email};
 
 use uuid::Uuid;
 use chrono::{NaiveDateTime, Local};
@@ -9,6 +9,7 @@ use diesel::prelude::*;
 use diesel::PgConnection;
 use serde_json;
 use std::sync::Arc;
+use std::thread;
 
 
 #[derive(Queryable)]
@@ -86,6 +87,26 @@ impl RUser {
 
     pub fn view_with_cookie(redis_pool: &Arc<RedisPool>, cookie: &str) -> String {
         redis_pool.hget::<String>(cookie, "info")
+    }
+
+    pub fn reset_password(conn: &PgConnection, account: String) -> Result<usize, String> {
+        let salt = random_string(6);
+        let new_password = random_string(8);
+        let res = diesel::update(all_rusers.filter(ruser::account.eq(&account)))
+            .set((ruser::password.eq(sha3_256_encode(new_password.clone() + &salt)),
+                  ruser::salt.eq(salt)))
+            .execute(conn);
+        match res {
+            Ok(num) => {
+                thread::spawn(move || {
+                    send_reset_password_email(new_password, account)
+                });
+                Ok(num)
+            }
+            Err(err) => {
+                Err(format!("{}", err))
+            }
+        }
     }
 }
 
@@ -231,7 +252,7 @@ impl NewUser {
     fn new(reg: RegisteredUser, salt: String) -> Self {
         NewUser {
             account: reg.account,
-            password: reg.password,
+            password: sha3_256_encode(reg.password + &salt),
             salt: salt,
             nickname: reg.nickname,
         }

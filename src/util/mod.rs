@@ -9,9 +9,11 @@ use serde_json;
 use tiny_keccak::Keccak;
 use std::fmt::Write;
 use comrak::{markdown_to_html, ComrakOptions};
-use sapper::{Key, Request};
+use sapper::{Key, Request, Client};
+use sapper::header::ContentType;
 use sapper_std::SessionVal;
 use super::RUser;
+use serde_urlencoded;
 
 /// Get random value
 #[inline]
@@ -46,6 +48,7 @@ pub fn markdown_render(md: &str) -> String {
     markdown_to_html(md, &option)
 }
 
+/// Get visitor status
 #[inline]
 pub fn get_identity(req: &Request) -> Option<i16> {
     let cookie = req.ext().get::<SessionVal>();
@@ -63,6 +66,35 @@ pub fn get_identity(req: &Request) -> Option<i16> {
         }
         None => None,
     }
+}
+
+/// send email
+#[inline]
+pub fn send_reset_password_email(new_password: String, email: String) {
+    let client = Client::new();
+    let xsmtpapi = json!({
+		"to": [&email],
+		"sub": {
+			"%password%": [&new_password],
+			}
+	});
+    let body = serde_urlencoded::to_string(
+        [
+            ("apiUser", "rustcc"),
+            ("apiKey","Cb2HNnzRBRGq6QLa"),
+            ("templateInvokeName", "reset_password"),
+            ("xsmtpapi", &xsmtpapi.to_string()),
+            ("from", "admin@rust.cc"),
+            ("fromName", "Admin"),
+            ("subject", "重置密码")
+        ]
+    ).unwrap();
+    let _ = client.post("http://api.sendcloud.net/apiv2/mail/sendtemplate")
+        .header(ContentType::form_url_encoded())
+        .body(&body)
+        .send()
+        .unwrap();
+    println!("{} reset the password", &email)
 }
 
 pub struct Permissions;

@@ -205,14 +205,14 @@ struct InsertArticle {
 }
 
 impl InsertArticle {
-    fn new(new_article: NewArticle) -> Self {
+    fn new(new_article: NewArticle, author_id: Uuid) -> Self {
         let content = markdown_render(&new_article.raw_content);
         InsertArticle {
             title: new_article.title,
             raw_content: new_article.raw_content,
             content: content,
             section_id: new_article.section_id,
-            author_id: new_article.author_id,
+            author_id: author_id,
             tags: new_article.tags,
         }
     }
@@ -233,13 +233,13 @@ pub struct NewArticle {
     pub title: String,
     pub raw_content: String,
     pub section_id: Uuid,
-    pub author_id: Uuid,
     pub tags: String,
 }
 
 impl NewArticle {
-    pub fn insert(self, conn: &PgConnection) -> bool {
-        InsertArticle::new(self).insert(conn).is_ok()
+    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> bool {
+        let user:RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+        InsertArticle::new(self, user.id).insert(conn).is_ok()
     }
 }
 

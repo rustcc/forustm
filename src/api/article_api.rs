@@ -1,6 +1,6 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper::header::ContentType;
-use sapper_std::{set_cookie, JsonParams, QueryParams};
+use sapper_std::{QueryParams};
 use serde_json;
 use uuid::Uuid;
 

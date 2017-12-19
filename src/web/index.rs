@@ -1,18 +1,26 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper_std::{Context, render, SessionVal, PathParams};
-use uuid::Uuid;
+use super::super::{Permissions};
 
 pub struct Index;
 
 impl Index {
-    fn index(req: &mut Request) -> SapperResult<Response> {
+    fn index(_req: &mut Request) -> SapperResult<Response> {
         let web = Context::new();
         res_html!("index.html", web)
     }
 
-    fn login(_req: &mut Request) -> SapperResult<Response> {
+    fn login(req: &mut Request) -> SapperResult<Response> {
+        let permission = req.ext().get::<Permissions>().unwrap().to_owned();
         let web = Context::new();
-        res_html!("login.html", web)
+        match permission {
+            Some(_) => {
+                res_html!("index.html", web)
+            },
+            None => {
+                res_html!("login.html", web)
+            }
+        }
     }
 }
 
