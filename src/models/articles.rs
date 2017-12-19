@@ -51,6 +51,15 @@ impl RawArticles {
             status: self.status,
         }
     }
+
+    fn into_brief(self) -> ArticleBrief {
+        ArticleBrief {
+            id: self.id,
+            title: self.title,
+            tags: self.tags,
+            created_time: self.created_time,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -63,6 +72,14 @@ pub struct Articles {
     pub tags: String,
     pub created_time: NaiveDateTime,
     pub status: i16,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ArticleBrief {
+    pub id: Uuid,
+    pub title: String,
+    pub tags: String,
+    pub created_time: NaiveDateTime,
 }
 
 pub struct ArticlesWithTotal<T> {
@@ -148,14 +165,14 @@ impl Articles {
     }
 
     pub fn query_articles_with_section_id_paging(conn: &PgConnection, id: Uuid, page: i64)
-          -> Result<ArticlesWithTotal<Articles>, String> {
+          -> Result<ArticlesWithTotal<ArticleBrief>, String> {
         match Articles::raw_articles_with_section_id_paging(conn, id, page) {
             Ok(raw_articles) => {
                 Ok(
                     ArticlesWithTotal{
                         articles: raw_articles.articles.into_iter()
-                            .map(|art| art.into_html())
-                            .collect::<Vec<Articles>>(),
+                            .map(|art| art.into_brief())
+                            .collect::<Vec<ArticleBrief>>(),
                         total: raw_articles.total,
                         max_page: raw_articles.max_page,
                     }
