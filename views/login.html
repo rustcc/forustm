@@ -10,6 +10,7 @@
     $("#register_btn").click(function () {
         $("#register_form").css("display", "block");
         $("#login_form").css("display", "none");
+        $("#reset_form").css("display", "none");
         $(".text-danger").remove();
         $("input[type!='button']").val("");
         $("#register_account").focus();
@@ -18,9 +19,19 @@
     $("#back_btn").click(function () {
         $("#register_form").css("display", "none");
         $("#login_form").css("display", "block");
+        $("#reset_form").css("display", "none");
         $(".text-danger").remove();
         $("input[type!='button']").val("");
         $("#login_account").focus();
+    });
+
+    $("#forget").click(function () {
+        $("#register_form").css("display", "none");
+        $("#login_form").css("display", "none");
+        $("#reset_form").css("display", "block");
+        $(".text-danger").remove();
+        $("input[type!='button']").val("");
+        $("#reset_account").focus();
     });
 
     $("#login").click(function (event) {
@@ -34,6 +45,11 @@
             register()
         }
     );
+
+    $("#reset_btn").click(function (event) {
+        event.preventDefault();
+        reset_account()
+    });
 
     function login() {
         var account = $("#login_account").val();
@@ -89,6 +105,29 @@
         }
     }
 
+    function reset_account() {
+        var account = $("#reset_account").val();
+        $(".text-danger").remove();
+        if (account !== "") {
+            $.ajax({
+                url: "/api/v1/user/reset_pwd",
+                type: "post",
+                dataType: "json",
+                data: JSON.stringify({ "account": account }),
+                headers: { "Content-Type": "application/json" },
+                success: function (res) {
+                    if (res.status) {
+                        window.location = "/"
+                    } else {
+                        $("#reset_btn").prev().before("<span class='text-danger'>用户不存在</span>")
+                    }
+                }
+            })
+        } else {
+            $("#reset_btn").prev().before("<span class='text-danger'>account 不能为空</span>")
+        }
+    }
+
     function emailVerification(email) {
         var reg_email = /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/;
         return reg_email.test(email);
@@ -103,6 +142,10 @@
     }
 
     #register_form {
+        display: none;
+    }
+
+    #reset_form {
         display: none;
     }
 
@@ -132,6 +175,7 @@
             <tr>
                 <td>account:</td>
                 <td><input type="text" name="account" value="" size="20" autofocus="autofocus" placeholder="Email" id="login_account"></td>
+                <td><strong>Please fill in the real and effective email address</strong></td>
             </tr>
             <tr>
                 <td>password:</td>
@@ -176,6 +220,25 @@
         <br>
         <input type="button" id="sign_up" value="Sign up "/>
         <input type="button" id="back_btn" value="Back"/>
+    </form>
+    <br>
+    <br>
+</div>
+<div id="reset_form">
+    <b>Reset your password</b>
+    <br>
+    <br>
+    <form>
+        <table border="0">
+            <tbody>
+            <tr>
+                <td>account:</td>
+                <td><input type="text" name="acct" value="" size="20" placeholder="Email" id="reset_account"></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <input type="button" id="reset_btn" value="reset"/>
     </form>
     <br>
     <br>

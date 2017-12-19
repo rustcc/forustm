@@ -22,6 +22,7 @@ extern crate r2d2;
 extern crate r2d2_redis;
 extern crate r2d2_diesel;
 extern crate uuid;
+extern crate serde_urlencoded;
 
 pub mod api;
 pub mod schema;
@@ -30,7 +31,7 @@ pub mod models;
 pub mod web;
 pub mod web_wechat;
 
-pub(crate) use util::{sha3_256_encode, random_string, markdown_render};
+pub(crate) use util::{sha3_256_encode, random_string, markdown_render, send_reset_password_email};
 pub(crate) use schema::{article, ruser, section, comment};
 pub(crate) use models::{Articles, EditArticle, NewArticle, DeleteArticle};
 pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword, EditUser};
