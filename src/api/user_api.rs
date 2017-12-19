@@ -63,30 +63,6 @@ impl User {
         res_json!(res)
     }
 
-    fn reset_pwd(req: &mut Request) -> SapperResult<Response> {
-        #[derive(Deserialize, Serialize)]
-        struct Account {
-            account: String
-        }
-        let body: Account = get_json_params!(req);
-        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let res = match RUser::reset_password(&pg_pool, body.account) {
-            Ok(data) => {
-                json!({
-                    "status": true,
-                    "data": data
-                })
-            }
-            Err(err) => {
-                json!({
-                    "status": false,
-                    "error": err
-                })
-            }
-        };
-        res_json!(res)
-    }
-
     fn sign_out(req: &mut Request) -> SapperResult<Response> {
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let redis_pool = req.ext().get::<Redis>().unwrap();
@@ -188,8 +164,6 @@ impl SapperModule for User {
         router.get("/user/sign_out", User::sign_out);
 
         router.get("/user/view", User::view_user);
-
-        router.post("/user/reset_pwd", User::reset_pwd);
 
         router.post("/user/change_pwd", User::change_pwd);
 
