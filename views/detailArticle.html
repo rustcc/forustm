@@ -140,7 +140,13 @@
                 {% for comment in comments %}
                 <div class="item border">
                     <div class="comment-title padding-rectangle" style="background: #eee;">
-                        <a class="author-id">{{ comment.author_id }}</a> 发表于
+                        <a class="author-id" href="/user/{{ comment.author_id }}">
+                            {% if comment.author_id == manager.id %}
+                                作者
+                            {% else %}
+                                {{ comment.author_id }}
+                            {% endif %}
+                        </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
                     </div>
                     <div class="comment-content padding-rectangle">
