@@ -1,7 +1,7 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render, SessionVal, PathParams};
-use super::super::{Redis, Postgresql};
-use super::super::{Section, Articles, RUser};
+use sapper_std::{Context, render, PathParams};
+use super::super::{Postgresql};
+use super::super::{Articles, RUser};
 use uuid::Uuid;
 
 pub struct WebArticle;

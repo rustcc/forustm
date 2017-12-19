@@ -1,6 +1,6 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render, SessionVal, PathParams, QueryParams};
-use super::super::{Redis, Postgresql};
+use sapper_std::{Context, render, PathParams};
+use super::super::{Postgresql};
 use super::super::{Section, Articles, RUser};
 use uuid::Uuid;
 
