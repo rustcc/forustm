@@ -5,6 +5,9 @@
 {% endblock title %}
 
 {% block content %}
+<!--<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css">-->
+<link rel="stylesheet" href="/css/gruvbox-light.css">
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <style>
     .body-content {
         padding: 10px;
@@ -62,11 +65,15 @@
 
     .detail-body pre {
         background: #eee;
-        padding: 10px;
+        padding: 0px;
         border-radius: 6px;
         font-family: "Source Code Pro", Menlo, Monaco, Consolas, "DejaVu Sans Mono", Inconsolata, monospace;
         white-space: pre-wrap;
         margin: auto 15%;
+    }
+
+    .detail-body pre code {
+        border-radius: 4px;
     }
 
     .detail-body h1,
@@ -114,4 +121,8 @@
         </div>
     </div>
 </div>
+
+<script type="application/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
 {% endblock content %}
