@@ -1,0 +1,9 @@
+http://localhost http://127.0.0.1 {
+    proxy /api/v1 localhost:8888 {
+        without /api/v1
+        transparent
+    }
+    proxy / localhost:8081 {
+        transparent
+    }
+}
