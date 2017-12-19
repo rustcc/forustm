@@ -3,7 +3,7 @@ use sapper::header::ContentType;
 use sapper_std::{set_cookie, JsonParams};
 use serde_json;
 
-use super::super::{LoginUser, RegisteredUser, Redis, Postgresql};
+use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
 
 pub struct Visitor;
 
@@ -85,6 +85,30 @@ impl Visitor {
         }
         Ok(response)
     }
+
+    fn reset_pwd(req: &mut Request) -> SapperResult<Response> {
+        #[derive(Deserialize, Serialize)]
+        struct Account {
+            account: String
+        }
+        let body: Account = get_json_params!(req);
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+        let res = match RUser::reset_password(&pg_pool, body.account) {
+            Ok(data) => {
+                json!({
+                    "status": true,
+                    "data": data
+                })
+            }
+            Err(err) => {
+                json!({
+                    "status": false,
+                    "error": err
+                })
+            }
+        };
+        res_json!(res)
+    }
 }
 
 impl SapperModule for Visitor {
@@ -92,6 +116,8 @@ impl SapperModule for Visitor {
         router.post("/user/login", Visitor::login);
 
         router.post("/user/sign_up", Visitor::sign_up);
+
+        router.post("/user/reset_pwd", Visitor::reset_pwd);
 
         Ok(())
     }

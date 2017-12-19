@@ -7,6 +7,21 @@
 {% block script %}
 <script>
     "use strict";
+    $().ready(function () {
+        document.onkeydown = function (e) {
+            var ev = document.all ? window.event : e;
+            if (ev.keyCode === 13) {
+                if ($("#login_form").css("display") === 'block') {
+                    login()
+                } else if ($("#register_form").css("display") === 'block'){
+                    register()
+                } else {
+                    reset_account()
+                }
+            }
+        }
+    });
+
     $("#register_btn").click(function () {
         $("#register_form").css("display", "block");
         $("#login_form").css("display", "none");
@@ -16,7 +31,7 @@
         $("#register_account").focus();
     });
 
-    $("#back_btn").click(function () {
+    $(".back_btn").click(function () {
         $("#register_form").css("display", "none");
         $("#login_form").css("display", "block");
         $("#reset_form").css("display", "none");
@@ -175,7 +190,6 @@
             <tr>
                 <td>account:</td>
                 <td><input type="text" name="account" value="" size="20" autofocus="autofocus" placeholder="Email" id="login_account"></td>
-                <td><strong>Please fill in the real and effective email address</strong></td>
             </tr>
             <tr>
                 <td>password:</td>
@@ -206,6 +220,7 @@
             <tr>
                 <td>account:</td>
                 <td><input type="text" name="acct" value="" size="20" placeholder="Email" id="register_account"></td>
+                <td><strong>Please fill in the real and effective email address</strong></td>
             </tr>
             <tr>
                 <td>password:</td>
@@ -219,7 +234,7 @@
         </table>
         <br>
         <input type="button" id="sign_up" value="Sign up "/>
-        <input type="button" id="back_btn" value="Back"/>
+        <input type="button" class="back_btn" value="Back"/>
     </form>
     <br>
     <br>
@@ -239,6 +254,7 @@
         </table>
         <br>
         <input type="button" id="reset_btn" value="reset"/>
+        <input type="button" class="back_btn" value="Back"/>
     </form>
     <br>
     <br>
