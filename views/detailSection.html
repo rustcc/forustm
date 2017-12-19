@@ -105,8 +105,8 @@
         <div class="underline padding-rectangle">
             <div>
                 <h3>{{ res.title }}</h3>
-                <small>管理员：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
-                <button class="right new-article">发表新文章</button>
+                <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
+                <button class="right new-article">发表新{% if res.stype == 0 %}帖子{% else %}文章{% endif %}</button>
             </div>
             <p>
                 <small>{{ res.description }}</small>
@@ -116,7 +116,7 @@
             <div class="title border">
                 <div class="detail-body">
                     {% if articles | length == 0 %}
-                        <p>这里还没有内容哦..</p>
+                        <p class="padding-rectangle">这里还没有内容哦..</p>
                     {% else %}
                         <ul class="nodot items">
                             {% for article in articles %}
@@ -166,7 +166,7 @@
 
         <div id="new-article" class="padding-rectangle topline" style="display: none;">
             <div>
-                <h3>帖子标题</h3>
+                <h3>{% if res.stype == 0 %}帖子{% else %}文章{% endif %}标题</h3>
                 <input class="input" type="text" name="title" placeholder="这里输入标题">
                 <br>
                 <h3>标签</h3>
