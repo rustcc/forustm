@@ -27,12 +27,19 @@ function Page() {
 var PAGE = new Page();
 
 function checkLoggedIn(run_if_logged_in){
-    $.getJSON("/api/v1/user/view", function(response){
-        if (window.user !== undefined) {
-            run_if_logged_in();
-            return;
-        }
+    var role = $(".role").data("role");
+    if (role !== undefined && role === -1) {
+        localStorage.setItem("redirect", location.pathname);
+        window.location.pathname = '/login';
+        return;
+    }
 
+    if (window.user !== undefined) {
+        run_if_logged_in();
+        return;
+    }
+
+    $.getJSON("/api/v1/user/view", function(response){
         if (response.status === false) {
             // need login
             localStorage.setItem("redirect", location.pathname);
