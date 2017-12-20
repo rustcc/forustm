@@ -1,7 +1,7 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper_std::{Context, render, PathParams};
 use super::super::{Postgresql};
-use super::super::{Section, Articles, RUser};
+use super::super::{Section, Article, RUser};
 use uuid::Uuid;
 
 pub struct WebSection;
@@ -37,7 +37,7 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Articles::query_articles_with_section_id_paging(&pg_conn, id, page);
+                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, 20);
                 match articles {
                     Ok(arts) => {
                         //println!("articles: {:?}", &arts);
@@ -83,7 +83,7 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Articles::query_articles_with_section_id_paging(&pg_conn, id, page);
+                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, 20);
                 match articles {
                     Ok(arts) => {
                         //println!("articles: {:?}", &arts);

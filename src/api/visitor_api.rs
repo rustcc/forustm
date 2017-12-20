@@ -5,7 +5,7 @@ use serde_json;
 use uuid::Uuid;
 
 use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
-use super::super::Articles;
+use super::super::models::{Article, Comment };
 
 pub struct Visitor;
 
@@ -112,7 +112,7 @@ impl Visitor {
         res_json!(res)
     }
 
-    fn article_paging(req: &mut Request) -> SapperResult<Response> {
+    fn articles_paging(req: &mut Request) -> SapperResult<Response> {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
         let mut response = Response::new();
@@ -129,7 +129,7 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Articles::query_articles_with_section_id_paging(&pg_pool, section_id, page) {
+        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, 20) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,
@@ -151,6 +151,45 @@ impl Visitor {
         };
         Ok(response)
     }
+
+    fn comments_query(req: &mut Request) -> SapperResult<Response> {
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+
+        let mut response = Response::new();
+        response.headers_mut().set(ContentType::json());
+
+        let query_params = get_query_params!(req);
+        let article_id: Uuid = match t_param!(query_params, "id").clone().parse() {
+            Ok(i) => i,
+            Err(err) => return res_400!(format!("UUID invalid: {}", err)),
+        };
+
+        let offset: i64 = t_param_default!(query_params, "offset", "0")
+            .clone().parse().unwrap();
+        let limit: i64 = t_param_default!(query_params, "limit", "20")
+            .clone().parse().unwrap();
+
+        match Comment::query(&pg_pool, limit, offset, article_id) {
+            Ok(comments) => {
+                let res = json!({
+                    "status": true,
+                    "comments": comments,
+                    "loaded": comments.len()
+                });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            },
+            Err(err) => {
+                let res = json!({
+                    "status": false,
+                    "error": err,
+                });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            }
+        };
+        Ok(response)
+    }
 }
 
 
@@ -160,7 +199,8 @@ impl SapperModule for Visitor {
         router.post("/user/sign_up", Visitor::sign_up);
         router.post("/user/reset_pwd", Visitor::reset_pwd);
 
-        router.get("/article/paging", Visitor::article_paging);
+        router.get("/article/paging", Visitor::articles_paging);
+        router.get("/comment/query", Visitor::comments_query);
 
         Ok(())
     }
