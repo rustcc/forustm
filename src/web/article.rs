@@ -1,8 +1,9 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render, PathParams};
-use super::super::{Postgresql};
+use sapper_std::{Context, render, PathParams, SessionVal};
+use super::super::{Postgresql, Redis};
 use super::super::{Article, RUser, Comment};
 use uuid::Uuid;
+use serde_json;
 
 pub struct WebArticle;
 
@@ -39,7 +40,14 @@ impl WebArticle {
                         web.add("total", &coms.total);
                         web.add("max_page", &coms.max_page);
 
-                        println!("{:?}", coms);
+                        if let Some(cookie) = req.ext().get::<SessionVal>() {
+                            let redis_pool = req.ext().get::<Redis>().unwrap();
+                            let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+                            web.add("user", &user);
+                        } else {
+                            web.add("user", &false);
+                        }
+
                         res_html!("detailArticle.html", web)
                     },
                     Err(e) => res_500!(e),

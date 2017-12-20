@@ -148,6 +148,11 @@
                             {% endif %}
                         </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
+                        {% if user %}
+                            {% if user.id == comment.author_id or user.id == manager.id %}
+                            <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
+                            {% endif %}
+                        {% endif %}
                     </div>
                     <div class="comment-content padding-rectangle">
                         {{ comment.content | safe }}
@@ -159,6 +164,7 @@
             <div class="template item border" style="display: none;">
                 <div class="comment-title padding-rectangle" style="background: #eee;">
                     <a class="author-id"></a> 发表于 <span class="created-time"></span>
+                    <a class="delete" data-id="" data-author-id="" href="#" style="display: none;">删除</a>
                 </div>
                 <div class="comment-content padding-rectangle"></div>
             </div>
@@ -213,6 +219,7 @@
                 updateItem(i, comment, i === l-1);
             }
             hightlight($(".comment-content pre code"));
+            listenDeleteClick();
         });
 
         activePageBtn(page);
@@ -227,13 +234,17 @@
 
         // put data in
         $newNode.data("index", index);
-        $newNode.find("a")
+        $newNode.find("a.author-id")
             .attr("href", "/user/"+content.author_id)
             .text(content.author_id);
         $newNode.find(".created-time")
             .text(content.created_time);
         $newNode.find(".comment-content")
             .html(content.content);
+        $newNode.find(".delete")
+            .data("id", content.id)
+            .data("author-id", content.author_id)
+            .show();
 
         if (isLast) {
             $newNode.removeClass("underline");
@@ -251,6 +262,43 @@
 
     function getArticleID() {
         return window.location.pathname.split('/')[2];
+    }
+
+    function deleteComment(commentID, authorID, callback) {
+        $.ajax({
+            type: "POST",
+            url: "/api/v1/comment/delete",
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                comment_id: commentID,
+                author_id: authorID
+            }),
+            success: function (response) {
+                if (callback !== undefined) {
+                    callback(response);
+                }
+            }
+        })
+    }
+
+    function listenDeleteClick() {
+        $("a.delete").on("click", function(e) {
+            e.preventDefault();
+            var $this = $(this);
+
+            var commentID = $this.data("id");
+            var authorID = $this.data("author-id");
+
+            deleteComment(commentID, authorID, function(response) {
+                if (response.status === true) {
+                    alert("删除成功");
+                    $this.closest("div.item").remove();
+                } else {
+                    alert("删除失败");
+                }
+            });
+        });
     }
 
     $(function() {
@@ -298,6 +346,9 @@
                 }
             })
         });
+
+        listenDeleteClick();
+
     });
 </script>
 {% endblock content %}
