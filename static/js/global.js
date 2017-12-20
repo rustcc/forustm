@@ -25,3 +25,23 @@ function Page() {
 }
 
 var PAGE = new Page();
+
+function checkLoggedIn(run_if_logged_in){
+    $.getJSON("/api/v1/user/view", function(response){
+        if (window.user !== undefined) {
+            run_if_logged_in();
+            return;
+        }
+
+        if (response.status === false) {
+            // need login
+            localStorage.setItem("redirect", location.pathname);
+            window.location.pathname = '/login';
+        } else {
+            // logged in
+            // save global user data
+            window.user = response.data;
+            run_if_logged_in();
+        }
+    });
+}

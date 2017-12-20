@@ -268,22 +268,7 @@
                 $textarea.focus();
             }
 
-            $.getJSON("/api/v1/user/view", function(response){
-                if (window.user !== undefined) {
-                    run_if_logged_in();
-                    return;
-                }
-
-                if (response.status === false) {
-                    // need login
-                    window.location.pathname = '/login';
-                } else {
-                    // logged in
-                    // save global user data
-                    window.user = response.data;
-                    run_if_logged_in();
-                }
-            });
+            checkLoggedIn(run_if_logged_in);
         });
 
         // new article button event
