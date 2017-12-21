@@ -1,12 +1,18 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render};
-use super::super::{Permissions};
+use sapper_std::{Context, render, SessionVal};
+use super::super::Redis;
+use super::super::{RUser, Permissions};
+use serde_json;
 
 pub struct Index;
 
 impl Index {
-    fn index(_req: &mut Request) -> SapperResult<Response> {
-        let web = Context::new();
+    fn index(req: &mut Request) -> SapperResult<Response> {
+        let mut web = Context::new();
+        let redis_pool = req.ext().get::<Redis>().unwrap();
+        let cookie = req.ext().get::<SessionVal>().unwrap();
+        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+        web.add("user", &user);
         res_html!("index.html", web)
     }
 
