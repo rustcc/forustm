@@ -15,11 +15,13 @@
 ```rust
 forustm $  cargo build
 forustm $  diesel setup
-forustm $  cargo run --bin forustm_web forustm_api
+forustm $  cargo run --bin forustm_web
+forustm $  cargo run --bin forustm_api
 ```
 配置文件：
 
 - .env
+- 配置Nginx（[nginx配置文件](./nginx_template.md)）或Caddy
 
 ### Docker里运行Postgresql指南
 
