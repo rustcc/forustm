@@ -27,7 +27,7 @@ fn main() {
     let redis_pool = Arc::new(create_redis_pool(None));
     let pg_pool = create_pg_pool();
     let mut app = SapperApp::new();
-    app.address("127.0.0.1")
+    app.address("0.0.0.0")
         .port(8888)
         .init_global(
             Box::new(move |req: &mut Request| {
@@ -41,6 +41,6 @@ fn main() {
         .add_module(Box::new(User))
         .static_service(false);
 
-    println!("Start listen on {}", "127.0.0.1:8888");
+    println!("Start listen on {}", "0.0.0.0:8888");
     app.run_http();
 }

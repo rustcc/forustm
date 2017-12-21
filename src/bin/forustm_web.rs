@@ -28,7 +28,7 @@ fn main() {
     let pg_pool = create_pg_pool();
     let mut app = SapperApp::new();
     let port = 8081;
-    app.address("127.0.0.1")
+    app.address("0.0.0.0")
         .port(port)
         .init_global(Box::new(move |req: &mut Request| {
             req.ext_mut().insert::<Redis>(redis_pool.clone());
@@ -41,6 +41,6 @@ fn main() {
         .add_module(Box::new(WebArticle))
         .static_service(true);
 
-    println!("Start listen on http://{}:{}", "127.0.0.1", port);
+    println!("Start listen on http://{}:{}", "0.0.0.0", port);
     app.run_http();
 }
