@@ -31,9 +31,37 @@
         <div class="logo-title">Rust语言中文社区</div>
         <div style="clear:both;"></div>
     </div>
+    {% if user %}
     <div class="userinfo right">
-        <span class="userinfo-text">{{user}}</span>
-        <div class="userinfo-popmenu"></div>
+        <span class="userinfo-text">{{ user.nickname }}</span>
+        <div class="userinfo-popmenu">
+          <ul>
+              <li><a href="/home">个人主页</a></li>
+              <li id="sign_out"><a href="/api/v1/user/sign_out">注销</a></li>
+          </ul>
+        </div>
     </div>
+    {% else %}
+        <span class="userinfo-text"><a href="/login">登录</a></span>
+    {% endif %}
+
     <div style="clear:both;"></div>
 </div>
+<script type="application/javascript">
+$('#sign_out a').click(function(event) {
+    event.preventDefault();
+
+    $.ajax({
+        url: $(this).attr('href'),
+        type: "get",
+        success: function (res) {
+            if (res.status) {
+                window.location = "/"
+            } else {
+                console.log("sign_out error");
+            }
+        }
+    })
+    return false; // for good measure
+});
+</script>

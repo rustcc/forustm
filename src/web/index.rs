@@ -10,9 +10,11 @@ impl Index {
     fn index(req: &mut Request) -> SapperResult<Response> {
         let mut web = Context::new();
         let redis_pool = req.ext().get::<Redis>().unwrap();
-        let cookie = req.ext().get::<SessionVal>().unwrap();
-        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-        web.add("user", &user);
+        let cookie = req.ext().get::<SessionVal>();
+        if cookie.is_some() {
+            let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie.unwrap())).unwrap();
+            web.add("user", &user);
+        }
         res_html!("index.html", web)
     }
 
@@ -31,6 +33,7 @@ impl Index {
 }
 
 impl SapperModule for Index {
+
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
         router.get("/", Index::index);
 
