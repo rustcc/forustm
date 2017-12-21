@@ -1,6 +1,7 @@
 use super::super::comment::dsl::comment as all_comments;
-use super::super::comment;
-use super::super::{markdown_render, RedisPool, RUser};
+use super::super::ruser::dsl::ruser as all_rusers;
+use super::super::{ comment, ruser };
+use super::super::{ markdown_render, RedisPool, RUser };
 
 use uuid::Uuid;
 use chrono::NaiveDateTime;
@@ -10,7 +11,7 @@ use diesel;
 use std::sync::Arc;
 use serde_json;
 
-#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+#[derive(Queryable, Associations, Debug, Clone, Deserialize, Serialize)]
 pub struct Comment {
     id: Uuid,
     content: String,
@@ -18,6 +19,18 @@ pub struct Comment {
     author_id: Uuid,
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
+}
+
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+pub struct CommentWithNickName {
+    id: Uuid,
+    content: String,
+    article_id: Uuid,
+    author_id: Uuid,
+    created_time: NaiveDateTime,
+    status: i16, // 0 normal, 1 frozen, 2 deleted
+
+    nickname: String,
 }
 
 #[derive(Debug)]
@@ -46,15 +59,24 @@ impl Comment {
     }
 
     pub fn comments_with_article_id_paging(conn: &PgConnection, id: Uuid, page: i64, page_size: i64)
-        -> Result<CommentsWithTotal<Comment>, String> {
+        -> Result<CommentsWithTotal<CommentWithNickName>, String> {
         let _res = all_comments
             .filter(comment::article_id.eq(id))
             .filter(comment::status.eq(0));
 
-        let res = _res.order(comment::created_time.desc())
+        let res = _res
+            .inner_join(all_rusers.on(
+                comment::author_id.eq(ruser::id)
+            ))
+            .select((
+                comment::id, comment::content, comment::article_id,
+                comment::author_id, comment::created_time, comment::status,
+                ruser::nickname
+            ))
+            .order(comment::created_time)
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
-            .get_results::<Comment>(conn);
+            .get_results::<CommentWithNickName>(conn);
 
         let all_count: i64 = _res
             .count()
