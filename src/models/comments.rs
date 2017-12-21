@@ -11,7 +11,7 @@ use diesel;
 use std::sync::Arc;
 use serde_json;
 
-#[derive(Queryable, Associations, Debug, Clone, Deserialize, Serialize)]
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct Comment {
     id: Uuid,
     content: String,
