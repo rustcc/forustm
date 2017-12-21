@@ -15,7 +15,7 @@
 ```rust
 forustm $  cargo build
 forustm $  diesel setup
-forustm $  cargo run -bin forustm_web forustm_api
+forustm $  cargo run --bin forustm_web forustm_api
 ```
 配置文件：
 
