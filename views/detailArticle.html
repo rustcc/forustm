@@ -69,6 +69,11 @@
         font-size: 15px;
     }
 
+    .article-detail hr {
+        border-top: gray dashed 1px;
+        border-bottom: none;
+    }
+
     .article-detail * {
         box-sizing: border-box;
     }
@@ -153,7 +158,8 @@
                             {% if identify <= 1 or user.id == comment.author_id %}
                             <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
                             {% endif %}
-                            <a class="reply" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">回复</a>
+                            <a class="reply" data-id="{{ comment.id }}"
+                               data-author-id="{{ comment.author_id }}" data-nickname="{{ comment.nickname }}" href="#">回复</a>
                         {% endif %}
                     </div>
                     <div class="comment-content padding-rectangle">
@@ -317,9 +323,10 @@
             var $this = $(this);
 
             // var commentID = $this.data("id");
-            var authorID = $this.data("author-id");
+            // var authorID = $this.data("author-id");
+            var nickname = $this.data("nickname");
 
-            var baseText = "回复 " + authorID + ":\n\n"
+            var baseText = "@" + nickname + "\t"
                 + $this.closest(".item").find(".comment-content").text().trim()
                 + "\n\n------------------\n\n";
 

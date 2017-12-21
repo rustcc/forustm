@@ -43,7 +43,7 @@ impl RawUser {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Associations, Clone, Deserialize, Serialize)]
 pub struct RUser {
     pub id: Uuid,
     pub account: String,
