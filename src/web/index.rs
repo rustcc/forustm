@@ -1,5 +1,5 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render, SessionVal, PathParams};
+use sapper_std::{Context, render};
 use super::super::{Permissions};
 
 pub struct Index;
@@ -15,7 +15,7 @@ impl Index {
         let web = Context::new();
         match permission {
             Some(_) => {
-                res_html!("index.html", web)
+                res_redirect!("/")
             },
             None => {
                 res_html!("login.html", web)

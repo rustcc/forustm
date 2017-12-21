@@ -250,21 +250,14 @@
 
             // new article
             $("button.new-article").on("click", function () {
-                $.getJSON("/api/v1/user/view", function(response){
-                    if (response.status === false) {
-                        // need login
-                        window.location.pathname = '/login';
-                    } else {
-                        // logged in
-                        // save global user data
-                        window.user = response.data;
+                function run_if_logged_in() {
+                    // show DOM
+                    $("div#new-article").show();
+                    var $textarea = $("textarea[name='raw-content']");
+                    $textarea.focus();
+                }
 
-                        // show DOM
-                        $("div#new-article").show();
-                        var $textarea = $("textarea[name='raw-content']");
-                        $textarea.focus();
-                    }
-                });
+                checkLoggedIn(run_if_logged_in);
             })
 
             // new article button event
