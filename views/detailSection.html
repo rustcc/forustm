@@ -105,7 +105,9 @@
         <div class="underline padding-rectangle">
             <div>
                 <h3>{{ res.title }}</h3>
+                {% if manager %}
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
+                {% endif %}
                 <button class="right new-article">发表新{% if res.stype == 0 %}帖子{% else %}文章{% endif %}</button>
             </div>
             <p>
@@ -175,7 +177,7 @@
                 <h3>正文</h3>
                 <textarea name="raw-content" placeholder="支持 Markdown 哦，快来试试吧"></textarea>
                 <br> <br>
-                <button name="submit" data-api="/api/v1/article/new">Bui！发送！</button>
+                <button name="submit" data-api="/api/v1/article/new">Biu！发送！</button>
             </div>
         </div>
     </div>

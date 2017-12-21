@@ -5,6 +5,7 @@ extern crate forustm;
 use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
 use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity, Permissions,
                Visitor, User };
+use forustm::{ AdminUser, AdminSection };
 use std::sync::Arc;
 
 struct ApiApp;
@@ -27,7 +28,7 @@ fn main() {
     let redis_pool = Arc::new(create_redis_pool(None));
     let pg_pool = create_pg_pool();
     let mut app = SapperApp::new();
-    app.address("127.0.0.1")
+    app.address("0.0.0.0")
         .port(8888)
         .init_global(
             Box::new(move |req: &mut Request| {
@@ -39,8 +40,10 @@ fn main() {
         .with_shell(Box::new(ApiApp))
         .add_module(Box::new(Visitor))
         .add_module(Box::new(User))
+        .add_module(Box::new(AdminUser))
+        .add_module(Box::new(AdminSection))
         .static_service(false);
 
-    println!("Start listen on {}", "127.0.0.1:8888");
+    println!("Start listen on {}", "0.0.0.0:8888");
     app.run_http();
 }

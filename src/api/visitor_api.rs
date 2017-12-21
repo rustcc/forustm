@@ -5,7 +5,7 @@ use serde_json;
 use uuid::Uuid;
 
 use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
-use super::super::models::{Article, Comment };
+use super::super::models::{Article, CommentWithNickName};
 
 pub struct Visitor;
 
@@ -169,7 +169,7 @@ impl Visitor {
         let limit: i64 = t_param_default!(query_params, "limit", "20")
             .clone().parse().unwrap();
 
-        match Comment::query(&pg_pool, limit, offset, article_id) {
+        match CommentWithNickName::query(&pg_pool, limit, offset, article_id) {
             Ok(comments) => {
                 let res = json!({
                     "status": true,

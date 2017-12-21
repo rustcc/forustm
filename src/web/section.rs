@@ -48,6 +48,8 @@ impl WebSection {
                         if let Some(suid) = r.suser {
                             let manager = RUser::query_with_id(&pg_conn, suid).unwrap();
                             web.add("manager", &manager);
+                        } else {
+                            web.add("manager", &false);
                         }
 
                         res_html!("detailSection.html", web)
