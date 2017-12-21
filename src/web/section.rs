@@ -26,7 +26,7 @@ impl WebSection {
         web.add("id", &id);
         web.add("page", &page);
 
-        let res = Section::query_with_id(&pg_conn, id);
+        let res = Section::query_with_section_id(&pg_conn, id);
 
         match res {
             Ok(r) => {
@@ -75,7 +75,7 @@ impl WebSection {
         web.add("id", &id);
         web.add("page", &page);
 
-        let res = Section::query_with_id(&pg_conn, id);
+        let res = Section::query_with_user_id(&pg_conn, id);
         match res {
             Ok(r) => {
                 if r.stype != SectionTypes::Blog as i32 {
