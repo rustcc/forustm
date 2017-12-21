@@ -43,4 +43,4 @@ pub(crate) use models::{InsertSection, Section};
 pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity,
                Permissions};
 pub use web::Index;
-pub use api::{Visitor, User, AdminUser};
+pub use api::{Visitor, User, AdminUser, AdminSection};

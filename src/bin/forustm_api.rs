@@ -5,6 +5,7 @@ extern crate forustm;
 use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
 use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity, Permissions,
                Visitor, User };
+use forustm::{ AdminUser, AdminSection };
 use std::sync::Arc;
 
 struct ApiApp;
@@ -39,6 +40,8 @@ fn main() {
         .with_shell(Box::new(ApiApp))
         .add_module(Box::new(Visitor))
         .add_module(Box::new(User))
+        .add_module(Box::new(AdminUser))
+        .add_module(Box::new(AdminSection))
         .static_service(false);
 
     println!("Start listen on {}", "0.0.0.0:8888");
