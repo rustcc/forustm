@@ -105,7 +105,9 @@
         <div class="underline padding-rectangle">
             <div>
                 <h3>{{ res.title }}</h3>
+                {% if manager %}
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
+                {% endif %}
                 <button class="right new-article">发表新{% if res.stype == 0 %}帖子{% else %}文章{% endif %}</button>
             </div>
             <p>
