@@ -21,7 +21,7 @@ impl Index {
         let web = Context::new();
         match permission {
             Some(_) => {
-                res_redirect!("/")
+                res_redirect!("/home")
             },
             None => {
                 res_html!("login.html", web)
