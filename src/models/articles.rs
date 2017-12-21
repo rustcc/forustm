@@ -89,7 +89,7 @@ pub struct ArticlesWithTotal<T> {
 
 impl Article {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.eq(0))
+        let res = all_articles.filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
         match res {
@@ -99,7 +99,7 @@ impl Article {
     }
 
     pub fn query_raw_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.eq(0))
+        let res = all_articles.filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
         match res {
@@ -111,7 +111,7 @@ impl Article {
     fn raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<RawArticles>, String> {
         let res = all_articles
             .filter(article::section_id.eq(id))
-            .filter(article::status.eq(0))
+            .filter(article::status.ne(2))
             .order(article::created_time.desc())
             .get_results::<RawArticles>(conn);
         match res {
@@ -139,7 +139,7 @@ impl Article {
             -> Result<ArticlesWithTotal<RawArticles>, String> {
         let _res = all_articles
             .filter(article::section_id.eq(id))
-            .filter(article::status.eq(0));
+            .filter(article::status.ne(2));
 
         let res = _res
             .order(article::created_time.desc())
@@ -248,19 +248,27 @@ pub struct EditArticle {
     title: String,
     raw_content: String,
     tags: String,
+    author_id: Uuid,
 }
 
 impl EditArticle {
-    pub fn edit_article(self, conn: &PgConnection) -> Result<usize, String> {
-        let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
-            .set((article::title.eq(self.title),
-                  article::content.eq(markdown_render(&self.raw_content)),
-                  article::raw_content.eq(self.raw_content),
-                  article::tags.eq(self.tags)))
-            .execute(conn);
-        match res {
-            Ok(data) => Ok(data),
-            Err(err) => Err(format!("{}", err)),
+    pub fn edit_article(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
+                .unwrap();
+        if self.author_id == info.id {
+            let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
+                .set((article::title.eq(self.title),
+                      article::content.eq(markdown_render(&self.raw_content)),
+                      article::raw_content.eq(self.raw_content),
+                      article::tags.eq(self.tags)))
+                .execute(conn);
+            match res {
+                Ok(data) => Ok(data),
+                Err(err) => Err(format!("{}", err)),
+            }
+        } else {
+            Err("No permission".to_string())
         }
     }
 }

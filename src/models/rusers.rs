@@ -10,6 +10,7 @@ use diesel::PgConnection;
 use serde_json;
 use std::sync::Arc;
 use std::thread;
+use super::ChangStatus;
 
 
 #[derive(Queryable)]
@@ -65,9 +66,25 @@ impl RUser {
         }
     }
 
-    pub fn delete(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
-        let res = diesel::update(all_rusers.find(id))
-            .set(ruser::status.eq(2))
+    pub fn view_user_list(conn: &PgConnection, limit: i64, offset: i64) -> Result<Vec<Self>, String> {
+        let res = all_rusers
+            .limit(limit)
+            .offset(offset)
+            .order(ruser::signup_time)
+            .get_results::<RawUser>(conn);
+        match res {
+            Ok(raw_user_list) => {
+                Ok(raw_user_list.into_iter()
+                    .map( |raw_user:RawUser| raw_user.into_user_info())
+                    .collect::<Vec<Self>>())
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn change_status(conn: &PgConnection, data: ChangStatus) -> Result<usize, String> {
+        let res = diesel::update(all_rusers.find(data.id))
+            .set(ruser::status.eq(data.status))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),
