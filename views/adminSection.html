@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}
+创建新版块
+{% endblock title %}
+
+{% block script %}
+<script>
+</script>
+{% endblock script %}
+
+{% block content %}
+<style>
+    .padding-rectangle {
+        padding: 10px 15px;
+    }
+</style>
+
+<div id="admin-section" class="padding-rectangle">
+    <b>创建新的版块</b>
+    <br>
+    <br>
+    <form>
+        <table border="0">
+            <tbody>
+            <tr>
+                <td>
+                    <input type="text" size="20" autofocus="autofocus" placeholder="版块名称" id="title">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" size="20" placeholder="版块描述" id="description">
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <input type="button" id="submit" data-type="" data-uid="{{ user.id }}" data-api="/api/v1/section/new" value="创建"/>
+    </form>
+    <br/>
+    <br>
+</div>
+
+<script type="application/javascript">
+    $("#submit").on("click", function () {
+        var title = $("input#title").val();
+        var desc = $("input#description").val();
+        var uid = $(this).data("uid");
+        var type = 0;
+
+        if (title.trim().length === 0 || desc.trim().length === 0) {
+            alert("请填写标题和描述");
+            return
+        }
+
+        $.ajax({
+            type: "POST",
+            url: $("#submit").data("api"),
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                title: title,
+                description: desc,
+                stype: type,
+                suer: uid
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    alert("创建成功!")
+                    window.location.reload();
+                } else {
+                    alert("创建失败...???");
+                }
+            }
+        });
+    })
+</script>
+{% endblock content %}
