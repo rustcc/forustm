@@ -30,9 +30,22 @@ impl Section {
         }
     }
 
-    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
+    pub fn query_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
         let res = all_sections.filter(section::status.eq(0))
             .filter(section::id.eq(id))
+            .first::<Self>(conn);
+        match res {
+            Ok(data) => {
+                //println!("data {:?}", data);
+                Ok(data)
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn query_with_user_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
+        let res = all_sections.filter(section::status.eq(0))
+            .filter(section::suser.eq(id))
             .first::<Self>(conn);
         match res {
             Ok(data) => {
