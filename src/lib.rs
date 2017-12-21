@@ -37,7 +37,7 @@ pub(crate) use schema::{article, ruser, section, comment};
 pub(crate) use models::{Article, EditArticle, NewArticle, DeleteArticle};
 pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword,
                         EditUser, ChangStatus};
-pub(crate) use models::{Comment, NewComment, DeleteComment};
+pub(crate) use models::{NewComment, DeleteComment};
 pub(crate) use models::{InsertSection, Section};
 
 pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity,

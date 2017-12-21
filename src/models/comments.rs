@@ -11,16 +11,6 @@ use diesel;
 use std::sync::Arc;
 use serde_json;
 
-#[derive(Queryable, Associations, Debug, Clone, Deserialize, Serialize)]
-pub struct Comment {
-    id: Uuid,
-    content: String,
-    article_id: Uuid,
-    author_id: Uuid,
-    created_time: NaiveDateTime,
-    status: i16, // 0 normal, 1 frozen, 2 deleted
-}
-
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct CommentWithNickName {
     id: Uuid,
@@ -40,18 +30,28 @@ pub struct CommentsWithTotal<T> {
     pub max_page: i64,
 }
 
-impl Comment {
+impl CommentWithNickName {
     pub fn query(conn: &PgConnection,
                  limit: i64,
                  offset: i64,
                  article_id: Uuid)
                  -> Result<Vec<Self>, String> {
-        let res = all_comments.filter(comment::status.eq(0))
+        let res = all_comments
+            .inner_join(all_rusers.on(
+                comment::author_id.eq(ruser::id)
+            ))
+            .select((
+                comment::id, comment::content, comment::article_id,
+                comment::author_id, comment::created_time, comment::status,
+                ruser::nickname
+            ))
+            .filter(comment::status.eq(0))
             .filter(comment::article_id.eq(article_id))
             .order(comment::created_time)
             .limit(limit)
             .offset(offset)
-            .get_results::<Self>(conn);
+            .get_results::<CommentWithNickName>(conn);
+
         match res {
             Ok(data) => Ok(data),
             Err(err) => Err(format!("{}", err)),
@@ -59,7 +59,7 @@ impl Comment {
     }
 
     pub fn comments_with_article_id_paging(conn: &PgConnection, id: Uuid, page: i64, page_size: i64)
-        -> Result<CommentsWithTotal<CommentWithNickName>, String> {
+        -> Result<CommentsWithTotal<Self>, String> {
         let _res = all_comments
             .filter(comment::article_id.eq(id))
             .filter(comment::status.eq(0));
@@ -76,7 +76,7 @@ impl Comment {
             .order(comment::created_time)
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
-            .get_results::<CommentWithNickName>(conn);
+            .get_results::<Self>(conn);
 
         let all_count: i64 = _res
             .count()
@@ -102,6 +102,7 @@ impl Comment {
             .execute(conn)
             .is_ok()
     }
+
     pub fn delete_with_author_id(conn: &PgConnection, id: Uuid) -> bool {
         diesel::update(all_comments.filter(comment::author_id.eq(id)))
             .set(comment::status.eq(2))
@@ -163,13 +164,13 @@ impl DeleteComment {
                   permission: &Option<i16>)
                   -> bool {
         match permission {
-            &Some(0) | &Some(1) => Comment::delete_with_comment_id(conn, self.comment_id),
+            &Some(0) | &Some(1) => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
             _ => {
                 let info =
                     serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
                         .unwrap();
                 match self.author_id == info.id {
-                    true => Comment::delete_with_comment_id(conn, self.comment_id),
+                    true => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
                     false => false,
                 }
             }
