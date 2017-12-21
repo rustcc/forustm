@@ -39,6 +39,7 @@ fn main() {
         .add_module(Box::new(Index))
         .add_module(Box::new(WebSection))
         .add_module(Box::new(WebArticle))
+        .add_module(Box::new(Home))
         .add_module(Box::new(WebAdminSection))
         .static_service(true);
 

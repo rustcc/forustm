@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ user.nickname }} - Rust语言中文社区
+{% endblock title %}
+
+{% block script %}
+<script src="/js/home.js"></script
+<link href="/css/home.css" rel="stylesheet" />
+{% endblock script %}
+
+{% block content %}
+<nav class="navigation">
+    <ul>
+        <li><a href="/blog/{{ user.id }}">博客</a></li>
+        <li><a id="information_btn" class="active">个人信息</a></li>
+        <li><a id="modify_btn">修改信息</a></li>
+        <li><a id="change_password_btn">修改密码</a></li>
+    </ul>
+</nav>
+<div class="information">
+    <h3>用户信息</h3><img src="{{ user.avatar }}" id="path">
+    <hr/>
+    <div><label>账号：</label><p style="display:inline;">{{ user.account }}<p></div>
+    <div><label>昵称：</label><p style="display:inline;" class="nickname">{{ user.nickname }}<p></div>
+    <div><label>微信号：</label><p style="display:inline;" class="wx_openid">{{ user.wx_openid }}<p></div>
+    <div><label>签名：</label>
+        <p style="display:inline;" class="say">{{ user.say }}</p>
+    </div>
+    <div><label>创建时间：</label><p style="display:inline;">{{ user.signup_time }}</p></div>
+    <br />
+</div>
+<div class="modify">
+    <h3>修改信息</h3>
+    <hr/>
+    <form>
+        <div class="form-group">
+            <label>昵称:</label><input id="nickname" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>签名:</label><textarea id="say" rows="5"></textarea>
+        </div>
+        <div class="form-group">
+            <label>图片地址:</label><input id="avatar" type="text">
+        </div>
+        <div class="form-group">
+            <label>微信号:</label><input id="wx_openid" type="text">
+        </div>
+        <div class="form-group">
+            <button type="button" class="btn btn-success pull-right">保存</button>
+        </div>
+    </form>
+</div>
+<div class="change_password">
+    <h3>修改密码</h3>
+    <hr/>
+    <form>
+        <div class="form-group">
+            <label>旧密码:</label><input id="old_password" type="password" maxlength="20">
+        </div>
+        <div class="form-group">
+            <label>新密码:</label><input id="new_password" type="password" maxlength="20">
+        </div>
+        <div class="form-group">
+            <label>再次输入:</label><input id="re_password" type="password" maxlength="20">
+        </div>
+        <div class="form-group">
+            <button type="button" class="btn btn-success pull-right">提交</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}
