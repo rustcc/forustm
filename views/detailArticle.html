@@ -65,7 +65,7 @@
 
     .article-detail textarea {
         width: 50%;
-        min-height: 100px;
+        min-height: 300px;
         font-size: 15px;
     }
 
@@ -142,12 +142,11 @@
                 {% for comment in comments %}
                 <div class="item border">
                     <div class="comment-title padding-rectangle" style="background: #eee;">
+                        {% if comment.author_id == author.id %}
+                        作者
+                        {% endif %}
                         <a class="author-id" href="/user/{{ comment.author_id }}">
-                            {% if comment.author_id == author.id %}
-                                作者
-                            {% else %}
-                                {{ comment.author_id }}
-                            {% endif %}
+                            {{ comment.nickname }}
                         </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
                         {% if identify != -1 %}
@@ -320,9 +319,9 @@
             // var commentID = $this.data("id");
             var authorID = $this.data("author-id");
 
-            var baseText = "回复 " + authorID + ":\n"
+            var baseText = "回复 " + authorID + ":\n\n"
                 + $this.closest(".item").find(".comment-content").text().trim()
-                + "\n------------------\n";
+                + "\n\n------------------\n\n";
 
             $("div#new-comment")
                 .show()

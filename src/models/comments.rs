@@ -1,6 +1,6 @@
 use super::super::comment::dsl::comment as all_comments;
 use super::super::comment;
-use super::super::{markdown_render, RedisPool, RUser};
+use super::super::{ markdown_render, RedisPool, RUser };
 
 use uuid::Uuid;
 use chrono::NaiveDateTime;
@@ -18,6 +18,18 @@ pub struct Comment {
     author_id: Uuid,
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CommentWithName {
+    id: Uuid,
+    content: String,
+    article_id: Uuid,
+    author_id: Uuid,
+    created_time: NaiveDateTime,
+    status: i16, // 0 normal, 1 frozen, 2 deleted
+
+    nickname: String,
 }
 
 #[derive(Debug)]
@@ -46,7 +58,7 @@ impl Comment {
     }
 
     pub fn comments_with_article_id_paging(conn: &PgConnection, id: Uuid, page: i64, page_size: i64)
-        -> Result<CommentsWithTotal<Comment>, String> {
+        -> Result<CommentsWithTotal<CommentWithName>, String> {
         let _res = all_comments
             .filter(comment::article_id.eq(id))
             .filter(comment::status.eq(0));
@@ -62,9 +74,28 @@ impl Comment {
 
         match res {
             Ok(data) => {
+                let comments_with_name = data.into_iter()
+                    .map(|c: Comment| {
+                        let nickname = match RUser::query_with_id(&conn, c.author_id) {
+                            Ok(author) => author.nickname,
+                            Err(e) => "未知用户".to_owned(),
+                        };
+
+                        CommentWithName {
+                            id: c.id,
+                            content: c.content,
+                            article_id: c.article_id,
+                            author_id: c.author_id,
+                            created_time: c.created_time,
+                            status: c.status,
+                            nickname,
+                        }
+                    })
+                    .collect();
+
                 Ok(
                     CommentsWithTotal {
-                        comments: data,
+                        comments: comments_with_name,
                         total: all_count,
                         max_page: (all_count as f64 / page_size as f64).ceil() as i64,
                     }
