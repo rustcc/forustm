@@ -389,7 +389,7 @@
             }
 
             var markdown = $textarea.data("markdown");
-            if (markdown.indexOf("@") > -1) {
+            if (markdown !== undefined && markdown.indexOf("@") > -1) {
                 content += markdown;
                 // clear reply hidden text
                 $textarea.data("markdown", "");
