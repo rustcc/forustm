@@ -99,6 +99,14 @@
         border-radius: 4px;
     }
 
+    .detail-body div code,
+    .detail-body p code,
+    .detail-body ul code
+    {
+        border-radius: 4px;
+        background: pink;
+    }
+
     .detail-body h1,
     .detail-body h2,
     .detail-body h3,
@@ -107,6 +115,7 @@
     {
         background: #ddd;
         padding: 10px 20px;
+        border-radius: 5px;
     }
 
     .detail-body ul {
@@ -219,8 +228,7 @@
             hljs.highlightBlock(block);
         });
     }
-    hightlight($("code"));
-
+    hightlight($("pre code"));
 
     // load new page
     function loadPage(id, page) {
@@ -335,7 +343,8 @@
             var nickname = $this.data("nickname");
 
             /* @current aaa @xx bbb @xx cc */
-            var originText = "@" + nickname + " " + $this.closest(".item").find(".comment-content").text().trim();
+            var originText = "@" + nickname + " "
+                + $this.closest(".item").find(".comment-content").text().trim();
             var replies = originText.split('@')
             var history = replies.map(function (rpl, index) {
                 return ("@" + rpl).trim().split("\n").map(function(line) {
@@ -359,6 +368,41 @@
         listenReplyClick();
     }
 
+    function submit() {
+        var $textarea = $("textarea[name='content']");
+        var content = $textarea.val();
+
+        if (content.trim().length === 0) {
+            alert("请输入评论内容！");
+            return;
+        }
+
+        var markdown = $textarea.data("markdown");
+        if (markdown !== undefined && markdown.indexOf("@") > -1) {
+            content += markdown;
+            // clear reply hidden text
+            $textarea.data("markdown", "");
+        }
+
+        $.ajax({
+            type: "POST",
+            url: $("button[name='submit']").data("api"),
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                content: content,
+                article_id: getArticleID()
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    window.location.reload();
+                } else {
+                    alert("发射失败...???");
+                }
+            }
+        })
+    }
+
     $(function() {
         // page button click event
         $(".paginator a").on("click", function() {
@@ -379,43 +423,15 @@
         });
 
         // new article button event
-        $("button[name='submit']").on("click", function() {
-            var $textarea = $("textarea[name='content']");
-            var content = $textarea.val();
-
-            if (content.trim().length === 0) {
-                alert("请输入评论内容！");
-                return;
-            }
-
-            var markdown = $textarea.data("markdown");
-            if (markdown !== undefined && markdown.indexOf("@") > -1) {
-                content += markdown;
-                // clear reply hidden text
-                $textarea.data("markdown", "");
-            }
-
-            $.ajax({
-                type: "POST",
-                url: $("button[name='submit']").data("api"),
-                contentType: 'application/json; charset=utf-8',
-                dataType: "json",
-                data: JSON.stringify({
-                    content: content,
-                    article_id: getArticleID()
-                }),
-                success: function (response) {
-                    if (response.status === true) {
-                        window.location.reload();
-                    } else {
-                        alert("发射失败...???");
-                    }
-                }
-            })
-        });
+        $("button[name='submit']").on("click", submit);
 
         addListeners();
 
+        $('textarea').keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                submit();
+            }
+        });
     });
 </script>
 {% endblock content %}
