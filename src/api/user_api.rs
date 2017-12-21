@@ -5,7 +5,7 @@ use sapper_std::{JsonParams, SessionVal, set_cookie};
 use serde_json;
 
 use super::super::{LoginUser, Permissions, Redis, ChangePassword, EditUser, Postgresql, RUser,
-                   NewComment, DeleteComment, NewArticle, DeleteArticle};
+                   NewComment, DeleteComment, NewArticle, DeleteArticle, EditArticle};
 
 pub struct User;
 
@@ -154,14 +154,37 @@ impl User {
         };
         res_json!(res)
     }
+
+    fn edit_article(req: &mut Request) -> SapperResult<Response> {
+        let body: EditArticle = get_json_params!(req);
+        let redis_pool = req.ext().get::<Redis>().unwrap();
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+        let cookie = req.ext().get::<SessionVal>().unwrap();
+
+        let res = match body.edit_article(&pg_pool, redis_pool, cookie) {
+            Ok(num_update) => {
+                json!({
+                    "status": true,
+                    "num_update": num_update
+                })
+            }
+            Err(err) => {
+                json!({
+                    "status": false,
+                    "error": format!("{}", err)
+                })
+            }
+        };
+        res_json!(res)
+    }
 }
 
 impl SapperModule for User {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
-        let permission = req.ext().get::<Permissions>().unwrap().to_owned();
+        let permission = req.ext().get::<Permissions>().unwrap();
         match permission {
-            Some(_) => Ok(()),
-            None => {
+            &Some(_) => Ok(()),
+            &None => {
                 let res = json!({
                     "status": false,
                     "error": String::from("Verification error")
@@ -187,6 +210,8 @@ impl SapperModule for User {
         router.post("/article/new", User::new_article);
 
         router.post("/article/delete", User::delete_article);
+
+        router.post("/article/edit", User::edit_article);
 
         Ok(())
     }
