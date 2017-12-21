@@ -1,7 +1,8 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper_std::{Context, render, PathParams, SessionVal};
 use super::super::{Postgresql, Redis};
-use super::super::{Article, RUser, Comment, Permissions};
+use super::super::{Article, RUser, Permissions};
+use super::super::models::CommentWithNickName;
 use uuid::Uuid;
 use serde_json;
 
@@ -31,14 +32,14 @@ impl WebArticle {
 
                 // comments
                 let page = 1;
-                let comments = Comment::comments_with_article_id_paging(&pg_conn, id, page, 20);
+                let comments = CommentWithNickName::comments_with_article_id_paging(&pg_conn, id, page, 20);
                 match comments {
-                    Ok(coms) => {
+                    Ok(com) => {
                         web.add("page", &page);
 
-                        web.add("comments", &coms.comments);
-                        web.add("total", &coms.total);
-                        web.add("max_page", &coms.max_page);
+                        web.add("comments", &com.comments);
+                        web.add("total", &com.total);
+                        web.add("max_page", &com.max_page);
 
                         let identify = req.ext().get::<Permissions>().unwrap();
                         match *identify {

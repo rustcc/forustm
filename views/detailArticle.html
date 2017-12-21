@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="/css/gruvbox-light.css">
 <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <style>
-    .article-detail {
+    .detail {
         padding: 10px;
     }
-    .article-detail .notice {
+    .detail .notice {
         border: gray 1px solid;
         padding: 4px;
         min-height: 50px;
@@ -20,40 +20,40 @@
         margin-top: 5px;
     }
 
-    .article-detail .border {
+    .detail .border {
         border: gray 1px solid;
         margin-top: 15px;
     }
 
-    .article-detail .padding-square {
+    .detail .padding-square {
         padding: 15px;
     }
 
-    .article-detail .padding-rectangle {
+    .detail .padding-rectangle {
         padding: 10px 15px;
     }
 
-    .article-detail .margin-top {
+    .detail .margin-top {
         margin-top: 15px;
     }
 
-    .article-detail .margin-bottom {
+    .detail .margin-bottom {
         margin-bottom: 15px;
     }
 
-    .article-detail .underline {
+    .detail .underline {
         border-bottom: gray 1px solid;
     }
 
-    .article-detail .topline {
+    .detail .topline {
         border-top: gray 1px solid;
     }
 
-    .article-detail .nodot {
+    .detail .nodot {
         list-style: none;
     }
 
-    .article-detail .paging {
+    .detail .paging {
         display: inline-block;
         border: gray 1px solid;
         margin: 0;
@@ -63,14 +63,27 @@
         vertical-align: middle;
     }
 
-    .article-detail textarea {
+    .detail textarea {
         width: 50%;
-        min-height: 100px;
+        min-height: 300px;
         font-size: 15px;
     }
 
-    .article-detail * {
+    .detail hr {
+        border-top: gray dashed 1px;
+        border-bottom: none;
+    }
+
+    .detail * {
         box-sizing: border-box;
+    }
+
+    .detail blockquote {
+        margin-left: 0;
+        padding: 10px 10px 2px 20px;
+        border-left: black solid 2px;
+        background: ghostwhite;
+        margin-bottom: 2px;
     }
 
     .detail-body pre {
@@ -86,6 +99,14 @@
         border-radius: 4px;
     }
 
+    .detail-body div code,
+    .detail-body p code,
+    .detail-body ul code
+    {
+        border-radius: 4px;
+        background: pink;
+    }
+
     .detail-body h1,
     .detail-body h2,
     .detail-body h3,
@@ -94,6 +115,7 @@
     {
         background: #ddd;
         padding: 10px 20px;
+        border-radius: 5px;
     }
 
     .detail-body ul {
@@ -103,7 +125,7 @@
 
 <div class="role" data-role="{{ identify }}" style="display: none;"></div>
 
-<div class="article-detail">
+<div class="detail">
     <div class="notice">
         <p>论坛说明及公告</p>
     </div>
@@ -142,19 +164,19 @@
                 {% for comment in comments %}
                 <div class="item border">
                     <div class="comment-title padding-rectangle" style="background: #eee;">
+                        {% if comment.author_id == author.id %}
+                        作者
+                        {% endif %}
                         <a class="author-id" href="/user/{{ comment.author_id }}">
-                            {% if comment.author_id == author.id %}
-                                作者
-                            {% else %}
-                                {{ comment.author_id }}
-                            {% endif %}
+                            {{ comment.nickname }}
                         </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
                         {% if identify != -1 %}
                             {% if identify <= 1 or user.id == comment.author_id %}
                             <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
                             {% endif %}
-                            <a class="reply" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">回复</a>
+                            <a class="reply" data-id="{{ comment.id }}"
+                               data-author-id="{{ comment.author_id }}" data-nickname="{{ comment.nickname }}" href="#">回复</a>
                         {% endif %}
                     </div>
                     <div class="comment-content padding-rectangle">
@@ -190,6 +212,7 @@
         <div id="new-comment" class="padding-rectangle topline" style="display: none;">
             <div>
                 <h3>添加新评论</h3>
+                <p class="hint" style="display: none"></p>
                 <textarea name="content" placeholder="有何高见？"></textarea>
                 <br> <br>
                 <button name="submit" data-api="/api/v1/comment/new">Bui！发送！</button>
@@ -200,13 +223,12 @@
 
 <script type="application/javascript">
     "use strict";
-    hljs.initHighlightingOnLoad();
-
     function hightlight($doms) {
         $doms.each(function(i, block) {
             hljs.highlightBlock(block);
         });
     }
+    hightlight($("pre code"));
 
     // load new page
     function loadPage(id, page) {
@@ -222,7 +244,7 @@
                 var comment = response.comments[i];
                 updateItem(i, comment, i === l-1);
             }
-            hightlight($(".comment-content pre code"));
+            hightlight($(".comment-content code"));
             addListeners();
         });
 
@@ -254,6 +276,7 @@
             $newNode.find(".reply")
                 .data("id", content.id)
                 .data("author-id", content.author_id)
+                .data("nickname", content.nickname)
                 .show();
         }
 
@@ -317,17 +340,25 @@
             e.preventDefault();
             var $this = $(this);
 
-            // var commentID = $this.data("id");
-            var authorID = $this.data("author-id");
+            var nickname = $this.data("nickname");
 
-            var baseText = "回复 " + authorID + ":\n"
-                + $this.closest(".item").find(".comment-content").text().trim()
-                + "\n------------------\n";
+            /* @current aaa @xx bbb @xx cc */
+            var originText = "@" + nickname + " "
+                + $this.closest(".item").find(".comment-content").text().trim();
+            var replies = originText.split('@')
+            var history = replies.map(function (rpl, index) {
+                return ("@" + rpl).trim().split("\n").map(function(line) {
+                    return "> ".repeat(index) + line;
+                }).join("\n");
+            })
+            history.shift();
+            var markdown = "\n\n" + history.join("\n")
 
+            $(".hint").text("正在回复 @" + nickname).show();
             $("div#new-comment")
                 .show()
                 .find("textarea")
-                .val(baseText)
+                .data("markdown", markdown)
                 .focus();
         });
     }
@@ -335,6 +366,41 @@
     function addListeners() {
         listenDeleteClick();
         listenReplyClick();
+    }
+
+    function submit() {
+        var $textarea = $("textarea[name='content']");
+        var content = $textarea.val();
+
+        if (content.trim().length === 0) {
+            alert("请输入评论内容！");
+            return;
+        }
+
+        var markdown = $textarea.data("markdown");
+        if (markdown !== undefined && markdown.indexOf("@") > -1) {
+            content += markdown;
+            // clear reply hidden text
+            $textarea.data("markdown", "");
+        }
+
+        $.ajax({
+            type: "POST",
+            url: $("button[name='submit']").data("api"),
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                content: content,
+                article_id: getArticleID()
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    window.location.reload();
+                } else {
+                    alert("发射失败...???");
+                }
+            }
+        })
     }
 
     $(function() {
@@ -349,41 +415,23 @@
                 // show DOM
                 $("div#new-comment").show();
                 $("textarea[name='content']").focus();
+                // hide reply hint
+                $(".hint").text("").hide();
             }
 
             checkLoggedIn(run_if_logged_in);
         });
 
         // new article button event
-        $("button[name='submit']").on("click", function() {
-            var content = $("textarea[name='content']").val();
-
-            if (content.trim().length === 0) {
-                alert("请输入评论内容！");
-                return;
-            }
-
-            $.ajax({
-                type: "POST",
-                url: $("button[name='submit']").data("api"),
-                contentType: 'application/json; charset=utf-8',
-                dataType: "json",
-                data: JSON.stringify({
-                    content: content,
-                    article_id: getArticleID()
-                }),
-                success: function (response) {
-                    if (response.status === true) {
-                        window.location.reload();
-                    } else {
-                        alert("发射失败...???");
-                    }
-                }
-            })
-        });
+        $("button[name='submit']").on("click", submit);
 
         addListeners();
 
+        $('textarea').keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                submit();
+            }
+        });
     });
 </script>
 {% endblock content %}
