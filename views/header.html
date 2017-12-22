@@ -84,13 +84,12 @@
         </div>
         {% else %}
             <span class="userinfo-text"><a href="/login">登录</a></span>
-
         {% endif %}
     </div>
     <div style="clear:both;"></div>
 </div>
 <script type="application/javascript">
-$('#sign_out a').click(function(event) {
+$('#sign_out').click(function(event) {
     event.preventDefault();
 
     $.ajax({
@@ -98,6 +97,7 @@ $('#sign_out a').click(function(event) {
         type: "get",
         success: function (res) {
             if (res.status) {
+               console.log(res.status);
                 window.location = "/"
             } else {
                 console.log("sign_out error");
