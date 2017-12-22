@@ -72,7 +72,13 @@ function login() {
             headers: { 'Content-Type': 'application/json' },
             success: function (res) {
                 if (res.status) {
-                    window.location = "/home"
+                    var redirect = localStorage.getItem("redirect");
+                    if (redirect) {
+                        localStorage.removeItem("redirect");
+                        window.location = redirect;
+                    } else {
+                        window.location = "/home"
+                    }
                 } else {
                     if (res.error === "NotFound") {
                         $("#login").prev().before("<span class='text-danger'>用户被锁定或未创建</span>")
