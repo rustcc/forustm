@@ -11,7 +11,7 @@ use std::fmt::Write;
 use comrak::{markdown_to_html, ComrakOptions};
 use sapper::{Key, Request, Client};
 use sapper::header::ContentType;
-use sapper_std::SessionVal;
+use sapper_std::{Context, SessionVal};
 use super::RUser;
 use serde_urlencoded;
 
@@ -97,8 +97,26 @@ pub fn send_reset_password_email(new_password: String, email: String) {
     println!("{} reset the password", &email)
 }
 
+#[inline]
+pub fn get_web_context(req: &Request) -> Context {
+    let mut web = Context::new();
+    let redis_pool = req.ext().get::<Redis>().unwrap();
+    let cookie = req.ext().get::<SessionVal>();
+    if cookie.is_some() {
+        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie.unwrap())).unwrap();
+        web.add("user", &user);
+    }
+    web
+}
+
 pub struct Permissions;
 
 impl Key for Permissions {
     type Value = Option<i16>;
+}
+
+pub struct WebContext;
+
+impl Key for WebContext {
+    type Value = Context;
 }
