@@ -24,11 +24,7 @@ impl SapperModule for WebAdminSection {
         match permission {
             &Some(0) => Ok(()),
             _ => {
-                let res = json!({
-                    "status": false,
-                    "error": String::from("Verification error")
-                });
-                Err(SapperError::CustomJson(res.to_string()))
+                Err(SapperError::TemporaryRedirect("/login".to_owned()))
             }
         }
     }

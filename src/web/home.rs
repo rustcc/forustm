@@ -18,11 +18,7 @@ impl SapperModule for Home {
         match permission {
             &Some(_) => Ok(()),
             &None => {
-                let res = json!({
-                    "status": false,
-                    "error": String::from("Verification error")
-                });
-                Err(SapperError::CustomJson(res.to_string()))
+                Err(SapperError::TemporaryRedirect("/login".to_owned()))
             }
         }
     }
