@@ -1,19 +1,15 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult, Error as SapperError};
-use sapper_std::{Context, render, SessionVal};
-use serde_json;
+use sapper_std::{render};
 
-use super::super::{ Permissions, Redis, RUser };
+use util::{get_web_context};
+
+use super::super::{ Permissions };
 
 pub struct Home;
 
 impl Home {
     fn home(req: &mut Request) -> SapperResult<Response> {
-        let mut web = Context::new();
-        let cookie = req.ext().get::<SessionVal>().unwrap();
-        let redis_pool = req.ext().get::<Redis>().unwrap();
-        let info = serde_json::from_str::<RUser>(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-        web.add("user", &info);
-
+        let web = get_web_context(req);
         res_html!("home.html", web)
     }
 }
