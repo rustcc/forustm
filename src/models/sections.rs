@@ -98,8 +98,13 @@ impl PubNotice {
     }
 
     pub fn get(redis_pool: &Arc<RedisPool>) -> (String, String) {
-        let title  = redis_pool.hget::<String>("pub_notice", "title");
-        let desc  = redis_pool.hget::<String>("pub_notice", "desc");
-        (title, desc)
+        if redis_pool.exists("pub_notice") {
+            let title  = redis_pool.hget::<String>("pub_notice", "title");
+            let desc  = redis_pool.hget::<String>("pub_notice", "desc");
+            (title, desc)
+        }else{
+            (String::default(), String::default())
+        }
+
     }
 }

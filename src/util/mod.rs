@@ -103,8 +103,10 @@ pub fn get_web_context(req: &Request) -> Context {
     let redis_pool = req.ext().get::<Redis>().unwrap();
     let cookie = req.ext().get::<SessionVal>();
     if cookie.is_some() {
-        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie.unwrap())).unwrap();
-        web.add("user", &user);
+        if redis_pool.exists(cookie.unwrap()){
+            let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie.unwrap())).unwrap();
+            web.add("user", &user);
+        }
     }
     web
 }
