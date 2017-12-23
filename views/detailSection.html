@@ -244,6 +244,14 @@
       return window.location.pathname.split('/')[2];
     }
 
+    function getStype() {
+        if (window.location.pathname.split("/")[1] === "blog") {
+            return 1
+        } else {
+            return 0
+        }
+    }
+
     $(function () {
             // page button click event
             $(".paginator a").on("click", function() {
@@ -260,13 +268,14 @@
                 }
 
                 checkLoggedIn(run_if_logged_in);
-            })
+            });
 
             // new article button event
             $("button[name='submit']").on("click", function() {
                 var title = $("input[name='title']").val();
                 var tags = $("input[name='tags']").val();
                 var rawContent = $("textarea[name='raw-content']").val();
+                var stype = getStype();
 
                 if (title.trim().length === 0 || rawContent.trim().length === 0) {
                     alert("请输入文章标题和内容！");
@@ -281,6 +290,7 @@
                     data: JSON.stringify({
                         title: title,
                         tags: tags,
+                        stype: stype,
                         raw_content: rawContent,
                         section_id: getSectionID()
                     }),
