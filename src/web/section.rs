@@ -106,12 +106,31 @@ impl WebSection {
             Err(e) => res_500!(format!("section not found: {}", e)),
         }
     }
+    fn blogs(req: &mut Request) -> SapperResult<Response> {
+        let mut web = req.ext().get::<WebContext>().unwrap().clone();
+        let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+        let page = 1;
+        let res = Article::query_articles_by_stype_paging(&pg_conn, 1, page, 2);
+
+        match res {
+            Ok(r) => {
+                web.add("articles", &r.articles);
+                web.add("page", &page);
+                web.add("total", &r.total);
+                web.add("max_page", &r.max_page);
+                res_html!("blogs.html", web)
+            },
+            Err(e) => res_400!(format!("blogs not found: {}", e)),
+        }
+
+    }
 }
 
 impl SapperModule for WebSection {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
         router.get("/section/:id", WebSection::section);
         router.get("/blog/:id", WebSection::blog);
+        router.get("/blogs", WebSection::blogs);
 
         Ok(())
     }

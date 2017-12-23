@@ -1,6 +1,7 @@
 use super::super::section;
 use super::super::section::dsl::section as all_sections;
 use super::super::{RedisPool};
+use sapper_std::Context;
 
 use uuid::Uuid;
 use chrono::NaiveDateTime;
@@ -97,13 +98,12 @@ impl PubNotice {
         redis_pool.hset("pub_notice", "desc", self.desc);
     }
 
-    pub fn get(redis_pool: &Arc<RedisPool>) -> (String, String) {
+    pub fn get(web: &mut Context, redis_pool: &Arc<RedisPool>) {
         if redis_pool.exists("pub_notice") {
             let title  = redis_pool.hget::<String>("pub_notice", "title");
             let desc  = redis_pool.hget::<String>("pub_notice", "desc");
-            (title, desc)
-        }else{
-            (String::default(), String::default())
+            web.add("title", &title);
+            web.add("desc", &desc);
         }
 
     }

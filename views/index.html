@@ -73,15 +73,43 @@ Rust语言中文社区-首页
 
 <div class="body-content">
     <div class="notice">
-        <p>论坛说明及公告</p>
+      {% if title and desc %}
+        <p>{{ title }}</p>
+        <p>{{ desc }}</p>
+      {% endif %}
     </div>
     <div class="planet-space">
         <div class="planet-space-head">
-            Rust星球
+          {% if articles | length == 0 %}
+              <p class="padding-rectangle">这里还没有内容哦..</p>
+          {% else %}
+            <ul class="nodot items">
+              {% for article in articles %}
+                {% if not loop.last %}
+                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                  <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                  <span class="right">
+                      <span class="tags">{{ article.tags }}</span>
+                      <span class="createdTime">{{ article.created_time }}</span>
+                  </span>
+                </li>
+                {% else %}
+                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
+                  <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                  <span class="right">
+                      <span class="tags">{{ article.tags }}</span>
+                      <span class="createdTime">{{ article.created_time }}</span>
+                  </span>
+                </li>
+              {% endif %}
+              {% endfor %}
+            </ul>
+            <a href = "/blogs">查看更多</a>
+          {% endif %}
         </div>
         <div class="planet-space-container">
             <ul>
-                
+
             </ul>
         </div>
     </div>
@@ -232,4 +260,3 @@ Rust语言中文社区-首页
     </div>
 </div>
 {% endblock content %}
-
