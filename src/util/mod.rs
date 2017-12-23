@@ -48,9 +48,9 @@ pub fn markdown_render(md: &str) -> String {
     markdown_to_html(md, &option)
 }
 
-/// Get visitor status
-#[inline]
-pub fn get_identity(req: &Request) -> Option<i16> {
+/// Get visitor status and web context
+pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
+    let mut web = Context::new();
     let cookie = req.ext().get::<SessionVal>();
     let redis_pool = req.ext().get::<Redis>().unwrap();
     match cookie {
@@ -59,12 +59,13 @@ pub fn get_identity(req: &Request) -> Option<i16> {
                 let info =
                     serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
                         .unwrap();
-                Some(info.role)
+                web.add("user", &info);
+                (Some(info.role), web)
             } else {
-                None
+                (None, web)
             }
         }
-        None => None,
+        None => (None, web),
     }
 }
 
@@ -95,20 +96,6 @@ pub fn send_reset_password_email(new_password: String, email: String) {
         .send()
         .unwrap();
     println!("{} reset the password", &email)
-}
-
-#[inline]
-pub fn get_web_context(req: &Request) -> Context {
-    let mut web = Context::new();
-    let redis_pool = req.ext().get::<Redis>().unwrap();
-    let cookie = req.ext().get::<SessionVal>();
-    if cookie.is_some() {
-        if redis_pool.exists(cookie.unwrap()){
-            let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie.unwrap())).unwrap();
-            web.add("user", &user);
-        }
-    }
-    web
 }
 
 pub struct Permissions;

@@ -1,16 +1,15 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
 use sapper_std::{render, PathParams, SessionVal};
 use super::super::{Postgresql, Redis};
-use super::super::{Article, RUser, Permissions};
+use super::super::{Article, RUser, Permissions, WebContext};
 use super::super::models::CommentWithNickName;
 use uuid::Uuid;
 use serde_json;
-use util::{get_web_context};
 pub struct WebArticle;
 
 impl WebArticle {
     fn article(req: &mut Request) -> SapperResult<Response> {
-        let mut web = get_web_context(req);
+        let mut web = req.ext().get::<WebContext>().unwrap().clone();
 
         let params = get_path_params!(req);
         let id: Result<Uuid, _> = t_param!(params, "id").clone().parse();
