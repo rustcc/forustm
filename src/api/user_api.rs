@@ -127,10 +127,10 @@ impl User {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let redis_pool = req.ext().get::<Redis>().unwrap();
-        if body.insert(&pg_pool, redis_pool, cookie) {
-            res_json!(json!({"status": true}))
-        } else {
-            res_json!(json!({"status": false}))
+        match body.insert(&pg_pool, redis_pool, cookie) {
+            Ok(_) => res_json!(json!({"status": true})),
+
+            Err(t) => res_json!(json!({"status": false, "error": t}))
         }
     }
 

@@ -32,7 +32,7 @@ impl WebSection {
             Ok(r) => {
                 if r.stype != SectionTypes::Section as i32 {
                     // return res_400!(format!("section not found {}, it's type is blog", r.id))
-                    return res_redirect!(format!("/blog/{}", r.id));
+                    return res_redirect!(format!("/blog/{}", r.suser.unwrap()));
                 }
 
                 web.add("res", &r);
@@ -85,7 +85,7 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, 20);
+                let articles = Article::query_articles_with_section_id_paging(&pg_conn, r.id, page, 20);
                 match articles {
                     Ok(arts) => {
                         //println!("articles: {:?}", &arts);
