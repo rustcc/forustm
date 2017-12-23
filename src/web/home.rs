@@ -1,15 +1,13 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult, Error as SapperError};
 use sapper_std::{render};
 
-use util::{get_web_context};
-
-use super::super::{ Permissions };
+use super::super::{ Permissions, WebContext };
 
 pub struct Home;
 
 impl Home {
     fn home(req: &mut Request) -> SapperResult<Response> {
-        let web = get_web_context(req);
+        let web = req.ext().get::<WebContext>().unwrap().clone();
         res_html!("home.html", web)
     }
 }

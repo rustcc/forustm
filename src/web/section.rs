@@ -1,9 +1,8 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{Context, render, PathParams};
-use super::super::{Postgresql};
+use sapper_std::{render, PathParams};
+use super::super::{Postgresql, WebContext};
 use super::super::{Section, Article, RUser};
 use uuid::Uuid;
-use util::{get_web_context};
 
 pub struct WebSection;
 
@@ -14,7 +13,7 @@ enum SectionTypes {
 
 impl WebSection {
     fn section(req: &mut Request) -> SapperResult<Response> {
-        let mut web = get_web_context(req);
+        let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
         let path_params = get_path_params!(req);
@@ -63,7 +62,7 @@ impl WebSection {
     }
 
     fn blog(req: &mut Request) -> SapperResult<Response> {
-        let mut web = Context::new();
+        let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
         let path_params = get_path_params!(req);

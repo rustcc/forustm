@@ -6,16 +6,15 @@ use std::sync::Arc;
 use sapper::{SapperApp, SapperAppShell, Request, Response, Result as SapperResult};
 use forustm::{Redis, create_redis_pool, create_pg_pool, Postgresql};
 use forustm::web::*;
-use forustm::util::{get_identity, Permissions, get_web_context, WebContext};
+use forustm::{get_identity_and_web_context, Permissions, WebContext};
 
 struct WebApp;
 
 impl SapperAppShell for WebApp {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
         sapper_std::init(req, Some("forustm_session"))?;
-        let identity = get_identity(req);
+        let (identity, web) = get_identity_and_web_context(req);
         req.ext_mut().insert::<Permissions>(identity);
-        let web = get_web_context(req);
         req.ext_mut().insert::<WebContext>(web);
         Ok(())
     }
