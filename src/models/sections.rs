@@ -1,5 +1,6 @@
 use super::super::section;
 use super::super::section::dsl::section as all_sections;
+use super::super::{RedisPool};
 
 use uuid::Uuid;
 use chrono::NaiveDateTime;
@@ -7,6 +8,7 @@ use diesel::prelude::*;
 use diesel::PgConnection;
 use diesel;
 
+use std::sync::Arc;
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct Section {
@@ -79,5 +81,25 @@ impl InsertSection {
             .values(&self)
             .execute(conn)
             .is_ok()
+    }
+}
+
+// for redis
+#[derive(Deserialize, Serialize)]
+pub struct PubNotice {
+    pub title: String,
+    pub desc: String,
+}
+
+impl PubNotice {
+    pub fn insert(self, redis_pool: &Arc<RedisPool> ) {
+        redis_pool.hset("pub_notice", "title", self.title);
+        redis_pool.hset("pub_notice", "desc", self.desc);
+    }
+
+    pub fn get(redis_pool: &Arc<RedisPool>) -> (String, String) {
+        let title  = redis_pool.hget::<String>("pub_notice", "title");
+        let desc  = redis_pool.hget::<String>("pub_notice", "desc");
+        (title, desc)
     }
 }
