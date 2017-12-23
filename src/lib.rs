@@ -40,6 +40,6 @@ pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, Chan
 pub(crate) use models::{NewComment, DeleteComment};
 pub(crate) use models::{InsertSection, Section};
 
-pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity,
-               Permissions};
+pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity_and_web_context,
+               Permissions, WebContext};
 pub use api::{Visitor, User, AdminUser, AdminSection};
