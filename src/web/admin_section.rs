@@ -13,7 +13,7 @@ impl WebAdminSection {
     }
 
     fn pub_notice(req: &mut Request) -> SapperResult<Response> {
-        let mut web = get_web_context(req);
+        let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let redis_pool = req.ext().get::<Redis>().unwrap();
 
         let  (title, desc) = PubNotice::get(&redis_pool);
