@@ -19,6 +19,8 @@ struct RawArticles {
     section_id: Uuid,
     author_id: Uuid,
     tags: String,
+    #[allow(warnings)]
+    stype: i32,
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
 }
@@ -232,6 +234,7 @@ pub struct NewArticle {
     pub title: String,
     pub raw_content: String,
     pub section_id: Uuid,
+    pub stype: i32,
     pub tags: String,
 }
 

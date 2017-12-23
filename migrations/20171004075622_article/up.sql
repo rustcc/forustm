@@ -7,6 +7,7 @@ CREATE TABLE article (
   section_id uuid references section (id) not null,
   author_id uuid references ruser (id) not null,
   tags VARCHAR NOT NULL,
+  stype INTEGER NOT NULL,
   created_time timestamp not null default current_timestamp,
   status smallint not null default 0
 )
