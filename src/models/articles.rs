@@ -202,6 +202,7 @@ struct InsertArticle {
     content: String,
     section_id: Uuid,
     author_id: Uuid,
+    stype: i32,
     tags: String,
 }
 
@@ -214,6 +215,7 @@ impl InsertArticle {
             content: content,
             section_id: new_article.section_id,
             author_id: author_id,
+            stype: new_article.stype,
             tags: new_article.tags,
         }
     }
@@ -239,9 +241,9 @@ pub struct NewArticle {
 }
 
 impl NewArticle {
-    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> bool {
+    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String>  {
         let user:RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-        InsertArticle::new(self, user.id).insert(conn).is_ok()
+        InsertArticle::new(self, user.id).insert(conn)
     }
 }
 

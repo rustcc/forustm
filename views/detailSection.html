@@ -104,7 +104,7 @@
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
-                <h3>{{ res.title }}</h3>
+                <h3 id="section_id" data-id={{ res.id }}>{{ res.title }}</h3>
                 {% if manager %}
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
                 {% endif %}
@@ -241,7 +241,7 @@
     }
 
     function getSectionID() {
-      return window.location.pathname.split('/')[2];
+      return $("#section_id").attr("data-id");
     }
 
     function getStype() {
