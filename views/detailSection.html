@@ -97,6 +97,10 @@
         color: red;
         cursor: pointer;
     }
+    span.edit {
+        color: green;
+        cursor: pointer;
+    }
 </style>
 
 <div class="body-content">
@@ -131,11 +135,16 @@
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
                                         <span class="createdTime">{{ article.created_time }}</span>
-                                        {% if identify != -1 %}
-                                            {% if identify <= 1 or user.id == article.author_id %}
+                                        {% if user %}
+                                            {% if user.role <= 1 or user.id == article.author_id %}
                                             <span class="delete" data-id="{{ article.id }}"
                                                   data-author-id="{{ article.author_id }}"
                                                   data-user-id="{{ user.id }}">删除</span>
+                                            {% endif %}
+                                            {% if user.id == article.author_id %}
+                                            <span class="edit" data-id="{{ article.id }}"
+                                                  data-author-id="{{ article.author_id }}"
+                                                  data-user-id="{{ user.id }}">编辑</span>
                                             {% endif %}
                                         {% endif %}
                                     </span>
@@ -222,6 +231,52 @@
         });
     }
 
+    // update article
+    function updateArticle(id, author_id, title, raw_content, tags, success) {
+        $.ajax({
+            type: "POST",
+            url: "/api/v1/article/edit",
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                id: id,
+                author_id: author_id,
+                title: title,
+                raw_content: raw_content,
+                tags: tags
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    success();
+                } else {
+                    alert("更新失败");
+                }
+            }
+        });
+    }
+
+    // edit article
+    function editArticle(id) {
+        $.getJSON("/api/v1/article/get?id=" + id, function (response) {
+            if (response.status === true) {
+                var data = response.data;
+                $("input[name='title']").val(data.title);
+                $("input[name='tags']").val(data.tags);
+
+                $("div#new-article")
+                    .data("type", "edit")
+                    .data("id", data.id)
+                    .data("author-id", data.author_id)
+                    .show();
+
+                var $textarea = $("textarea[name='raw-content']");
+                $textarea
+                    .val(data.content)
+                    .focus();
+            }
+        });
+    }
+
     // update one article DOM
     function updateItem(index, content, isLast) {
         // clone template
@@ -254,7 +309,7 @@
     }
 
     function getSectionID() {
-      return $("#section_id").attr("data-id");
+      return $("#section_id").data("id");
     }
 
     function getStype() {
@@ -271,15 +326,23 @@
                 loadPage(getSectionID(), $(this).data("page"));
             });
 
+            // delete article
             $("li span.delete").on("click", function() {
+                var $this = $(this);
                 deleteArticle(
-                    $(this).data("id"),
-                    $(this).data("author-id"),
+                    $this.data("id"),
+                    $this.data("author-id"),
                     function () {
                         alert("删除成功！");
-                        $(this).remove();
+                        $this.closest('li').remove();
                     }
                 );
+            });
+
+            // edit article
+            $("li span.edit").on("click", function () {
+                var $this = $(this);
+                editArticle($this.data("id"));
             });
 
             // new article
@@ -294,7 +357,7 @@
                 checkLoggedIn(run_if_logged_in);
             });
 
-            // new article button event
+            // new & edit article button event
             $("button[name='submit']").on("click", function() {
                 var title = $("input[name='title']").val();
                 var tags = $("input[name='tags']").val();
@@ -306,26 +369,44 @@
                     return;
                 }
 
-                $.ajax({
-                    type: "POST",
-                    url: $("button[name='submit']").data("api"),
-                    contentType: 'application/json; charset=utf-8',
-                    dataType: "json",
-                    data: JSON.stringify({
-                        title: title,
-                        tags: tags,
-                        stype: stype,
-                        raw_content: rawContent,
-                        section_id: getSectionID()
-                    }),
-                    success: function (response) {
-                        if (response.status === true) {
-                            window.location.reload();
-                        } else {
-                            alert("发射失败，请检查输入是否完整！");
+                var $newComment = $("div#new-article");
+                var type = $newComment.data('type');
+                var id = $newComment.data("id");
+                if (type === "edit") {
+                    updateArticle(
+                        id,
+                        $newComment.data("author-id"),
+                        title,
+                        rawContent,
+                        tags,
+                        function() {
+                            $newComment.data("type", "new");
+                            alert("更新成功！");
+                            window.location.pathname = '/article/' + id;
                         }
-                    }
-                })
+                    )
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: $("button[name='submit']").data("api"),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: "json",
+                        data: JSON.stringify({
+                            title: title,
+                            tags: tags,
+                            stype: stype,
+                            raw_content: rawContent,
+                            section_id: getSectionID()
+                        }),
+                        success: function (response) {
+                            if (response.status === true) {
+                                window.location.reload();
+                            } else {
+                                alert("发射失败，请检查输入是否完整！");
+                            }
+                        }
+                    });
+                }
             })
         }
     );

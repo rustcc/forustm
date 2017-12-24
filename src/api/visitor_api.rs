@@ -152,6 +152,39 @@ impl Visitor {
         Ok(response)
     }
 
+    fn article_query(req: &mut Request) -> SapperResult<Response> {
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+
+        let mut response = Response::new();
+        response.headers_mut().set(ContentType::json());
+
+        let query_params = get_query_params!(req);
+        let article_id: Uuid = match t_param!(query_params, "id").clone().parse() {
+            Ok(i) => i,
+            Err(err) => return res_400!(format!("UUID invalid: {}", err)),
+        };
+
+        match Article::query_article_md(&pg_pool, article_id) {
+            Ok(data) => {
+                let res = json!({
+                "status": true,
+                "data": data,
+            });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            },
+            Err(err) => {
+                let res = json!({
+                "status": false,
+                "error": err,
+            });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            }
+        };
+        Ok(response)
+    }
+
     fn blogs_paging(req: &mut Request) -> SapperResult<Response> {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
@@ -237,6 +270,7 @@ impl SapperModule for Visitor {
         router.post("/user/reset_pwd", Visitor::reset_pwd);
 
         router.get("/article/paging", Visitor::articles_paging);
+        router.get("/article/get", Visitor::article_query);
         router.get("/blogs/paging", Visitor::blogs_paging);
         router.get("/comment/query", Visitor::comments_query);
 

@@ -127,6 +127,16 @@ impl Article {
         }
     }
 
+    pub fn query_article_md(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
+        let res = all_articles.filter(article::status.ne(2))
+            .filter(article::id.eq(id))
+            .get_result::<RawArticles>(conn);
+        match res {
+            Ok(data) => Ok(data.into_markdown()),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
     pub fn query_blogs(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
         let res = all_articles.filter(article::status.ne(2))
             .filter(article::id.eq(id))
