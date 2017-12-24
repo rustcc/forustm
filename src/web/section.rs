@@ -27,7 +27,7 @@ impl WebSection {
         web.add("id", &id);
         web.add("page", &page);
 
-        // add permission
+        // add identify
         let identify = req.ext().get::<Permissions>().unwrap();
         match *identify {
             Some(i) => {
@@ -91,12 +91,20 @@ impl WebSection {
         web.add("id", &id);
         web.add("page", &page);
 
-        // add permission
-        let permission = match *req.ext().get::<Permissions>().unwrap() {
-            Some(n) => n,
-            None => 9,
-        };
-        web.add("permission", &permission);
+        // add identify
+        let identify = req.ext().get::<Permissions>().unwrap();
+        match *identify {
+            Some(i) => {
+                let cookie = req.ext().get::<SessionVal>().unwrap();
+                let redis_pool = req.ext().get::<Redis>().unwrap();
+                let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+                web.add("user", &user);
+                web.add("identify", &i);
+            }
+            None => {
+                web.add("identify", &-1);
+            }
+        }
 
         let res = Section::query_with_user_id(&pg_conn, id);
         match res {
