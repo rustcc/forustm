@@ -1,8 +1,6 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult, Error as SapperError };
 use sapper_std::{render};
-use super::super::{Permissions, WebContext};
-
-use super::super::{Redis, PubNotice};
+use super::super::{Redis, PubNotice, Permissions, WebContext};
 
 pub struct WebAdminSection;
 
@@ -15,13 +13,7 @@ impl WebAdminSection {
     fn pub_notice(req: &mut Request) -> SapperResult<Response> {
         let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let redis_pool = req.ext().get::<Redis>().unwrap();
-
-        let  (title, desc) = PubNotice::get(&redis_pool);
-
-        web.add("title", &title);
-        web.add("desc", &desc);
-
-
+        PubNotice::get(&mut web, &redis_pool);
         res_html!("adminPubNotice.html", web)
     }
 }

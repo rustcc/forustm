@@ -152,6 +152,43 @@ impl Visitor {
         Ok(response)
     }
 
+    fn blogs_paging(req: &mut Request) -> SapperResult<Response> {
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+
+        let mut response = Response::new();
+        response.headers_mut().set(ContentType::json());
+
+        let query_params = get_query_params!(req);
+
+
+        let page: i64 = match t_param_default!(query_params, "page", "1").clone().parse() {
+            Ok(i) => i,
+            Err(err) => return res_400!(format!("missing page param: {}", err)),
+        };
+
+        match Article::query_articles_by_stype_paging(&pg_pool, 1, page, 2) {
+            Ok(arts_with_count) => {
+                let res = json!({
+                "status": true,
+                "articles": arts_with_count.articles,
+                "total": arts_with_count.total,
+                "max_page": arts_with_count.max_page,
+            });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            },
+            Err(err) => {
+                let res = json!({
+                "status": false,
+                "error": err,
+            });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            }
+        };
+        Ok(response)
+    }
+
     fn comments_query(req: &mut Request) -> SapperResult<Response> {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
@@ -200,6 +237,7 @@ impl SapperModule for Visitor {
         router.post("/user/reset_pwd", Visitor::reset_pwd);
 
         router.get("/article/paging", Visitor::articles_paging);
+        router.get("/blogs/paging", Visitor::blogs_paging);
         router.get("/comment/query", Visitor::comments_query);
 
         Ok(())

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}
+Rust 星球 - Rust语言中文社区
+{% endblock title %}
+
+{% block content %}
+<style>
+    .body-content {
+        padding: 10px;
+    }
+    .body-content .blogs {
+        border: gray 1px solid;
+        padding: 4px;
+        min-height: 50px;
+        text-align: center;
+        margin-top: 5px;
+    }
+
+    .body-content .border {
+        border: gray 1px solid;
+        margin-top: 15px;
+    }
+
+    .body-content .padding-square {
+        padding: 15px;
+    }
+
+    .body-content .padding-rectangle {
+        padding: 10px 15px;
+    }
+
+    .body-content .padding-samll-rectangle {
+        padding: 5px 10px;
+    }
+
+    .body-content .margin-top {
+        margin-top: 15px;
+    }
+
+    .body-content .margin-bottom {
+        margin-bottom: 15px;
+    }
+
+    .body-content .topline {
+        border-top: gray 1px solid;
+    }
+
+    .body-content .underline {
+        border-bottom: gray 1px solid;
+    }
+
+    .body-content .nodot {
+        list-style: none;
+    }
+
+    .body-content .paging {
+        display: inline-block;
+        border: gray 1px solid;
+        margin: 0;
+        width: 22px;
+        height: 22px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .body-content * {
+        box-sizing: border-box;
+    }
+
+    .body-content a {
+        text-decoration-line: none;
+    }
+
+    .body-content a:hover {
+        color: cornflowerblue;
+        cursor: pointer;
+    }
+
+    .body-content .tags {
+        color: gray;
+    }
+
+    .body-content .input {
+        width: 500px;
+        height: 30px;
+        font-size: 18px;
+    }
+
+    .body-content textarea {
+        width: 100%;
+        min-height: 300px;
+        font-size: 15px;
+    }
+</style>
+
+
+
+<div class="body-content">
+    <div class="blogs">
+        <p>Rust 星球</p>
+    </div>
+
+    <div class="border">
+
+        <div class="detail padding-square">
+            <div class="title border">
+                <div class="detail-body">
+                    {% if articles | length == 0 %}
+                        <p class="padding-rectangle">这里还没有内容哦..</p>
+                    {% else %}
+                        <ul class="nodot items">
+                            {% for article in articles %}
+                                {% if not loop.last %}
+                                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                    <span class="right">
+                                        <span class="tags">{{ article.tags }}</span>
+                                        <span class="createdTime">{{ article.created_time }}</span>
+                                    </span>
+                                </li>
+                                {% else %}
+                                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
+                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                    <span class="right">
+                                        <span class="tags">{{ article.tags }}</span>
+                                        <span class="createdTime">{{ article.created_time }}</span>
+                                    </span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <li class="item padding-samll-rectangle underline template" data-index="" style="display: none">
+                                <a href=""></a>
+                                <span class="right">
+                                    <span class="tags"></span>
+                                    <span class="createdTime"></span>
+                                </span>
+                            </li>
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
+            <div class="paginator right">
+                {% for _ in range(end=max_page) %}
+                    {% if loop.index == page %}
+                    <a data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% else %}
+                    <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                    {% endif %}
+                {% endfor %}
+                共 {{ total }} 篇, 共 {{ max_page }} 页
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<script type="application/javascript">
+    "use strict";
+    function Page() {
+        this.page = 1;
+        this.update = function (page) {
+            this.page = page
+        };
+    }
+
+    var PAGE = new Page();
+
+    // load new page
+    function loadPage(page) {
+        if (PAGE.page === page) return;
+
+        $.getJSON("/api/v1/blogs/paging?" + "&page=" + page, function (response) {
+            $("li.item").not("li.template").remove();
+
+            for(var i=0, l=response.articles.length; i < l; i++) {
+                var article = response.articles[i];
+                updateItem(i, article, i === l-1);
+            }
+            activePageBtn(page);
+        });
+    }
+
+    // update one article DOM
+    function updateItem(index, content, isLast) {
+        // clone template
+        var $newNode = $("li.template").clone();
+        $newNode.removeClass("template");
+        $newNode.show();
+
+        // put data in
+        $newNode.data("index", index);
+        $newNode.find("a")
+            .attr("href", "/article/"+content.id)
+            .text(content.title);
+        $newNode.find(".tags")
+            .text(content.tags);
+        $newNode.find(".createdTime")
+            .text(content.created_time);
+
+        if (isLast) {
+            $newNode.removeClass("underline");
+        }
+        $newNode.appendTo($("ul.items"));
+    }
+
+    // change activated page button
+    function activePageBtn(page) {
+        // transform pagination
+        $(".paginator a[data-page='"+PAGE.page+"']").addClass("paging");
+        $(".paging[data-page='"+page+"']").removeClass("paging");
+        PAGE.update(page);
+    }
+
+
+
+    $(function () {
+            // page button click event
+            $(".paginator a").on("click", function() {
+                loadPage($(this).data("page"));
+            });
+
+
+        }
+    );
+</script>
+{% endblock content %}
