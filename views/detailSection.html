@@ -131,8 +131,8 @@
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
                                         <span class="createdTime">{{ article.created_time }}</span>
-                                        {% if identify != -1 %}
-                                            {% if identify <= 1 or user.id == article.author_id %}
+                                        {% if user %}
+                                            {% if user.role <= 1 or user.id == article.author_id %}
                                             <span class="delete" data-id="{{ article.id }}"
                                                   data-author-id="{{ article.author_id }}"
                                                   data-user-id="{{ user.id }}">删除</span>
@@ -271,13 +271,15 @@
                 loadPage(getSectionID(), $(this).data("page"));
             });
 
+            // delete article
             $("li span.delete").on("click", function() {
+                var $this = $(this);
                 deleteArticle(
-                    $(this).data("id"),
-                    $(this).data("author-id"),
+                    $this.data("id"),
+                    $this.data("author-id"),
                     function () {
                         alert("删除成功！");
-                        $(this).remove();
+                        $this.closest('li').remove();
                     }
                 );
             });
