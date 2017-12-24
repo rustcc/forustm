@@ -141,16 +141,12 @@ impl User {
         let permission = req.ext().get::<Permissions>().unwrap();
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let res = match body.delete(&pg_pool, redis_pool, cookie, permission) {
-            true => {
-                json!({
+            true => json!({
                 "status": true
-            })
-            }
-            false => {
-                json!({
+            }),
+            false => json!({
                 "status": false
-            })
-            }
+            }),
         };
         res_json!(res)
     }

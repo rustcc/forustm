@@ -92,9 +92,12 @@
         min-height: 300px;
         font-size: 15px;
     }
+
+    span.delete {
+        color: red;
+        cursor: pointer;
+    }
 </style>
-
-
 
 <div class="body-content">
     <div class="notice">
@@ -122,23 +125,21 @@
                     {% else %}
                         <ul class="nodot items">
                             {% for article in articles %}
-                                {% if not loop.last %}
-                                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                                <li class="item padding-samll-rectangle {% if not loop.last %} underline {% else %} last {% endif %}"
+                                    data-index="{{ loop.index0 }}">
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
                                         <span class="createdTime">{{ article.created_time }}</span>
+                                        {% if identify != -1 %}
+                                            {% if identify <= 1 or user.id == article.author_id %}
+                                            <span class="delete" data-id="{{ article.id }}"
+                                                  data-author-id="{{ article.author_id }}"
+                                                  data-user-id="{{ user.id }}">删除</span>
+                                            {% endif %}
+                                        {% endif %}
                                     </span>
                                 </li>
-                                {% else %}
-                                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
-                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
-                                    <span class="right">
-                                        <span class="tags">{{ article.tags }}</span>
-                                        <span class="createdTime">{{ article.created_time }}</span>
-                                    </span>
-                                </li>
-                                {% endif %}
                             {% endfor %}
 
                             <li class="item padding-samll-rectangle underline template" data-index="" style="display: none">
@@ -185,15 +186,6 @@
 
 <script type="application/javascript">
     "use strict";
-    function Page() {
-        this.page = 1;
-        this.update = function (page) {
-            this.page = page
-        };
-    }
-
-    var PAGE = new Page();
-
     // load new page
     function loadPage(sectionID, page) {
         if (PAGE.page === page) return;
@@ -206,6 +198,27 @@
                 updateItem(i, article, i === l-1);
             }
             activePageBtn(page);
+        });
+    }
+
+    // delete article
+    function deleteArticle(articleID, authorID, success) {
+        $.ajax({
+            type: "POST",
+            url: "/api/v1/article/delete",
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                article_id: articleID,
+                user_id: articleID,
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    success();
+                } else {
+                    alert("删除失败");
+                }
+            }
         });
     }
 
@@ -256,6 +269,17 @@
             // page button click event
             $(".paginator a").on("click", function() {
                 loadPage(getSectionID(), $(this).data("page"));
+            });
+
+            $("li span.delete").on("click", function() {
+                deleteArticle(
+                    $(this).data("id"),
+                    $(this).data("author-id"),
+                    function () {
+                        alert("删除成功！");
+                        $(this).remove();
+                    }
+                );
             });
 
             // new article
