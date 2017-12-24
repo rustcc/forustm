@@ -219,6 +219,53 @@ impl Article {
         }
     }
 
+    fn raw_articles_with_section_id_and_stype_paging(conn: &PgConnection, id: Uuid, stype: i32, page: i64, page_size: i64)
+            -> Result<ArticlesWithTotal<RawArticles>, String> {
+        let _res = all_articles
+            .filter(article::section_id.eq(id))
+            .filter(article::stype.eq(stype))
+            .filter(article::status.ne(2));
+
+        let res = _res
+            .order(article::created_time.desc())
+            .offset(page_size * (page - 1) as i64)
+            .limit(page_size)
+            .get_results::<RawArticles>(conn);
+
+        let all_count: i64 = _res
+            .count()
+            .get_result(conn).unwrap();
+
+        match res {
+            Ok(data) => {
+                Ok(ArticlesWithTotal {
+                    articles: data,
+                    total: all_count,
+                    max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+                })
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn query_articles_with_section_id_and_stype_paging(conn: &PgConnection, id: Uuid, stype: i32, page: i64, page_size: i64)
+          -> Result<ArticlesWithTotal<ArticleBrief>, String> {
+        match Article::raw_articles_with_section_id_and_stype_paging(conn, id, stype, page, page_size) {
+            Ok(raw_articles) => {
+                Ok(
+                    ArticlesWithTotal{
+                        articles: raw_articles.articles.into_iter()
+                            .map(|art| art.into_brief())
+                            .collect::<Vec<ArticleBrief>>(),
+                        total: raw_articles.total,
+                        max_page: raw_articles.max_page,
+                    }
+                )
+            }
+            Err(err) => Err(err)
+        }
+    }
+
     fn raw_articles_by_stype_paging(conn: &PgConnection, stype: i32, page: i64, page_size: i64)
             -> Result<ArticlesWithTotal<RawArticles>, String> {
         let _res = all_articles

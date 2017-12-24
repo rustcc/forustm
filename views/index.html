@@ -79,41 +79,66 @@ Rust语言中文社区-首页
       {% endif %}
     </div>
     <div class="planet-space">
-        <div class="planet-space-head">
-          {% if articles | length == 0 %}
-              <p class="padding-rectangle">这里还没有内容哦..</p>
-          {% else %}
-            <ul class="nodot items">
-              {% for article in articles %}
-                {% if not loop.last %}
-                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
-                  <a href="/article/{{ article.id }}">{{ article.title }}</a>
-                  <span class="right">
-                      <span class="tags">{{ article.tags }}</span>
-                      <span class="createdTime">{{ article.created_time }}</span>
-                  </span>
-                </li>
-                {% else %}
-                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
-                  <a href="/article/{{ article.id }}">{{ article.title }}</a>
-                  <span class="right">
-                      <span class="tags">{{ article.tags }}</span>
-                      <span class="createdTime">{{ article.created_time }}</span>
-                  </span>
-                </li>
-              {% endif %}
-              {% endfor %}
-            </ul>
-            <a href = "/blogs">查看更多</a>
-          {% endif %}
-        </div>
         <div class="planet-space-container">
             <ul>
-
+              <div class="planet-space-head">
+                {% if blogs | length == 0 %}
+                    <p class="padding-rectangle">这里还没有内容哦..</p>
+                {% else %}
+                  <ul class="nodot items">
+                    {% for blog in blogs %}
+                      {% if not loop.last %}
+                      <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                        <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
+                        <span class="right">
+                            <span class="tags">{{ blog.tags }}</span>
+                            <span class="createdTime">{{ blog.created_time }}</span>
+                        </span>
+                      </li>
+                      {% else %}
+                      <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
+                        <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
+                        <span class="right">
+                            <span class="tags">{{ blog.tags }}</span>
+                            <span class="createdTime">{{ blog.created_time }}</span>
+                        </span>
+                      </li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                  <a href = "/blogs">查看更多</a>
+                {% endif %}
+              </div>
             </ul>
         </div>
     </div>
     <div class="category-section">
+      {% if sections_len  == 0 %}
+          <p class="padding-rectangle">这里还没有内容哦..</p>
+      {% else %}
+          {% for key, section in sections_hash %}
+            <div class="one-section">
+                <div class="one-section-head">
+                    <li class="item" data-index="{{ loop.index0 }}">
+                      <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
+                    </li>
+                  </div>
+                  <div class="one-section-container">
+                    <ul>
+                      {% for s in section.2 %}
+                      <li class="item" data-index="{{ loop.index0 }}">
+                        <a href="/article/{{ s.id }}">{{ s.title }}</a>
+                      </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+          {% endfor %}
+      {% endif %}
+
+
+
+
         <div class="one-section">
             <div class="one-section-head">
                 综合讨论区

@@ -33,6 +33,17 @@ impl Section {
         }
     }
 
+    pub fn query_by_stype(conn: &PgConnection, stype: i32) -> Result<Vec<Self>, String> {
+        let res = all_sections.filter(section::status.eq(0))
+            .filter(section::stype.eq(stype))
+            .order(section::created_time.desc())
+            .get_results::<Self>(conn);
+        match res {
+            Ok(data) => Ok(data),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
     pub fn query_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
         let res = all_sections.filter(section::status.eq(0))
             .filter(section::id.eq(id))
