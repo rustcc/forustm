@@ -1,8 +1,9 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{render, PathParams};
-use super::super::{Postgresql, WebContext};
+use sapper_std::{render, PathParams, SessionVal};
+use super::super::{Postgresql, Redis, WebContext, Permissions};
 use super::super::{Section, Article, RUser};
 use uuid::Uuid;
+use serde_json;
 
 pub struct WebSection;
 
@@ -25,6 +26,21 @@ impl WebSection {
         let page = 1i64;
         web.add("id", &id);
         web.add("page", &page);
+
+        // add permission
+        let identify = req.ext().get::<Permissions>().unwrap();
+        match *identify {
+            Some(i) => {
+                let cookie = req.ext().get::<SessionVal>().unwrap();
+                let redis_pool = req.ext().get::<Redis>().unwrap();
+                let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+                web.add("user", &user);
+                web.add("identify", &i);
+            }
+            None => {
+                web.add("identify", &-1);
+            }
+        }
 
         let res = Section::query_with_section_id(&pg_conn, id);
 
@@ -74,6 +90,13 @@ impl WebSection {
         let page = 1i64;
         web.add("id", &id);
         web.add("page", &page);
+
+        // add permission
+        let permission = match *req.ext().get::<Permissions>().unwrap() {
+            Some(n) => n,
+            None => 9,
+        };
+        web.add("permission", &permission);
 
         let res = Section::query_with_user_id(&pg_conn, id);
         match res {

@@ -56,6 +56,7 @@ impl RawArticles {
         ArticleBrief {
             id: self.id,
             title: self.title,
+            author_id: self.author_id,
             tags: self.tags,
             created_time: self.created_time,
         }
@@ -90,6 +91,7 @@ pub struct Article {
 pub struct ArticleBrief {
     pub id: Uuid,
     pub title: String,
+    pub author_id: Uuid,
     pub tags: String,
     pub created_time: NaiveDateTime,
 }
@@ -376,10 +378,10 @@ impl DeleteArticle {
         match permission {
             &Some(0) | &Some(1) => Article::delete_with_id(conn, self.article_id).is_ok(),
             _ => {
-                let info =
+                let logged_user =
                     serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
                         .unwrap();
-                match self.user_id == info.id {
+                match self.user_id == logged_user.id {
                     true => Article::delete_with_id(conn, self.article_id).is_ok(),
                     false => false,
                 }
