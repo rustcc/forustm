@@ -34,7 +34,7 @@ pub mod web_wechat;
 
 pub(crate) use util::{sha3_256_encode, random_string, markdown_render, send_reset_password_email};
 pub(crate) use schema::{article, ruser, section, comment};
-pub(crate) use models::{Article, EditArticle, NewArticle, DeleteArticle};
+pub(crate) use models::{Article, ArticleBrief, EditArticle, NewArticle, DeleteArticle};
 pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword,
                         EditUser, ChangStatus};
 pub(crate) use models::{NewComment, DeleteComment};
