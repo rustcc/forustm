@@ -2,30 +2,14 @@
     color: red
 }
 
-nav {
-    border-radius: 4px;
+img.avatar {
+    max-height: 300px;
+    max-width: 300px;
+    border-radius: 5px;
 }
 
-ul {
-    list-style-type:none;
-    margin:0;
-    padding:0;
-    font-size:24px;
-}
-
-ul a {
-    display: block;
-    color:#337ab7;
-    background-color:rgba(217, 219, 252, 0.98);
-    text-align:center;
-    padding:20px;
-    text-decoration:none;
-}
-
-ul a:hover {
-    cursor: pointer;
-    background-color: #b6b7b6;
-    color: #111;
+img.round-avatar {
+    border-radius: 50%;
 }
 
 .navigation, .information, .modify, .change_password {
@@ -37,14 +21,51 @@ ul a:hover {
 }
 
 .navigation {
-    width: 16.66666667%;
+    width: 20%;
     float: left;
 }
 
+.navigation ul {
+    display: inline-block;
+    border-radius: 5px;
+    list-style-type:none;
+    margin:0;
+    padding: 5px 0;
+    font-size:24px;
+    width: 100%;
+
+    color:#337ab7;
+    background-color:rgba(217, 219, 252, 0.98);
+}
+
+.navigation ul a {
+    display: block;
+    text-align:center;
+    padding: 10px 20px;
+    text-decoration:none;
+}
+
+.navigation ul a:hover {
+    cursor: pointer;
+    background-color: #eee;
+    color: #111;
+}
+
+.navigation ul a.active {
+    border-left: solid black 2px;
+    border-right: solid black 2px;
+}
+
 .information {
+    display: block;
     width: 66.66666667%;
     float: left;
-    display: block;
+}
+
+.module {
+    background: #fbf1c7;
+    border-radius: 5px;
+    margin-bottom: 20px;
 }
 
 .modify, .change_password {
@@ -82,6 +103,7 @@ input, textarea {
 
 input {
     height: 34px;
+    padding-left: 10px;
 }
 
 #footer {

@@ -1,12 +1,19 @@
 "use strict";
 
+function changeActive($node) {
+    $(".active").removeClass("active");
+    $node.addClass("active");
+}
+
 $("#information_btn").click(function() {
+    changeActive($(this));
     $(".information").css("display", "block");
     $(".modify").css("display", "none");
     $(".change_password").css("display", "none");
 });
 
 $("#modify_btn").click(function () {
+    changeActive($(this));
     $(".information").css("display", "none");
     $(".modify").css("display", "block");
     $(".change_password").css("display", "none");
@@ -14,6 +21,7 @@ $("#modify_btn").click(function () {
 });
 
 $("#change_password_btn").click(function () {
+    changeActive($(this));
     $(".information").css("display", "none");
     $(".modify").css("display", "none");
     $(".change_password").css("display", "block");

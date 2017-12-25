@@ -18,8 +18,15 @@
         <li><a id="change_password_btn">修改密码</a></li>
     </ul>
 </nav>
-<div class="information">
-    <h3>用户信息</h3><img src="{{ user.avatar }}" id="path">
+<div class="information module">
+    <h3>用户信息</h3>
+    {% if user.avatar %}
+    <img class="avatar" src="{{ user.avatar }}" id="path">
+    <img class="avatar round-avatar" src="{{ user.avatar }}">
+    {% else %}
+    <img class="avatar anonymous" src="/img/anonymous.jpg">
+    <img class="avatar round-avatar anonymous" src="/img/anonymous.jpg">
+    {% endif %}
     <hr/>
     <div><label>账号：</label><p style="display:inline;">{{ user.account }}<p></div>
     <div><label>昵称：</label><p style="display:inline;" class="nickname">{{ user.nickname }}<p></div>
@@ -30,7 +37,7 @@
     <div><label>创建时间：</label><p style="display:inline;">{{ user.signup_time }}</p></div>
     <br />
 </div>
-<div class="modify">
+<div class="modify module">
     <h3>修改信息</h3>
     <hr/>
     <form>
@@ -51,7 +58,7 @@
         </div>
     </form>
 </div>
-<div class="change_password">
+<div class="change_password module">
     <h3>修改密码</h3>
     <hr/>
     <form>
