@@ -8,6 +8,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use diesel;
+use diesel::pg::expression::dsl::any;
 
 use std::sync::Arc;
 
@@ -75,6 +76,26 @@ impl Section {
             .set(section::status.eq(2))
             .execute(conn)
             .is_ok()
+    }
+
+    pub fn query_with_redis_queue(conn: &PgConnection, redis_pool: &Arc<RedisPool>, key: &'static str) 
+        -> Result<Vec<Self>, String> {
+        if redis_pool.exists(key) {
+            let section_ids_string  = redis_pool.lrange::<Vec<String>>(key, 0, -1);
+            let section_ids: Vec<Uuid> = section_ids_string.into_iter().map(|id_str| id_str.parse::<Uuid>().unwrap()).collect();
+         
+            let res = all_sections.filter(section::status.eq(0))
+                        .filter(section::id.eq(any(section_ids)))
+                        .get_results::<Self>(conn);
+            match res {
+                Ok(data) => Ok(data),
+                Err(err) => Err(format!("{}", err)),
+            }
+        }
+        else {
+            return Ok(vec![])
+        }
+
     }
 }
 

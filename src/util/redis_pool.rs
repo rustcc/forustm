@@ -119,6 +119,18 @@ impl RedisPool {
         };
         self.with_conn(a)
     }
+    
+    pub fn rpush<T>(&self, redis_key: &str, value: T)
+        where T: redis::ToRedisArgs
+    {
+        let a = |conn: &redis::Connection| {
+            redis::cmd("rpush")
+                .arg(redis_key)
+                .arg(value)
+                .execute(conn)
+        };
+        self.with_conn(a)
+    }
 
     pub fn llen<T>(&self, redis_key: &str) -> T
         where T: redis::FromRedisValue

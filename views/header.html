@@ -1,23 +1,12 @@
 <style>
 .header {
     height: 40px;
+    line-height: 40px;
     border-bottom: gray 1px solid;
     padding: 0 10px;
 }
 .header .logo img {
     width: 40px;
-    float: left;
-}
-.header .logo .logo-title {
-    float: left;
-}
-.header .left {
-    line-height: 40px;
-    float: left;
-}
-.header .right {
-    line-height: 40px;
-    float: right;
 }
 
 /* The container <div> - needed to position the dropdown content */
@@ -62,8 +51,10 @@
 
 <div class="header">
     <div class="logo left">
-        <a href="/"><img src="/rust-logo.svg"/></a>
-        <div class="logo-title">Rust语言中文社区</div>
+        <a href="/">
+            <img class="left" src="/rust-logo.svg"/>
+            <div class="logo-title left">Rust语言中文社区</div>
+        </a>
         <div style="clear:both;"></div>
     </div>
 
@@ -91,7 +82,7 @@ $('#sign_out').click(function(event) {
         type: "get",
         success: function (res) {
             if (res.status) {
-               console.log(res.status);
+                console.log(res.status);
                 window.location = "/"
             } else {
                 console.log("sign_out error");

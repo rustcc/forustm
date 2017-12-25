@@ -1,7 +1,6 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult,
              Error as SapperError};
-use sapper::header::ContentType;
-use sapper_std::{JsonParams, SessionVal, set_cookie};
+use sapper_std::{JsonParams, SessionVal};
 use serde_json;
 
 use super::super::{LoginUser, Permissions, Redis, ChangePassword, EditUser, Postgresql, RUser,
@@ -68,17 +67,11 @@ impl User {
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let redis_pool = req.ext().get::<Redis>().unwrap();
 
-        let mut response = Response::new();
-        response.headers_mut().set(ContentType::json());
+        let _ = LoginUser::sign_out(redis_pool, cookie);
 
-        let res = json!({"status": LoginUser::sign_out(redis_pool, cookie) });
-        response.write_body(serde_json::to_string(&res).unwrap());
-        // clear cookie
-        let _ = set_cookie(&mut response,
-                           "forustm_session".to_string(),
-                           "".to_string(), None, Some("/".to_string()),
-                           None, Some(0));
-        Ok(response)
+        res_json!(json!({
+            "status": true
+        }))
     }
 
     fn new_comment(req: &mut Request) -> SapperResult<Response> {

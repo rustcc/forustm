@@ -24,6 +24,11 @@ Rust语言中文社区-首页
     padding: 8px 0;
 }
 
+.container a {
+    color: blue;
+}
+
+
 .planet-space .container {
     padding: 8px;
 }
@@ -34,7 +39,7 @@ ul li {
 }
 
 .body-content .notice {
-    border: gray 1px solid;
+    /* border: gray 1px solid; */
     padding: 4px;
     min-height: 50px;
     text-align: center;
@@ -81,8 +86,8 @@ ul li {
     
     <div class="notice">
       {% if title and desc %}
-        <p>{{ title }}</p>
-        <p>{{ desc }}</p>
+        <p class="title">{{ title }}</p>
+        <p class="desc">{{ desc }}</p>
       {% endif %}
     </div>
 
@@ -112,7 +117,7 @@ ul li {
     </div>
 
     <div class="category-section">
-    {% if sections_len  == 0 %}
+    {% if cate_sections_len  == 0 %}
         <p>这里还没有内容哦……</p>
     {% else %}
         {% for key, section in sections_hash %}
@@ -139,19 +144,27 @@ ul li {
         <div class="incubation-area-head">
             <p>Rust项目专题</p>
         </div>
+        {% if proj_sections_len == 0 %}
+        <p>这里还没有内容哦……</p>
+        {% else %}
         <div class="incubation-area-container">
+            {% for key, section in projects_hash %}
             <div class="one-section">
                 <div class="one-section-head head">
-                    <a>Sapper</a>
+                    <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
                 </div>
                 <div class="one-section-container container">
                     <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
+                        {% for s in section.2 %}
+                        <li>
+                            <a href="/article/{{ s.id }}">{{ s.title }}</a>
+                        </li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>
+            {% endfor %}
+        {% endif %}
             <div style="clear:both;"></div>
         </div>
     </div>

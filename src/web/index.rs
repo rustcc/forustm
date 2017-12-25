@@ -14,23 +14,45 @@ impl Index {
         PubNotice::get(&mut web, &redis_pool);
 
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+        
+        // query blogs
         let res = Article::query_articles_by_stype_paging(&pg_conn, 1, 1, 3);
         if res.is_ok(){
             web.add("blogs", &res.unwrap().articles);
         }
-        let stype = 0;
+
         let mut sections_hash: HashMap<usize, (Uuid, String, Vec<ArticleBrief>)> = HashMap::new();
-        let sections = Section::query_by_stype(&pg_conn, stype);
-        if sections.is_ok(){
-            web.add("sections_len", &sections.clone().unwrap().len());
-            for (idx, section) in sections.unwrap().iter().enumerate() {
-                let res = Article::query_articles_with_section_id_and_stype_paging(&pg_conn, section.clone().id, stype, 1, 3);
+        // query category sections
+        let cate_sections = Section::query_with_redis_queue(&pg_conn, &redis_pool, "cate_sections");
+        if cate_sections.is_ok(){
+            let cate_sections_vec = cate_sections.unwrap();
+            let cate_sections_len = cate_sections_vec.len();
+            web.add("cate_sections_len", &cate_sections_len);
+            for (idx, section) in cate_sections_vec.iter().enumerate() {
+                let res = Article::query_articles_with_section_id_and_stype_paging(&pg_conn, section.id, 0, 1, 3);
                 if res.is_ok(){
-                    sections_hash.insert(idx, (section.clone().id, section.clone().title, res.unwrap().articles));
+                    sections_hash.insert(idx, (section.id, section.title.clone(), res.unwrap().articles));
                 }
             }
             web.add("sections_hash", &sections_hash);
         }
+
+        // query project sections
+        let mut projects_hash: HashMap<usize, (Uuid, String, Vec<ArticleBrief>)> = HashMap::new();
+        // query category sections
+        let proj_sections = Section::query_with_redis_queue(&pg_conn, &redis_pool, "proj_sections");
+        if proj_sections.is_ok(){
+            let proj_sections_vec = proj_sections.unwrap();
+            web.add("proj_sections_len", &proj_sections_vec.len());
+            for (idx, section) in proj_sections_vec.iter().enumerate() {
+                let res = Article::query_articles_with_section_id_and_stype_paging(&pg_conn, section.id, 0, 1, 3);
+                if res.is_ok(){
+                    projects_hash.insert(idx, (section.id, section.title.clone(), res.unwrap().articles));
+                }
+            }
+            web.add("projects_hash", &projects_hash);
+        }
+
         res_html!("index.html", web)
     }
 
