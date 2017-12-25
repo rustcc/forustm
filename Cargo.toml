@@ -35,6 +35,6 @@ version = "^1.0.0-beta1"
 features = ["serde", "v4"]
 version = "^0.5.1"
 
-[patch.crates-io]
-sapper_std = { git = 'https://github.com/sappworks/sapper_std.git'}
-sapper = { git = 'https://github.com/sappworks/sapper.git' }
+#[patch.crates-io]
+#sapper_std = { git = 'https://github.com/sappworks/sapper_std.git'}
+#sapper = { git = 'https://github.com/sappworks/sapper.git' }

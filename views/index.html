@@ -9,6 +9,30 @@ Rust语言中文社区-首页
 .body-content {
     padding: 10px;
 }
+
+.head {
+    border-bottom: gray 1px solid;
+    height: 24px;
+}
+
+.head a {
+    text-decoration: none;
+    color: #222233;
+}
+
+.container {
+    padding: 8px 0;
+}
+
+.planet-space .container {
+    padding: 8px;
+}
+
+ul li {
+    list-style-type: none;
+    height: 24px;
+}
+
 .body-content .notice {
     border: gray 1px solid;
     padding: 4px;
@@ -23,11 +47,6 @@ Rust语言中文社区-首页
     height: 108px;
     text-align: center;
     margin-top: 15px;
-}
-
-.body-content .planet-space .planet-space-head {
-    border-bottom: gray 1px solid;
-    height: 24px;
 }
 
 .body-content .category-section {
@@ -45,19 +64,6 @@ Rust语言中文社区-首页
     min-width: 200px;
 }
 
-.one-section .one-section-head {
-    height: 24px;
-    border-bottom: gray 1px solid;
-}
-
-.one-section .one-section-container {
-    padding: 12px 0px;
-}
-
-.one-section .one-section-container ul li {
-    list-style-type: none;
-}
-
 .body-content .incubation-area .incubation-area-container {
     margin-top: 15px;
 }
@@ -72,207 +78,73 @@ Rust语言中文社区-首页
 
 
 <div class="body-content">
+    
     <div class="notice">
       {% if title and desc %}
         <p>{{ title }}</p>
         <p>{{ desc }}</p>
       {% endif %}
     </div>
+
     <div class="planet-space">
-        <div class="planet-space-container">
+        <div class="planet-space-head head">
+            <a href="/blogs">Rust 星球</a>
+        </div>
+        <div class="planet-space-container container">
+        {% if blogs | length == 0 %}
+            <p>这里还没有内容哦……</p>
+        {% else %}
             <ul>
-              <div class="planet-space-head">
-                {% if blogs | length == 0 %}
-                    <p class="padding-rectangle">这里还没有内容哦..</p>
-                {% else %}
-                  <ul class="nodot items">
-                    {% for blog in blogs %}
-                      {% if not loop.last %}
-                      <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
-                        <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
-                        <span class="right">
-                            <span class="tags">{{ blog.tags }}</span>
-                            <span class="createdTime">{{ blog.created_time }}</span>
-                        </span>
-                      </li>
-                      {% else %}
-                      <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
-                        <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
-                        <span class="right">
-                            <span class="tags">{{ blog.tags }}</span>
-                            <span class="createdTime">{{ blog.created_time }}</span>
-                        </span>
-                      </li>
-                    {% endif %}
-                    {% endfor %}
-                  </ul>
-                  <a href = "/blogs">查看更多</a>
-                {% endif %}
-              </div>
+            {% for blog in blogs %} 
+                <li>
+                    <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
+                    <!--
+                    <span class="right">
+                        <span class="tags">{{ blog.tags }}</span>
+                        <span class="createdTime">{{ blog.created_time }}</span>
+                    </span>
+                    -->
+                </li>
+            {% endfor %}
             </ul>
+        {% endif %}
         </div>
     </div>
+
     <div class="category-section">
-      {% if sections_len  == 0 %}
-          <p class="padding-rectangle">这里还没有内容哦..</p>
-      {% else %}
-          {% for key, section in sections_hash %}
-            <div class="one-section">
-                <div class="one-section-head">
-                    <li class="item" data-index="{{ loop.index0 }}">
-                      <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
-                    </li>
-                  </div>
-                  <div class="one-section-container">
-                    <ul>
-                      {% for s in section.2 %}
-                      <li class="item" data-index="{{ loop.index0 }}">
+    {% if sections_len  == 0 %}
+        <p>这里还没有内容哦……</p>
+    {% else %}
+        {% for key, section in sections_hash %}
+        <div class="one-section">
+            <div class="one-section-head head">
+                <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
+            </div>
+            <div class="one-section-container container">
+                <ul>
+                    {% for s in section.2 %}
+                    <li>
                         <a href="/article/{{ s.id }}">{{ s.title }}</a>
-                      </li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-                </div>
-          {% endfor %}
-      {% endif %}
-
-
-
-
-        <div class="one-section">
-            <div class="one-section-head">
-                综合讨论区
-            </div>
-            <div class="one-section-container">
-                <ul>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
+                    </li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
-        <!-- Can be duplicated here -->
-        <div class="one-section">
-            <div class="one-section-head">
-                Rust问答
-            </div>
-            <div class="one-section-container">
-                <ul>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="one-section">
-            <div class="one-section-head">
-                Rust聚合
-            </div>
-            <div class="one-section-container">
-                <ul>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="one-section">
-            <div class="one-section-head">
-                Rust招聘
-            </div>
-            <div class="one-section-container">
-                <ul>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="one-section">
-            <div class="one-section-head">
-                Rust活动
-            </div>
-            <div class="one-section-container">
-                <ul>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                    <li><a href="">Rust排名上升到43</a></li>
-                </ul>
-            </div>
-        </div>
+        {% endfor %}
+    {% endif %}
         <div style="clear:both;"></div>
     </div>
+
     <div class="incubation-area">
         <div class="incubation-area-head">
-            <p>Rust项目孵化器</p>
+            <p>Rust项目专题</p>
         </div>
         <div class="incubation-area-container">
             <div class="one-section">
-                <div class="one-section-head">
-                    Sapper
+                <div class="one-section-head head">
+                    <a>Sapper</a>
                 </div>
-                <div class="one-section-container">
-                    <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                    </ul>
-                </div>
-            </div>
-            <!-- Can be duplicated here -->
-            <div class="one-section">
-                <div class="one-section-head">
-                    Wasmui
-                </div>
-                <div class="one-section-container">
-                    <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="one-section">
-                <div class="one-section-head">
-                    Coroutine
-                </div>
-                <div class="one-section-container">
-                    <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="one-section">
-                <div class="one-section-head">
-                    Shadowsocks-rs
-                </div>
-                <div class="one-section-container">
-                    <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="one-section">
-                <div class="one-section-head">
-                    Pencil
-                </div>
-                <div class="one-section-container">
-                    <ul>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                        <li><a href="">Rust排名上升到43</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="one-section">
-                <div class="one-section-head">
-                    RustPrimer
-                </div>
-                <div class="one-section-container">
+                <div class="one-section-container container">
                     <ul>
                         <li><a href="">Rust排名上升到43</a></li>
                         <li><a href="">Rust排名上升到43</a></li>
