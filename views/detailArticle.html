@@ -12,13 +12,6 @@
     .detail {
         padding: 10px;
     }
-    .detail .notice {
-        border: gray 1px solid;
-        padding: 4px;
-        min-height: 50px;
-        text-align: center;
-        margin-top: 5px;
-    }
 
     .detail .border {
         border: gray 1px solid;
@@ -64,8 +57,9 @@
     }
 
     .detail textarea {
-        width: 50%;
-        min-height: 300px;
+        width: 70%;
+        min-height: 220px;
+        min-width: 250px;
         font-size: 15px;
     }
 
@@ -126,9 +120,6 @@
 <div class="role" data-role="{{ identify }}" style="display: none;"></div>
 
 <div class="detail">
-    <div class="notice">
-        <p>论坛说明及公告</p>
-    </div>
 
     <div class="border">
         <div class="underline padding-rectangle">
@@ -137,7 +128,7 @@
             </div>
             <p>
                 <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
-                发表于 {{ res.created_time }}
+                发表于 <span class="article_created_time"></span>
             </p>
             <p>
                 <small>标签：{{ res.tags }}</small>
@@ -403,6 +394,7 @@
         })
     }
 
+
     $(function() {
         // page button click event
         $(".paginator a").on("click", function() {
@@ -432,6 +424,10 @@
                 submit();
             }
         });
+
+        // format article date
+        var datetime_str = "{{ res.created_time }}";
+        $('.article_created_time').text(new Date(datetime_str).LocalFormat());
     });
 </script>
 {% endblock content %}
