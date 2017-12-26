@@ -30,7 +30,7 @@
         padding: 10px 15px;
     }
 
-    .body-content .padding-samll-rectangle {
+    .body-content .padding-small-rectangle {
         padding: 5px 10px;
     }
 
@@ -111,6 +111,13 @@
     }
 </style>
 
+<div class="meta hide"
+     {% if user %}
+     data-role="{{ user.role }}"
+     data-user-id="{{ user.id }}"
+     {% endif %}
+></div>
+
 <div class="body-content">
     <div class="border">
         <div class="underline padding-rectangle">
@@ -137,11 +144,12 @@
                     {% else %}
                         <ul class="nodot items">
                             {% for article in articles %}
-                                <li class="item padding-samll-rectangle {% if not loop.last %} underline {% else %} last {% endif %}"
+                                <li class="item padding-small-rectangle {% if not loop.last %} underline {% else %} last {% endif %}"
                                     data-index="{{ loop.index0 }}">
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
+                                        <span class="author">{{ article.author_name }}</span> 发表于
                                         <span class="createdTimePlaceholder" style="display: none">{{ article.created_time }}</span>
                                         <span class="createdTime"></span>
                                         {% if user %}
@@ -161,11 +169,21 @@
                                 </li>
                             {% endfor %}
 
-                            <li class="item padding-samll-rectangle underline template" data-index="" style="display: none">
+                            <li class="item padding-small-rectangle underline template" data-index="" style="display: none">
                                 <a href=""></a>
                                 <span class="right">
                                     <span class="tags"></span>
+                                    <span class="author"></span> 发表于
+                                    <span class="createdTimePlaceholder" style="display: none"></span>
                                     <span class="createdTime"></span>
+                                    <span class="delete hide"
+                                          data-id=""
+                                          data-author-id=""
+                                          data-user-id="">删除</span>
+                                    <span class="edit hide"
+                                          data-id=""
+                                          data-author-id=""
+                                          data-user-id="">编辑</span>
                                 </span>
                             </li>
                         </ul>
@@ -202,6 +220,7 @@
                 updateItem(i, article, i === l-1);
             }
             activePageBtn(page);
+            replaceTime();
         });
     }
 
@@ -240,8 +259,31 @@
             .text(content.title);
         $newNode.find(".tags")
             .text(content.tags);
-        $newNode.find(".createdTime")
+        $newNode.find(".author")
+            .text(content.author_name);
+        $newNode.find(".createdTimePlaceholder")
             .text(content.created_time);
+
+        var $meta = $(".meta");
+        var userID = $meta.data("user-id");
+        var role = $meta.data("role");
+        if (userID !== undefined) {
+            if (Number(role) <= 1 || userID === content.author_id) {
+                $newNode.find(".delete")
+                    .data("user-id", userID)
+                    .data("id", content.id)
+                    .data("author-id", content.author_id)
+                    .removeClass("hide");
+            }
+
+            if (userID === content.author_id) {
+                $newNode.find(".edit")
+                    .data("user-id", userID)
+                    .data("id", content.id)
+                    .data("author-id", content.author_id)
+                    .removeClass("hide");
+            }
+        }
 
         if (isLast) {
             $newNode.removeClass("underline");
@@ -269,14 +311,18 @@
         }
     }
 
+    function replaceTime() {
+        var mbody = $('.detail-body');
+        mbody.find('li').each(function (i) {
+            var that = $(this);
+            that.find('.createdTime').text(
+                new Date(that.find('.createdTimePlaceholder').text()).LocalFormat()
+            );
+        });
+    }
+
     $(function () {
-            var mbody = $('.detail-body');
-            mbody.find('li').each(function (i) {
-                var that = $(this);
-                that.find('.createdTime').text(
-                    new Date(that.find('.createdTimePlaceholder').text()).LocalFormat()
-                );
-            });
+            replaceTime()
 
             // page button click event
             $(".paginator a").on("click", function() {

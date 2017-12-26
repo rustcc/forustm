@@ -2,6 +2,7 @@ use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResu
 use sapper_std::{render, PathParams};
 use super::super::{Postgresql, WebContext};
 use super::super::{Section, Article, RUser};
+use super::super::page_size;
 use uuid::Uuid;
 
 pub struct WebSection;
@@ -37,7 +38,7 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, 20);
+                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, page_size());
                 match articles {
                     Ok(arts) => {
                         //println!("articles: {:?}", &arts);
@@ -110,7 +111,7 @@ impl WebSection {
         let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let page = 1;
-        let res = Article::query_articles_by_stype_paging(&pg_conn, 1, page, 2);
+        let res = Article::query_articles_by_stype_paging(&pg_conn, 1, page, page_size());
 
         match res {
             Ok(r) => {
