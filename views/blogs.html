@@ -6,13 +6,23 @@ Rust 星球 - Rust语言中文社区
 
 {% block content %}
 <style>
+    span.delete {
+        color: red;
+        cursor: pointer;
+    }
+    span.edit {
+        color: green;
+        cursor: pointer;
+    }
+
     .body-content {
         padding: 10px;
     }
     .body-content .blogs {
         border: gray 1px solid;
         padding: 4px;
-        min-height: 50px;
+        min-height: 24px;
+        line-height: 24px;
         text-align: center;
         margin-top: 5px;
     }
@@ -78,7 +88,13 @@ Rust 星球 - Rust语言中文社区
     }
 
     .body-content .tags {
-        color: gray;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .body-content .createdTime {
+        color: #444;
+        font-size: 14px;
     }
 
     .body-content .input {
@@ -98,7 +114,7 @@ Rust 星球 - Rust语言中文社区
 
 <div class="body-content">
     <div class="blogs">
-        <p>Rust 星球</p>
+        <p>Rust博客星球，我们的家园</p>
     </div>
 
     <div class="border">
@@ -111,23 +127,27 @@ Rust 星球 - Rust语言中文社区
                     {% else %}
                         <ul class="nodot items">
                             {% for article in articles %}
-                                {% if not loop.last %}
-                                <li class="item padding-samll-rectangle underline" data-index="{{ loop.index0 }}">
+                                <li class="item padding-samll-rectangle {% if not loop.last %} underline {% else %} last {% endif %}">
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
+                                        <span class="createdTimePlaceholder" style="display:none;">{{ article.created_time }}</span>
                                         <span class="createdTime">{{ article.created_time }}</span>
+                                        {% if user %}
+                                            {% if user.role <= 1 or user.id == article.author_id %}
+                                            <span class="delete" data-id="{{ article.id }}"
+                                                  data-author-id="{{ article.author_id }}"
+                                                  data-user-id="{{ user.id }}">删除</span>
+                                            {% endif %}
+                                            {% if user.id == article.author_id %}
+                                            <span class="edit" data-id="{{ article.id }}"
+                                                  data-author-id="{{ article.author_id }}"
+                                                  data-user-id="{{ user.id }}">编辑</span>
+                                            {% endif %}
+                                        {% endif %}
                                     </span>
+                                    <div style="clear:both;"></div>
                                 </li>
-                                {% else %}
-                                <li class="item padding-samll-rectangle last" data-index="{{ loop.index0 }}">
-                                    <a href="/article/{{ article.id }}">{{ article.title }}</a>
-                                    <span class="right">
-                                        <span class="tags">{{ article.tags }}</span>
-                                        <span class="createdTime">{{ article.created_time }}</span>
-                                    </span>
-                                </li>
-                                {% endif %}
                             {% endfor %}
 
                             <li class="item padding-samll-rectangle underline template" data-index="" style="display: none">
@@ -161,6 +181,16 @@ Rust 星球 - Rust语言中文社区
 
 <script type="application/javascript">
     "use strict";
+
+    var mbody = $('.detail-body');
+    mbody.find('li').each(function (i) {
+        var that = $(this);
+        that.find('.createdTime').text(
+            new Date(that.find('.createdTimePlaceholder').text()).LocalFormat()
+        );
+    });
+
+
     // load new page
     function loadPage(page) {
         if (PAGE.page === page) return;
@@ -191,7 +221,7 @@ Rust 星球 - Rust语言中文社区
         $newNode.find(".tags")
             .text(content.tags);
         $newNode.find(".createdTime")
-            .text(content.created_time);
+            .text(new Date(content.created_time).LocalFormat());
 
         if (isLast) {
             $newNode.removeClass("underline");

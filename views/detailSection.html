@@ -78,12 +78,12 @@
     }
 
     .body-content .tags {
-        color: #555;
+        color: #666;
         font-size: 14px;
     }
     
     .body-content .createdTime {
-        color: #333;
+        color: #444;
         font-size: 14px;
     }
 
@@ -121,9 +121,13 @@
                     style="cursor: pointer;"
                 >{{ res.title }}</span></h3>
                 {% if manager %}
+                <!--
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
+                -->
                 {% endif %}
+                {% if manager and user and manager.id == user.id %}
                 <button class="right new-article">发表新{% if res.stype == 0 %}帖子{% else %}文章{% endif %}</button>
+                {% endif %}
             </div>
             <p>
                 <small>{{ res.description }}</small>
@@ -241,7 +245,7 @@
         $newNode.find(".tags")
             .text(content.tags);
         $newNode.find(".createdTime")
-            .text(content.created_time);
+            .text(new Date(content.created_time).LocalFormat());
 
         if (isLast) {
             $newNode.removeClass("underline");

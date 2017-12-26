@@ -174,7 +174,11 @@
                 <h3><span onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</span></h3>
             </div>
             <p class="vice-title">
+                {% if res.stype == 0 %}
                 <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
+                {% else %}
+                <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
+                {% endif %}
                 发表于 <span class="article_created_time"></span>
 
                 {% if user %}
