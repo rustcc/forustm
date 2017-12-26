@@ -96,3 +96,6 @@ function clearPassword() {
     $("#new_password").val("");
     $("#old_password").focus();
 }
+
+var datetime_str = $('.signup_time').text();
+$('.signup_time').text(new Date(datetime_str).LocalFormat());

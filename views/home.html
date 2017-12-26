@@ -12,10 +12,10 @@
 {% block content %}
 <nav class="navigation">
     <ul>
-        <li><a href="/blog/{{ user.id }}">博客</a></li>
         <li><a id="information_btn" class="active">个人信息</a></li>
         <li><a id="modify_btn">修改信息</a></li>
         <li><a id="change_password_btn">修改密码</a></li>
+        <li><a href="/blog/{{ user.id }}">博客</a></li>
     </ul>
 </nav>
 <div class="information module">
@@ -24,8 +24,9 @@
     <img class="avatar" src="{{ user.avatar }}" id="path">
     <img class="avatar round-avatar" src="{{ user.avatar }}">
     {% else %}
-    <img class="avatar anonymous" src="/img/anonymous.jpg">
-    <img class="avatar round-avatar anonymous" src="/img/anonymous.jpg">
+    <!--
+    <img class="avatar anonymous" src="">
+    <img class="avatar round-avatar anonymous" src=""> -->
     {% endif %}
     <hr/>
     <div><label>账号：</label><p style="display:inline;">{{ user.account }}<p></div>
@@ -34,7 +35,7 @@
     <div><label>签名：</label>
         <p style="display:inline;" class="say">{{ user.say }}</p>
     </div>
-    <div><label>创建时间：</label><p style="display:inline;">{{ user.signup_time }}</p></div>
+    <div><label>创建时间：</label><p style="display:inline;" class="signup_time">{{ user.signup_time }}</p></div>
     <br />
 </div>
 <div class="modify module">
@@ -48,7 +49,7 @@
             <label>签名:</label><textarea id="say" rows="5"></textarea>
         </div>
         <div class="form-group">
-            <label>图片地址:</label><input id="avatar" type="text">
+            <label>头像地址:</label><input id="avatar" type="text">
         </div>
         <div class="form-group">
             <label>微信号:</label><input id="wx_openid" type="text">

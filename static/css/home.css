@@ -21,8 +21,7 @@ img.round-avatar {
 }
 
 .navigation {
-    width: 20%;
-    float: left;
+    width: 100%;
 }
 
 .navigation ul {
@@ -31,11 +30,13 @@ img.round-avatar {
     list-style-type:none;
     margin:0;
     padding: 5px 0;
-    font-size:24px;
+    font-size: 20px;
     width: 100%;
-
     color:#337ab7;
-    background-color:rgba(217, 219, 252, 0.98);
+}
+
+.navigation ul li {
+    float: left;
 }
 
 .navigation ul a {
@@ -52,20 +53,19 @@ img.round-avatar {
 }
 
 .navigation ul a.active {
-    border-left: solid black 2px;
-    border-right: solid black 2px;
+    border-bottom: solid gray 2px;
 }
 
 .information {
     display: block;
     width: 66.66666667%;
-    float: left;
 }
 
 .module {
     background: #fbf1c7;
     border-radius: 5px;
     margin-bottom: 20px;
+    margin-left: 15px;
 }
 
 .modify, .change_password {
@@ -87,7 +87,8 @@ label {
 
 input, textarea {
     display: block;
-    width: 100%;
+    padding-left: 10px;
+    width: 96%;
     font-size: 14px;
     line-height: 1.42857143;
     color: #555;
@@ -103,7 +104,6 @@ input, textarea {
 
 input {
     height: 34px;
-    padding-left: 10px;
 }
 
 #footer {

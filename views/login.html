@@ -10,6 +10,10 @@
 
 {% block content %}
 <style>
+    .content-area {
+        padding: 15px;
+    }
+
     #login_form {
         display: block;
     }
@@ -36,8 +40,18 @@
     .text-danger {
         color: red
     }
+
+    .remember {
+        display: block;
+        padding: 8px 0;
+    }
+
+    .strongit {
+        font-size: 15px;
+    }
 </style>
 
+<div class="content-area">
 <div id="login_form">
     <b>Login</b>
     <br>
@@ -46,22 +60,21 @@
         <table border="0">
             <tbody>
             <tr>
-                <td>account:</td>
+                <td>Account:</td>
                 <td><input type="text" name="account" value="" size="20" autofocus="autofocus" placeholder="Email" id="login_account"></td>
             </tr>
             <tr>
-                <td>password:</td>
+                <td>Password:</td>
                 <td><input type="password" name="password" value="" size="20" placeholder="Password" id="login_password"></td>
             </tr>
-            <label class="checkbox">
-                <input type="checkbox" name="remember"/> Remember 90 day
-            </label>
             </tbody>
         </table>
-        <br>
+        <label class="checkbox remember">
+            <input type="checkbox" name="remember" class=""/> Remember 90 day
+        </label>
         <input type="button" class="btn btn-success pull-right" id="login" value="Login "/>
     </form>
-    <br/>
+    <br>
     <a id="forget">Forgot your password?</a><br/>
     <a id="register_btn" class="">Create an account</a>
 
@@ -76,16 +89,16 @@
         <table border="0">
             <tbody>
             <tr>
-                <td>account:</td>
+                <td>Account:</td>
                 <td><input type="text" name="acct" value="" size="20" placeholder="Email" id="register_account"></td>
-                <td><strong>Please fill in the real and effective email address</strong></td>
+                <td class="strongit"><strong>Please fill in the real and valid email address</strong></td>
             </tr>
             <tr>
-                <td>password:</td>
+                <td>Password:</td>
                 <td><input type="password" name="pw" value="" size="20" id="register_password"></td>
             </tr>
             <tr>
-                <td>nickname:</td>
+                <td>Nickname:</td>
                 <td><input type="text" id="nickname" class="required"></td>
             </tr>
             </tbody>
@@ -105,16 +118,17 @@
         <table border="0">
             <tbody>
             <tr>
-                <td>account:</td>
+                <td>Account:</td>
                 <td><input type="text" name="acct" value="" size="20" placeholder="Email" id="reset_account"></td>
             </tr>
             </tbody>
         </table>
         <br>
-        <input type="button" id="reset_btn" value="reset"/>
+        <input type="button" id="reset_btn" value="Reset"/>
         <input type="button" class="back_btn" value="Back"/>
     </form>
     <br>
     <br>
+</div>
 </div>
 {% endblock content %}
