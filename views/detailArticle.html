@@ -128,6 +128,11 @@
         font-size: 14px;
         background-color: #e8e8e8;
     }
+
+    .created-time {
+        color: #555;
+        font-size: 13px;
+    }
 </style>
 
 <div class="role" data-role="{{ identify }}" style="display: none;"></div>
@@ -173,7 +178,7 @@
                         {% endif %}
                         <a class="author-id" href="/user/{{ comment.author_id }}">
                             {{ comment.nickname }}
-                        </a> 发表于
+                        </a> 
                         <span class="created-time">{{ comment.created_time }}</span>
                         {% if identify != -1 %}
                             {% if identify <= 1 or user.id == comment.author_id %}
@@ -192,7 +197,7 @@
 
             <div class="template item border" style="display: none;">
                 <div class="comment-title padding-rectangle">
-                    <a class="author-id"></a> 发表于 <span class="created-time"></span>
+                    <a class="author-id"></a> <span class="created-time"></span>
                     <a class="delete" data-id="" data-author-id="" href="#" style="display: none;">删除</a>
                     <a class="reply" data-id="" data-author-id="" href="#" style="display: none;">回复</a>
                 </div>
