@@ -237,16 +237,38 @@ Rust 星球 - Rust语言中文社区
         PAGE.update(page);
     }
 
-
-
     $(function () {
             // page button click event
             $(".paginator a").on("click", function() {
                 loadPage($(this).data("page"));
             });
+               
+            // delete article
+            $("li span.delete").on("click", function() {
+                var $this = $(this);
+                if (!confirm("确认删除？")) return;
+                deleteArticle(
+                    $this.data("id"),
+                    $this.data("author-id"),
+                    function () {
+                        alert("删除成功！");
+                        $this.closest('li').remove();
+                    }
+                );
+            });
 
+            // edit article
+            $("li span.edit").on("click", function () {
+                var uri = '/user/article/edit?id=' + $(this).data("id");
+                window.location.href = uri;
+            });
 
-        }
-    );
+            // new article
+            $("button.new-article").on("click", function () {
+                var uri = '/user/article/edit?sectionID=' + getSectionID() + '&stype=' + getStype();
+                window.location.href = uri;
+            });
+
+    });
 </script>
 {% endblock content %}
