@@ -3,4 +3,4 @@ Cargo.lock
 cmake-build-debug/
 .idea/
 .env
-
+*.swp

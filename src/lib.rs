@@ -43,3 +43,7 @@ pub(crate) use models::{InsertSection, PubNotice, Section};
 pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity_and_web_context,
                Permissions, WebContext};
 pub use api::{Visitor, User, AdminUser, AdminSection};
+
+pub fn page_size() -> i64 {
+    20
+}

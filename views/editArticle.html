@@ -93,6 +93,8 @@
 </div>
 
 <script>
+    var queryDict = parseQueryStringToDictionary(window.location.search);
+
     // edit article
     function editArticle(id) {
         $.getJSON("/api/v1/article/get?id=" + id, function (response) {
@@ -139,9 +141,63 @@
         });
     }
 
-    $(function () {
-        var queryDict = parseQueryStringToDictionary(window.location.search);
+    function submit() {
+        var title = $("input[name='title']").val();
+        var tags = $("input[name='tags']").val();
+        var rawContent = $("textarea[name='raw-content']").val();
 
+        if (title.trim().length === 0 || rawContent.trim().length === 0) {
+            alert("请输入文章标题和内容！");
+            return;
+        }
+
+        if ('id' in queryDict) {
+            // update article
+            var id = queryDict.id;
+            var $newArticle = $("div#new-article");
+
+            updateArticle(
+                id,
+                $newArticle.data("author-id"),
+                title,
+                rawContent,
+                tags,
+                function() {
+                    $newArticle.data("type", "new");
+                    alert("更新成功！");
+                    window.location.href = window.location.origin + '/article/' + id;
+                }
+            )
+        } else {
+            // new article
+            var stype = Number(queryDict.stype);
+            var sectionID = queryDict.sectionID;
+
+            $.ajax({
+                type: "POST",
+                url: $("button[name='submit']").data("api"),
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                data: JSON.stringify({
+                    section_id: sectionID,
+                    stype: stype,
+                    title: title,
+                    tags: tags,
+                    raw_content: rawContent
+                }),
+                success: function (response) {
+                    if (response.status === true) {
+                        alert("发表成功！");
+                        window.location.href = "/section/" + sectionID;
+                    } else {
+                        alert("发射失败，请检查输入是否完整！");
+                    }
+                }
+            });
+        }
+    }
+
+    $(function () {
         // load article from API
         if ('id' in queryDict) {
             editArticle(queryDict.id);
@@ -153,61 +209,9 @@
         }
 
         // new & edit article button event
-        $("button[name='submit']").on("click", function() {
-            var title = $("input[name='title']").val();
-            var tags = $("input[name='tags']").val();
-            var rawContent = $("textarea[name='raw-content']").val();
+        $("button[name='submit']").on("click", submit);
 
-            if (title.trim().length === 0 || rawContent.trim().length === 0) {
-                alert("请输入文章标题和内容！");
-                return;
-            }
-
-            if ('id' in queryDict) {
-                // update article
-                var id = queryDict.id;
-                var $newArticle = $("div#new-article");
-
-                updateArticle(
-                    id,
-                    $newArticle.data("author-id"),
-                    title,
-                    rawContent,
-                    tags,
-                    function() {
-                        $newArticle.data("type", "new");
-                        alert("更新成功！");
-                        window.location.href = window.location.origin + '/article/' + id;
-                    }
-                )
-            } else {
-                // new article
-                var stype = Number(queryDict.stype);
-                var sectionID = queryDict.sectionID;
-
-                $.ajax({
-                    type: "POST",
-                    url: $("button[name='submit']").data("api"),
-                    contentType: 'application/json; charset=utf-8',
-                    dataType: "json",
-                    data: JSON.stringify({
-                        section_id: sectionID,
-                        stype: stype,
-                        title: title,
-                        tags: tags,
-                        raw_content: rawContent
-                    }),
-                    success: function (response) {
-                        if (response.status === true) {
-                            alert("发表成功！");
-                            window.location.href = "/section/" + sectionID;
-                        } else {
-                            alert("发射失败，请检查输入是否完整！");
-                        }
-                    }
-                });
-            }
-        })
+        ctrlEnterThen($('textarea'), submit);
     })
 </script>
 {% endblock content %}

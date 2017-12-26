@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
 use super::super::models::{Article, CommentWithNickName};
+use super::super::page_size;
 
 pub struct Visitor;
 
@@ -129,7 +130,7 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, 20) {
+        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, page_size()) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,
@@ -199,7 +200,7 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_by_stype_paging(&pg_pool, 1, page, 2) {
+        match Article::query_articles_by_stype_paging(&pg_pool, 1, page, page_size()) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,

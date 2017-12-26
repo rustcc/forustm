@@ -104,8 +104,18 @@ Date.prototype.Format = function (fmt) { //author: meizz
         }
     }
     return fmt;
-}
+};
 
 Date.prototype.LocalFormat = function () {
     return new Date(this.getTime() + 3600000 * 8).Format("yyyy-MM-dd hh:mm:ss");
+};
+
+
+function ctrlEnterThen($DOMs, callback) {
+    $DOMs.keydown(function (e) {
+        if (e.ctrlKey && e.keyCode === 13) {
+            callback();
+        }
+    });
 }
+
