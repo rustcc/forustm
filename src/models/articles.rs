@@ -36,6 +36,7 @@ impl RawArticles {
             tags: self.tags,
             created_time: self.created_time,
             status: self.status,
+            stype: self.stype,
         }
     }
 
@@ -49,6 +50,7 @@ impl RawArticles {
             tags: self.tags,
             created_time: self.created_time,
             status: self.status,
+            stype: self.stype,
         }
     }
 
@@ -85,6 +87,7 @@ pub struct Article {
     pub tags: String,
     pub created_time: NaiveDateTime,
     pub status: i16,
+    pub stype: i32,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

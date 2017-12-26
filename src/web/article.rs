@@ -1,10 +1,10 @@
 use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{render, PathParams, SessionVal};
-use super::super::{Postgresql, Redis};
+use sapper_std::{render, PathParams};
+use super::super::{Postgresql};
 use super::super::{Article, RUser, Permissions, WebContext};
 use super::super::models::CommentWithNickName;
 use uuid::Uuid;
-use serde_json;
+
 pub struct WebArticle;
 
 impl WebArticle {
@@ -39,20 +39,6 @@ impl WebArticle {
                         web.add("comments", &com.comments);
                         web.add("total", &com.total);
                         web.add("max_page", &com.max_page);
-
-                        let identify = req.ext().get::<Permissions>().unwrap();
-                        match *identify {
-                            Some(i) => {
-                                let cookie = req.ext().get::<SessionVal>().unwrap();
-                                let redis_pool = req.ext().get::<Redis>().unwrap();
-                                let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-                                web.add("user", &user);
-                                web.add("identify", &i);
-                            }
-                            None => {
-                                web.add("identify", &-1);
-                            }
-                        }
 
                         res_html!("detailArticle.html", web)
                     },

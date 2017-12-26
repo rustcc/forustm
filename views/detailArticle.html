@@ -135,7 +135,11 @@
 </style>
 
 <div class="meta"
-     data-role="{{ identify }}"
+     {% if user %}
+     data-role="{{ user.role }}"
+     {% else %}
+     data-role="-1"
+     {% endif %}
      data-id="{{ res.id }}"
      data-author-id="{{ author.id }}"
      style="display: none;"></div>
@@ -145,13 +149,20 @@
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
-                <h3>{{ res.title }}</h3>
+                <h3 onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</h3>
             </div>
             <p>
                 <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
                 发表于 <span class="article_created_time"></span>
-                {% if identify != -1 %}
-                {% if identify <= 1 or user.id == res.author_id %}
+
+                {% if res.stype == 0 %}
+                <a href="/section/{{ res.section_id }}" class="return">返回</a>
+                {% else %}
+                <a href="/blog/{{ author.id }}" class="return">返回</a>
+                {% endif %}
+
+                {% if user %}
+                {% if user.role <= 1 or user.id == res.author_id %}
                 <button class="edit">编辑</button>
                 {% endif %}
                 {% endif %}
@@ -188,8 +199,8 @@
                             {{ comment.nickname }}
                         </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
-                        {% if identify != -1 %}
-                            {% if identify <= 1 or user.id == comment.author_id %}
+                        {% if user %}
+                            {% if user.role <= 1 or user.id == comment.author_id %}
                             <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
                             {% endif %}
                             <a class="reply" data-id="{{ comment.id }}"
