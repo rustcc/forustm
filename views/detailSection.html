@@ -115,7 +115,11 @@
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
-                <h3 id="section_id" data-id={{ res.id }}>{{ res.title }}</h3>
+                <h3 id="section_id" data-id={{ res.id }}
+                    onclick="javascript: window.location.reload()"
+                    title="刷新"
+                    style="cursor: pointer;"
+                >{{ res.title }}</h3>
                 {% if manager %}
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
                 {% endif %}
