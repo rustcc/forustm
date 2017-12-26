@@ -24,7 +24,7 @@
 
     .detail .border {
         border: gray 1px solid;
-        margin-top: 15px;
+        margin-top: 10px;
     }
 
     .detail .padding-square {
@@ -95,7 +95,6 @@
         border-radius: 6px;
         font-family: "Source Code Pro", Menlo, Monaco, Consolas, "DejaVu Sans Mono", Inconsolata, monospace;
         white-space: pre-wrap;
-        margin: auto 15%;
     }
 
     .detail-body pre code {
@@ -116,9 +115,9 @@
     .detail-body h4,
     .detail-body h5
     {
-        background: #ddd;
+        background: #eee;
         padding: 10px 20px;
-        border-radius: 5px;
+        border-radius: 1px;
     }
 
     .detail-body ul {
@@ -127,6 +126,7 @@
 
     .comment-title {
         font-size: 14px;
+        background-color: #e8e8e8;
     }
 </style>
 
@@ -167,7 +167,7 @@
             {% else %}
                 {% for comment in comments %}
                 <div class="item border">
-                    <div class="comment-title padding-rectangle" style="background: #eee;">
+                    <div class="comment-title padding-rectangle">
                         {% if comment.author_id == author.id %}
                         作者
                         {% endif %}
@@ -191,7 +191,7 @@
             {% endif %}
 
             <div class="template item border" style="display: none;">
-                <div class="comment-title padding-rectangle" style="background: #eee;">
+                <div class="comment-title padding-rectangle">
                     <a class="author-id"></a> 发表于 <span class="created-time"></span>
                     <a class="delete" data-id="" data-author-id="" href="#" style="display: none;">删除</a>
                     <a class="reply" data-id="" data-author-id="" href="#" style="display: none;">回复</a>
