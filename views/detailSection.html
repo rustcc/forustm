@@ -115,11 +115,11 @@
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
-                <h3 id="section_id" data-id={{ res.id }}
+                <h3><span id="section_id" data-id={{ res.id }}
                     onclick="javascript: window.location.reload()"
                     title="刷新"
                     style="cursor: pointer;"
-                >{{ res.title }}</h3>
+                >{{ res.title }}</span></h3>
                 {% if manager %}
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
                 {% endif %}
@@ -300,13 +300,13 @@
             // edit article
             $("li span.edit").on("click", function () {
                 var uri = '/user/article/edit?id=' + $(this).data("id");
-                window.open(uri);
+                window.location.href = uri;
             });
 
             // new article
             $("button.new-article").on("click", function () {
                 var uri = '/user/article/edit?sectionID=' + getSectionID() + '&stype=' + getStype();
-                window.open(uri);
+                window.location.href = uri;
             });
         }
     );

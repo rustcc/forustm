@@ -18,6 +18,15 @@
         color: blue;
     }
 
+    .edit {
+        color: green;
+    }
+
+    .return {
+        font-size: 14px;
+        color: #228;
+    }
+
     .detail {
         padding: 10px;
     }
@@ -133,6 +142,9 @@
         background-color: #e8e8e8;
     }
 
+    .vice-title {
+        font-size: 14px;
+    }
     .created-time {
         color: #555;
         font-size: 13px;
@@ -153,22 +165,21 @@
 
     <div class="border">
         <div class="underline padding-rectangle">
+                {% if res.stype == 0 %}
+                <a href="/section/{{ res.section_id }}" class="return">&lt; 返回版块</a>
+                {% else %}
+                <a href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
+                {% endif %}
             <div>
-                <h3 onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</h3>
+                <h3><span onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</span></h3>
             </div>
-            <p>
+            <p class="vice-title">
                 <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
                 发表于 <span class="article_created_time"></span>
 
-                {% if res.stype == 0 %}
-                <a href="/section/{{ res.section_id }}" class="return">返回</a>
-                {% else %}
-                <a href="/blog/{{ author.id }}" class="return">返回</a>
-                {% endif %}
-
                 {% if user %}
                 {% if user.role <= 1 or user.id == res.author_id %}
-                <button class="edit">编辑</button>
+                <a class="edit" href="#">编辑</a>
                 {% endif %}
                 {% endif %}
             </p>
@@ -474,7 +485,7 @@
         // edit article
         $(".edit").on("click", function () {
             var uri = '/user/article/edit?id=' + $('.meta').data("id");
-            window.open(uri);
+            window.location.href = uri;
         });
 
         addListeners();

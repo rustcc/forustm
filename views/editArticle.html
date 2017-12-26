@@ -64,9 +64,21 @@
         min-height: 400px;
         font-size: 15px;
     }
+
+    .hidden {
+        display: none;
+    }
+
+    #new-article {
+        padding-left: 0;
+    }
 </style>
 
 <div class="body-content">
+    <h3>
+        <span class="new_article hidden">发表帖子</span>
+        <span class="edit_article hidden">编辑帖子</span>
+    </h3>
     <div id="new-article" class="padding-rectangle topline">
         <div>
             <input class="input" type="text" name="title" placeholder="这里输入标题">
@@ -133,6 +145,11 @@
         // load article from API
         if ('id' in queryDict) {
             editArticle(queryDict.id);
+
+            $('.edit_article').show();
+        }
+        else {
+            $('.new_article').show();
         }
 
         // new & edit article button event
@@ -183,7 +200,7 @@
                     success: function (response) {
                         if (response.status === true) {
                             alert("发表成功！");
-                            window.location.reload();
+                            window.location.href = "/section/" + sectionID;
                         } else {
                             alert("发射失败，请检查输入是否完整！");
                         }
