@@ -62,10 +62,19 @@ impl WebArticle {
             Err(e) => res_400!(format!("article not found: {}", e)),
         }
     }
+
+    fn edit(req: &mut Request) -> SapperResult<Response> {
+        let web = req.ext().get::<WebContext>().unwrap().clone();
+        match *req.ext().get::<Permissions>().unwrap() {
+            Some(_) => res_html!("editArticle.html", web),
+            None => res_redirect!("/login")
+        }
+    }
 }
 
 impl SapperModule for WebArticle {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
+        router.get("/user/article/edit", WebArticle::edit);
         router.get("/article/:id", WebArticle::article);
 
         Ok(())
