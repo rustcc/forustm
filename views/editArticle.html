@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}
+编辑文章 - Rust语言中文社区
+{% endblock title %}
+
+{% block content %}
+<style>
+    .body-content {
+        padding: 10px;
+    }
+    .body-content .border {
+        border: gray 1px solid;
+        margin-top: 10px;
+    }
+
+    .body-content .padding-square {
+        padding: 15px;
+    }
+
+    .body-content .padding-rectangle {
+        padding: 10px 15px;
+    }
+
+    .body-content .padding-samll-rectangle {
+        padding: 5px 10px;
+    }
+
+    .body-content .margin-top {
+        margin-top: 15px;
+    }
+
+    .body-content .margin-bottom {
+        margin-bottom: 15px;
+    }
+
+    .body-content .topline {
+        border-top: gray 1px solid;
+    }
+
+    .body-content * {
+        box-sizing: border-box;
+    }
+
+    .body-content a {
+        text-decoration-line: none;
+    }
+
+    .body-content a:hover {
+        color: cornflowerblue;
+        cursor: pointer;
+    }
+
+    .body-content .input {
+        min-width: 280px;
+        height: 30px;
+        font-size: 18px;
+        width: 60%;
+    }
+
+    .body-content textarea {
+        width: 100%;
+        min-width: 280px;
+        min-height: 400px;
+        font-size: 15px;
+    }
+</style>
+
+<div class="body-content">
+    <div id="new-article" class="padding-rectangle topline">
+        <div>
+            <input class="input" type="text" name="title" placeholder="这里输入标题">
+            <br> <br>
+            <input class="input" type="text" name="tags" placeholder="这里输入标签 以英文逗号分隔">
+            <br> <br>
+            <textarea name="raw-content" placeholder="支持 Markdown 哦，快来试试吧" autofocus></textarea>
+            <br> <br>
+            <button name="submit" data-api="/api/v1/article/new">Biu！发送！</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // edit article
+    function editArticle(id) {
+        $.getJSON("/api/v1/article/get?id=" + id, function (response) {
+            if (response.status === true) {
+                var data = response.data;
+                $("input[name='title']").val(data.title);
+                $("input[name='tags']").val(data.tags);
+
+                $("div#new-article")
+                    .data("type", "edit")
+                    .data("id", data.id)
+                    .data("author-id", data.author_id)
+                    .show();
+
+                var $textarea = $("textarea[name='raw-content']");
+                $textarea
+                    .val(data.content)
+                    .focus();
+            }
+        });
+    }
+
+    // update article
+    function updateArticle(id, author_id, title, raw_content, tags, success) {
+        $.ajax({
+            type: "POST",
+            url: "/api/v1/article/edit",
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            data: JSON.stringify({
+                id: id,
+                author_id: author_id,
+                title: title,
+                raw_content: raw_content,
+                tags: tags
+            }),
+            success: function (response) {
+                if (response.status === true) {
+                    success();
+                } else {
+                    alert("更新失败");
+                }
+            }
+        });
+    }
+
+    $(function () {
+        var queryDict = parseQueryStringToDictionary(window.location.search);
+
+        // load article from API
+        if ('id' in queryDict) {
+            editArticle(queryDict.id);
+        }
+
+        // new & edit article button event
+        $("button[name='submit']").on("click", function() {
+            var title = $("input[name='title']").val();
+            var tags = $("input[name='tags']").val();
+            var rawContent = $("textarea[name='raw-content']").val();
+
+            if (title.trim().length === 0 || rawContent.trim().length === 0) {
+                alert("请输入文章标题和内容！");
+                return;
+            }
+
+            if ('id' in queryDict) {
+                // update article
+                var id = queryDict.id;
+                var $newArticle = $("div#new-article");
+
+                updateArticle(
+                    id,
+                    $newArticle.data("author-id"),
+                    title,
+                    rawContent,
+                    tags,
+                    function() {
+                        $newArticle.data("type", "new");
+                        alert("更新成功！");
+                        window.location.href = window.location.origin + '/article/' + id;
+                    }
+                )
+            } else {
+                // new article
+                var stype = Number(queryDict.stype);
+                var sectionID = queryDict.sectionID;
+
+                $.ajax({
+                    type: "POST",
+                    url: $("button[name='submit']").data("api"),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: "json",
+                    data: JSON.stringify({
+                        section_id: sectionID,
+                        stype: stype,
+                        title: title,
+                        tags: tags,
+                        raw_content: rawContent
+                    }),
+                    success: function (response) {
+                        if (response.status === true) {
+                            alert("发表成功！");
+                            window.location.reload();
+                        } else {
+                            alert("发射失败，请检查输入是否完整！");
+                        }
+                    }
+                });
+            }
+        })
+    })
+</script>
+{% endblock content %}

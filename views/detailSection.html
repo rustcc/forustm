@@ -19,7 +19,7 @@
 
     .body-content .border {
         border: gray 1px solid;
-        margin-top: 15px;
+        margin-top: 10px;
     }
 
     .body-content .padding-square {
@@ -112,7 +112,6 @@
 </style>
 
 <div class="body-content">
-
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
@@ -182,21 +181,6 @@
                 共 {{ total }} 篇, 共 {{ max_page }} 页
             </div>
         </div>
-
-        <div id="new-article" class="padding-rectangle topline" style="display: none;">
-            <div>
-                <h3>{% if res.stype == 0 %}帖子{% else %}文章{% endif %}标题</h3>
-                <input class="input" type="text" name="title" placeholder="这里输入标题">
-                <br>
-                <h3>标签</h3>
-                <input class="input" type="text" name="tags" placeholder="这里输入标签 以英文逗号分隔">
-                <br>
-                <h3>正文</h3>
-                <textarea name="raw-content" placeholder="支持 Markdown 哦，快来试试吧"></textarea>
-                <br> <br>
-                <button name="submit" data-api="/api/v1/article/new">Biu！发送！</button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -234,52 +218,6 @@
                 } else {
                     alert("删除失败");
                 }
-            }
-        });
-    }
-
-    // update article
-    function updateArticle(id, author_id, title, raw_content, tags, success) {
-        $.ajax({
-            type: "POST",
-            url: "/api/v1/article/edit",
-            contentType: 'application/json; charset=utf-8',
-            dataType: "json",
-            data: JSON.stringify({
-                id: id,
-                author_id: author_id,
-                title: title,
-                raw_content: raw_content,
-                tags: tags
-            }),
-            success: function (response) {
-                if (response.status === true) {
-                    success();
-                } else {
-                    alert("更新失败");
-                }
-            }
-        });
-    }
-
-    // edit article
-    function editArticle(id) {
-        $.getJSON("/api/v1/article/get?id=" + id, function (response) {
-            if (response.status === true) {
-                var data = response.data;
-                $("input[name='title']").val(data.title);
-                $("input[name='tags']").val(data.tags);
-
-                $("div#new-article")
-                    .data("type", "edit")
-                    .data("id", data.id)
-                    .data("author-id", data.author_id)
-                    .show();
-
-                var $textarea = $("textarea[name='raw-content']");
-                $textarea
-                    .val(data.content)
-                    .focus();
             }
         });
     }
@@ -344,6 +282,7 @@
             // delete article
             $("li span.delete").on("click", function() {
                 var $this = $(this);
+                if (!confirm("确认删除？")) return;
                 deleteArticle(
                     $this.data("id"),
                     $this.data("author-id"),
@@ -356,73 +295,15 @@
 
             // edit article
             $("li span.edit").on("click", function () {
-                var $this = $(this);
-                editArticle($this.data("id"));
+                var uri = '/user/article/edit?id=' + $(this).data("id");
+                window.open(uri);
             });
 
             // new article
             $("button.new-article").on("click", function () {
-                function run_if_logged_in() {
-                    // show DOM
-                    $("div#new-article").show();
-                    var $textarea = $("textarea[name='raw-content']");
-                    $textarea.focus();
-                }
-
-                checkLoggedIn(run_if_logged_in);
+                var uri = '/user/article/edit?sectionID=' + getSectionID() + '&stype=' + getStype();
+                window.open(uri);
             });
-
-            // new & edit article button event
-            $("button[name='submit']").on("click", function() {
-                var title = $("input[name='title']").val();
-                var tags = $("input[name='tags']").val();
-                var rawContent = $("textarea[name='raw-content']").val();
-                var stype = getStype();
-
-                if (title.trim().length === 0 || rawContent.trim().length === 0) {
-                    alert("请输入文章标题和内容！");
-                    return;
-                }
-
-                var $newComment = $("div#new-article");
-                var type = $newComment.data('type');
-                var id = $newComment.data("id");
-                if (type === "edit") {
-                    updateArticle(
-                        id,
-                        $newComment.data("author-id"),
-                        title,
-                        rawContent,
-                        tags,
-                        function() {
-                            $newComment.data("type", "new");
-                            alert("更新成功！");
-                            window.location.pathname = '/article/' + id;
-                        }
-                    )
-                } else {
-                    $.ajax({
-                        type: "POST",
-                        url: $("button[name='submit']").data("api"),
-                        contentType: 'application/json; charset=utf-8',
-                        dataType: "json",
-                        data: JSON.stringify({
-                            title: title,
-                            tags: tags,
-                            stype: stype,
-                            raw_content: rawContent,
-                            section_id: getSectionID()
-                        }),
-                        success: function (response) {
-                            if (response.status === true) {
-                                window.location.reload();
-                            } else {
-                                alert("发射失败，请检查输入是否完整！");
-                            }
-                        }
-                    });
-                }
-            })
         }
     );
 </script>
