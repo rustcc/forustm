@@ -55,6 +55,10 @@
         list-style: none;
     }
 
+    .detail .edit {
+        color: green;
+    }
+
     .detail .paging {
         display: inline-block;
         border: gray 1px solid;
@@ -130,18 +134,38 @@
     }
 </style>
 
-<div class="role" data-role="{{ identify }}" style="display: none;"></div>
+<div class="meta"
+     {% if user %}
+     data-role="{{ user.role }}"
+     {% else %}
+     data-role="-1"
+     {% endif %}
+     data-id="{{ res.id }}"
+     data-author-id="{{ author.id }}"
+     style="display: none;"></div>
 
 <div class="detail">
 
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
-                <h3>{{ res.title }}</h3>
+                <h3 onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</h3>
             </div>
             <p>
                 <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
                 发表于 <span class="article_created_time"></span>
+
+                {% if res.stype == 0 %}
+                <a href="/section/{{ res.section_id }}" class="return">返回</a>
+                {% else %}
+                <a href="/blog/{{ author.id }}" class="return">返回</a>
+                {% endif %}
+
+                {% if user %}
+                {% if user.role <= 1 or user.id == res.author_id %}
+                <button class="edit">编辑</button>
+                {% endif %}
+                {% endif %}
             </p>
             <p>
                 <small>标签：{{ res.tags }}</small>
@@ -175,8 +199,8 @@
                             {{ comment.nickname }}
                         </a> 发表于
                         <span class="created-time">{{ comment.created_time }}</span>
-                        {% if identify != -1 %}
-                            {% if identify <= 1 or user.id == comment.author_id %}
+                        {% if user %}
+                            {% if user.role <= 1 or user.id == comment.author_id %}
                             <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
                             {% endif %}
                             <a class="reply" data-id="{{ comment.id }}"
@@ -287,7 +311,7 @@
             .data("author-id", content.author_id)
             .show();
 
-        if ($(".role").data("role") !== -1) {
+        if ($(".meta").data("role") !== -1) {
             $newNode.find(".reply")
                 .data("id", content.id)
                 .data("author-id", content.author_id)
@@ -341,6 +365,7 @@
 
             deleteComment(commentID, authorID, function(response) {
                 if (response.status === true) {
+                    if (!confirm("确认删除？")) return;
                     alert("删除成功");
                     $this.closest("div.item").remove();
                 } else {
@@ -441,6 +466,12 @@
         // new article button event
         $("button[name='submit']").on("click", submit);
 
+        // edit article
+        $(".edit").on("click", function () {
+            var uri = '/user/article/edit?id=' + $('.meta').data("id");
+            window.open(uri);
+        });
+
         addListeners();
 
         $('textarea').keydown(function (e) {
@@ -448,8 +479,6 @@
                 submit();
             }
         });
-
-        
     });
 </script>
 {% endblock content %}

@@ -53,6 +53,38 @@ function checkLoggedIn(run_if_logged_in){
     });
 }
 
+function parseQueryStringToDictionary(queryString) {
+    var dictionary = {};
+
+    // remove the '?' from the beginning of the
+    // if it exists
+    if (queryString.indexOf('?') === 0) {
+        queryString = queryString.substr(1);
+    }
+
+    // Step 1: separate out each key/value pair
+    var parts = queryString.split('&');
+
+    for(var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        // Step 2: Split Key/Value pair
+        var keyValuePair = p.split('=');
+
+        // Step 3: Add Key/Value pair to Dictionary object
+        var key = keyValuePair[0];
+        var value = keyValuePair[1];
+
+        // decode URI encoded string
+        value = decodeURIComponent(value);
+        value = value.replace(/\+/g, ' ');
+
+        dictionary[key] = value;
+    }
+
+    // Step 4: Return Dictionary Object
+    return dictionary;
+}
+
 Date.prototype.Format = function (fmt) { //author: meizz 
     var o = {
         "M+": this.getMonth() + 1, //月份 
@@ -63,9 +95,14 @@ Date.prototype.Format = function (fmt) { //author: meizz
         "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
         "S": this.getMilliseconds() //毫秒 
     };
-    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
-    for (var k in o)
-    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    if (/(y+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    }
+    for (var k in o) {
+        if (new RegExp("(" + k + ")").test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        }
+    }
     return fmt;
 }
 
