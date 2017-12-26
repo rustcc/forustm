@@ -159,6 +159,7 @@
      {% endif %}
      data-id="{{ res.id }}"
      data-author-id="{{ author.id }}"
+     data-page-size="{{ page_size }}"
      style="display: none;"></div>
 
 <div class="detail">
@@ -291,7 +292,7 @@
 
     // load new page
     function loadPage(id, page) {
-        var limit = 20;
+        var limit = Number($(".meta").data("page-size"));
         var offset = limit * (page - 1);
 
         if (PAGE.page === page) return;
@@ -493,12 +494,7 @@
         });
 
         addListeners();
-
-        $('textarea').keydown(function (e) {
-            if (e.ctrlKey && e.keyCode == 13) {
-                submit();
-            }
-        });
+        ctrlEnterThen($('textarea'), submit);
     });
 </script>
 {% endblock content %}

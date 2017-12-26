@@ -3,6 +3,7 @@ use sapper_std::{render, PathParams};
 use super::super::{Postgresql};
 use super::super::{Article, RUser, Permissions, WebContext};
 use super::super::models::CommentWithNickName;
+use super::super::page_size;
 use uuid::Uuid;
 
 pub struct WebArticle;
@@ -31,9 +32,10 @@ impl WebArticle {
 
                 // comments
                 let page = 1;
-                let comments = CommentWithNickName::comments_with_article_id_paging(&pg_conn, id, page, 20);
+                let comments = CommentWithNickName::comments_with_article_id_paging(&pg_conn, id, page, page_size());
                 match comments {
                     Ok(com) => {
+                        web.add("page_size", &page_size());
                         web.add("page", &page);
 
                         web.add("comments", &com.comments);
