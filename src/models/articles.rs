@@ -1,5 +1,5 @@
 use super::super::article::dsl::article as all_articles;
-use super::super::article;
+use super::super::{ article, Section };
 use super::super::{markdown_render, RUser, RedisPool};
 
 use chrono::NaiveDateTime;
@@ -19,7 +19,6 @@ struct RawArticles {
     section_id: Uuid,
     author_id: Uuid,
     tags: String,
-    #[allow(warnings)]
     stype: i32, // 0 section, 1 user blog
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
@@ -387,7 +386,16 @@ pub struct NewArticle {
 impl NewArticle {
     pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String>  {
         let user:RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-        InsertArticle::new(self, user.id).insert(conn)
+        if self.stype == 1 {
+            let blog_owner = Section::query_with_section_id(conn, self.section_id.clone()).unwrap().suser.unwrap();
+            if user.id == blog_owner {
+                InsertArticle::new(self, user.id).insert(conn)
+            } else {
+                Err("No right to add articles".to_string())
+            }
+        } else {
+            InsertArticle::new(self, user.id).insert(conn)
+        }
     }
 }
 
