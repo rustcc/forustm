@@ -279,7 +279,7 @@
             .attr("href", "/user/"+content.author_id)
             .text(content.author_id);
         $newNode.find(".created-time")
-            .text(content.created_time);
+            .text((new Date(content.created_time)).LocalFormat());
         $newNode.find(".comment-content")
             .html(content.content);
         $newNode.find(".delete")
