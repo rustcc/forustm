@@ -78,18 +78,26 @@
     }
 
     .body-content .tags {
-        color: gray;
+        color: #555;
+        font-size: 14px;
+    }
+    
+    .body-content .createdTime {
+        color: #333;
+        font-size: 14px;
     }
 
     .body-content .input {
-        width: 500px;
+        min-width: 280px;
         height: 30px;
         font-size: 18px;
+        width: 60%;
     }
 
     .body-content textarea {
         width: 100%;
-        min-height: 300px;
+        min-width: 280px;
+        min-height: 400px;
         font-size: 15px;
     }
 
@@ -104,7 +112,7 @@
 </style>
 
 <div class="body-content">
-    
+
     <div class="border">
         <div class="underline padding-rectangle">
             <div>
@@ -131,7 +139,8 @@
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
-                                        <span class="createdTime">{{ article.created_time }}</span>
+                                        <span class="createdTimePlaceholder" style="display: none">{{ article.created_time }}</span>
+                                        <span class="createdTime"></span>
                                         {% if user %}
                                             {% if user.role <= 1 or user.id == article.author_id %}
                                             <span class="delete" data-id="{{ article.id }}"
@@ -145,6 +154,7 @@
                                             {% endif %}
                                         {% endif %}
                                     </span>
+                                    <div style="clear:both;"></div>
                                 </li>
                             {% endfor %}
 
@@ -318,6 +328,14 @@
     }
 
     $(function () {
+            var mbody = $('.detail-body');
+            mbody.find('li').each(function (i) {
+                var that = $(this);
+                that.find('.createdTime').text(
+                    new Date(that.find('.createdTimePlaceholder').text()).LocalFormat()
+                );
+            });
+
             // page button click event
             $(".paginator a").on("click", function() {
                 loadPage(getSectionID(), $(this).data("page"));

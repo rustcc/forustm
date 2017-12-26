@@ -9,6 +9,15 @@
 <link rel="stylesheet" href="/css/gruvbox-light.css">
 <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js"></script>
 <style>
+    
+    .delete {
+        color: red;
+    }
+
+    .reply {
+        color: blue;
+    }
+
     .detail {
         padding: 10px;
     }
@@ -115,6 +124,10 @@
     .detail-body ul {
         margin: 15px 0 15px 30px;
     }
+
+    .comment-title {
+        font-size: 14px;
+    }
 </style>
 
 <div class="role" data-role="{{ identify }}" style="display: none;"></div>
@@ -220,6 +233,17 @@
         });
     }
     hightlight($("pre code"));
+
+    // format article date
+    var datetime_str = "{{ res.created_time }}";
+    $('.article_created_time').text(new Date(datetime_str).LocalFormat());
+    var mbody = $('#comments');
+    mbody.find('.comment-title').each(function (i) {
+        var that = $(this);
+        that.find('.created-time').text(
+            new Date(that.find('.created-time').text()).LocalFormat()
+        );
+    });
 
     // load new page
     function loadPage(id, page) {
@@ -425,9 +449,7 @@
             }
         });
 
-        // format article date
-        var datetime_str = "{{ res.created_time }}";
-        $('.article_created_time').text(new Date(datetime_str).LocalFormat());
+        
     });
 </script>
 {% endblock content %}
