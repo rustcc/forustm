@@ -218,7 +218,7 @@
                         {% if comment.author_id == author.id %}
                         作者
                         {% endif %}
-                        <a class="author-id" href="/user/{{ comment.author_id }}">
+                        <a class="author-id" href="/blog/{{ comment.author_id }}">
                             {{ comment.nickname }}
                         </a> 
                         <span class="created-time">{{ comment.created_time }}</span>
@@ -323,7 +323,7 @@
         // put data in
         $newNode.data("index", index);
         $newNode.find("a.author-id")
-            .attr("href", "/user/"+content.author_id)
+            .attr("href", "/blog/"+content.author_id)
             .text(content.author_id);
         $newNode.find(".created-time")
             .text((new Date(content.created_time)).LocalFormat());
