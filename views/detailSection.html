@@ -77,12 +77,12 @@
         cursor: pointer;
     }
 
-    .body-content .tags {
+    .body-content .tags{
         color: #666;
         font-size: 14px;
     }
     
-    .body-content .createdTime {
+    .body-content .createdTime, .fabiaoyu  {
         color: #444;
         font-size: 14px;
     }
@@ -109,6 +109,7 @@
         color: green;
         cursor: pointer;
     }
+
 </style>
 
 <div class="meta hide"
@@ -153,7 +154,7 @@
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
-                                        <span class="author">{{ article.author_name }}</span> 发表于
+                                        <span class="author">{{ article.author_name }}</span> <span class="fabiaoyu">发表于</span>
                                         <span class="createdTimePlaceholder" style="display: none">{{ article.created_time }}</span>
                                         <span class="createdTime"></span>
                                         {% if user %}
@@ -177,7 +178,7 @@
                                 <a href=""></a>
                                 <span class="right">
                                     <span class="tags"></span>
-                                    <span class="author"></span> 发表于
+                                    <span class="author"></span>  <span class="fabiaoyu">发表于</span>
                                     <span class="createdTimePlaceholder" style="display: none"></span>
                                     <span class="createdTime"></span>
                                     <span class="delete hide"
