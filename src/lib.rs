@@ -45,5 +45,5 @@ pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, 
 pub use api::{Visitor, User, AdminUser, AdminSection};
 
 pub fn page_size() -> i64 {
-    2
+    20
 }
