@@ -107,7 +107,8 @@ Date.prototype.Format = function (fmt) { //author: meizz
 };
 
 Date.prototype.LocalFormat = function () {
-    return new Date(this.getTime() + 3600000 * 8).Format("yyyy-MM-dd hh:mm:ss");
+    //return new Date(this.getTime() + 3600000 * 8).Format("yyyy-MM-dd hh:mm:ss");
+    return new Date(this.getTime()).Format("yyyy-MM-dd hh:mm:ss");
 };
 
 
