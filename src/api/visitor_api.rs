@@ -200,22 +200,22 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_by_stype_paging(&pg_pool, 1, page, page_size()) {
+        match Article::query_blogs_paging(&pg_pool, 1, page, page_size()) {
             Ok(arts_with_count) => {
                 let res = json!({
-                "status": true,
-                "articles": arts_with_count.articles,
-                "total": arts_with_count.total,
-                "max_page": arts_with_count.max_page,
-            });
+                    "status": true,
+                    "articles": arts_with_count.articles,
+                    "total": arts_with_count.total,
+                    "max_page": arts_with_count.max_page,
+                });
 
                 response.write_body(serde_json::to_string(&res).unwrap());
             },
             Err(err) => {
                 let res = json!({
-                "status": false,
-                "error": err,
-            });
+                    "status": false,
+                    "error": err,
+                });
 
                 response.write_body(serde_json::to_string(&res).unwrap());
             }

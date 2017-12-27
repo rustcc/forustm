@@ -111,15 +111,16 @@ impl WebSection {
         let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let page = 1;
-        let res = Article::query_articles_by_stype_paging(&pg_conn, 1, page, page_size());
+        let res = Article::query_blogs_paging(&pg_conn, 1, page, page_size());
 
         match res {
             Ok(r) => {
+                web.add("blog_planet", &"true");
                 web.add("articles", &r.articles);
                 web.add("page", &page);
                 web.add("total", &r.total);
                 web.add("max_page", &r.max_page);
-                res_html!("blogs.html", web)
+                res_html!("detailSection.html", web)
             },
             Err(e) => res_400!(format!("blogs not found: {}", e)),
         }

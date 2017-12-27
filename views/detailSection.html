@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block title %}
+{% if blog_planet %}
+Rust博客星球 - Rust语言中文社区
+{% else %}
 {{ res.title }} - Rust语言中文社区
+{% endif %}
 {% endblock title %}
 
 {% block content %}
@@ -9,10 +13,12 @@
     .body-content {
         padding: 10px;
     }
-    .body-content .notice {
+
+    .body-content .blogs {
         border: gray 1px solid;
         padding: 4px;
-        min-height: 50px;
+        min-height: 24px;
+        line-height: 24px;
         text-align: center;
         margin-top: 5px;
     }
@@ -82,7 +88,7 @@
         font-size: 14px;
     }
     
-    .body-content .createdTime, .fabiaoyu  {
+    .body-content .createdTime, .author  {
         color: #444;
         font-size: 14px;
     }
@@ -120,7 +126,14 @@
 ></div>
 
 <div class="body-content">
+    {% if blog_planet %}
+    <div class="blogs">
+        <p>Rust博客星球，我们的家园</p>
+    </div>
+    {% endif %}
+
     <div class="border">
+        {% if not blog_planet %}
         <div class="underline padding-rectangle">
             <div>
                 <h3><span id="section_id" data-id={{ res.id }}
@@ -141,6 +154,7 @@
                 <small>{{ res.description }}</small>
             </p>
         </div>
+        {% endif %}
         <div class="detail padding-square">
             <div class="title border">
                 <div class="detail-body">
@@ -154,7 +168,7 @@
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
-                                        <span class="author">{{ article.author_name }}</span> <span class="fabiaoyu">发表于</span>
+                                        <span class="author">{{ article.author_name }}</span> 
                                         <span class="createdTimePlaceholder" style="display: none">{{ article.created_time }}</span>
                                         <span class="createdTime"></span>
                                         {% if user %}
@@ -178,7 +192,7 @@
                                 <a href=""></a>
                                 <span class="right">
                                     <span class="tags"></span>
-                                    <span class="author"></span>  <span class="fabiaoyu">发表于</span>
+                                    <span class="author"></span>
                                     <span class="createdTimePlaceholder" style="display: none"></span>
                                     <span class="createdTime"></span>
                                     <span class="delete hide"
@@ -216,8 +230,12 @@
     // load new page
     function loadPage(sectionID, page) {
         if (PAGE.page === page) return;
+        var is_blog = {% if blog_planet  %} true {% else %} false {% endif %};
+        var url = is_blog? 
+            "/api/v1/blogs/paging?" + "&page=" + page : 
+            "/api/v1/article/paging?id=" + sectionID + "&page=" + page;
 
-        $.getJSON("/api/v1/article/paging?id=" + sectionID + "&page=" + page, function (response) {
+        $.getJSON(url, function (response) {
             $("li.item").not("li.template").remove();
 
             for(var i=0, l=response.articles.length; i < l; i++) {

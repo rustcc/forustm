@@ -176,7 +176,8 @@
             </div>
             <p class="vice-title">
                 {% if res.stype == 0 %}
-                <a href="/user/{{ author.id }}">{{ author.nickname }}</a>
+                <!--<a href="/user/{{ author.id }}">{{ author.nickname }}</a>-->
+                <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
                 {% else %}
                 <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
                 {% endif %}

@@ -16,7 +16,7 @@ impl Index {
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         
         // query blogs
-        let res = Article::query_articles_by_stype_paging(&pg_conn, 1, 1, 3);
+        let res = Article::query_blogs_paging(&pg_conn, 1, 1, 3);
         if res.is_ok(){
             web.add("blogs", &res.unwrap().articles);
         }
