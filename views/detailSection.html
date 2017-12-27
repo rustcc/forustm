@@ -146,8 +146,10 @@ Rust博客星球 - Rust语言中文社区
                 <small>{% if res.stype == 0 %}管理员{% else %}作者{% endif %}：<a href="/user/{{ manager.id }}">{{ manager.nickname }}</a></small>
                 -->
                 {% endif %}
-                {% if user %}
-                <button class="right new-article">发表新{% if res.stype == 0 %}帖子{% else %}文章{% endif %}</button>
+                {% if res.stype == 0 %}
+                <button class="right new-article">发表新帖子</button>
+                {% elif user and res.suser == user.id %}
+                <button class="right new-article">发表新文章</button>
                 {% endif %}
             </div>
             <p>
