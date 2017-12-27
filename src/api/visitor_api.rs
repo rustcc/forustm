@@ -237,7 +237,8 @@ impl Visitor {
 
         let offset: i64 = t_param_default!(query_params, "offset", "0")
             .clone().parse().unwrap();
-        let limit: i64 = t_param_default!(query_params, "limit", "20")
+        let _page_size: &str = &*format!("{}", page_size());
+        let limit: i64 = t_param_default!(query_params, "limit", _page_size)
             .clone().parse().unwrap();
 
         match CommentWithNickName::query(&pg_pool, limit, offset, article_id) {
