@@ -68,18 +68,26 @@ ul li {
 }
 
 .body-content .category-section {
-    margin-top: 15px;
+    margin: 10px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .one-section {
-    width: 28%;
-    margin-right: 15px;
-    margin-bottom: 15px;
+    width: 30%;
+    margin-top: 15px;
     padding: 10px;
     border: gray 1px solid;
     height: 104px;
     float: left;
     min-width: 276px;
+}
+
+@media screen and (max-width: 901px) {
+    .one-section {
+        width: 100%;
+    }
 }
 
 .body-content .incubation-area .incubation-area-container {
