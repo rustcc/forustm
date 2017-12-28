@@ -95,22 +95,30 @@ impl Visitor {
             account: String
         }
         let body: Account = get_json_params!(req);
-        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let res = match RUser::reset_password(&pg_pool, body.account) {
-            Ok(data) => {
-                json!({
+        if &body.account == "admin@admin.com" {
+            let res = json!({
+                "status": false,
+                "data": "Can't change admin".to_string()
+            });
+            res_json!(res)
+        } else {
+            let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+            let res = match RUser::reset_password(&pg_pool, body.account) {
+                Ok(data) => {
+                    json!({
                     "status": true,
                     "data": data
                 })
-            }
-            Err(err) => {
-                json!({
+                }
+                Err(err) => {
+                    json!({
                     "status": false,
                     "error": err
                 })
-            }
-        };
-        res_json!(res)
+                }
+            };
+            res_json!(res)
+        }
     }
 
     fn articles_paging(req: &mut Request) -> SapperResult<Response> {
