@@ -109,7 +109,7 @@ function register() {
                 if (res.status) {
                     window.location = "/home"
                 } else {
-                    $("#sign_up").prev().before("<span class='text-danger'>用户已创建</span>")
+                    $("#sign_up").prev().before("<span class='text-danger'>用户已存在</span>")
                 }
             }
         })

@@ -4,7 +4,7 @@ create extension pgcrypto;
 
 CREATE TABLE ruser (
   id uuid primary key default gen_random_uuid(),
-  account VARCHAR NOT NULL,
+  account VARCHAR unique NOT NULL,
   password VARCHAR NOT NULL,
   salt VARCHAR NOT NULL,
   nickname VARCHAR NOT NULL,
