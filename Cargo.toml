@@ -18,6 +18,7 @@ authors = ["Mike Tang <miketang84@outlook.com>"]
  r2d2_redis = '^0.7.0'
  r2d2-diesel = '^1.0.0-beta1'
  serde_urlencoded = "^0.5.1"
+ ammonia = "^1.0.1"
 
 [dependencies.diesel]
 features = ["postgres", "chrono", "uuid"]

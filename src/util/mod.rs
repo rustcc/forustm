@@ -14,6 +14,7 @@ use sapper::header::ContentType;
 use sapper_std::{Context, SessionVal};
 use super::RUser;
 use serde_urlencoded;
+use ammonia::clean;
 
 /// Get random value
 #[inline]
@@ -45,7 +46,7 @@ pub fn markdown_render(md: &str) -> String {
         ext_superscript: true,
         ..ComrakOptions::default()
     };
-    markdown_to_html(md, &option)
+    clean(&markdown_to_html(md, &option))
 }
 
 /// Get visitor status and web context
