@@ -276,20 +276,25 @@ impl NewUser {
     }
 
     fn insert(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
-        match diesel::insert_into(ruser::table)
-            .values(self)
-            .get_result::<RawUser>(conn) {
-            Ok(info) => {
-                let section = InsertSection {
-                    title: info.nickname.clone(),
-                    description: format!("{}的博客", info.nickname),
-                    stype: 1,
-                    suser: Some(info.id),
-                };
-                section.insert(conn);
-                self.set_cookies(redis_pool, info.into_user_info())
+        match all_rusers.filter(ruser::account.eq(&self.account)).first::<RawUser>(conn) {
+            Ok(_) => { Err("Account already exists".to_string()) },
+            Err(_) => {
+                match diesel::insert_into(ruser::table)
+                    .values(self)
+                    .get_result::<RawUser>(conn) {
+                    Ok(info) => {
+                        let section = InsertSection {
+                            title: info.nickname.clone(),
+                            description: format!("{}的博客", info.nickname),
+                            stype: 1,
+                            suser: Some(info.id),
+                        };
+                        section.insert(conn);
+                        self.set_cookies(redis_pool, info.into_user_info())
+                    }
+                    Err(err) => Err(format!("{}", err)),
+                }
             }
-            Err(err) => Err(format!("{}", err)),
         }
     }
 
