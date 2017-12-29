@@ -378,6 +378,12 @@ Rust博客星球 - Rust语言中文社区
                 var uri = '/user/article/edit?sectionID=' + getSectionID() + '&stype=' + getStype();
                 window.location.href = uri;
             });
+
+            // open article in new page
+            var isMobile = !!navigator.userAgent.match(/AppleWebKit.*Mobile.*/);
+            if ($(window).width() > 1200 && !isMobile) {
+                $("li.item a").attr("target", "_blank");
+            }
         }
     );
 </script>
