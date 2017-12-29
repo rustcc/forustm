@@ -348,7 +348,7 @@
         $newNode.data("index", index);
         $newNode.find("a.author-id")
             .attr("href", "/blog/"+content.author_id)
-            .text(content.author_id);
+            .text(content.nickname);
         $newNode.find(".created-time")
             .text((new Date(content.created_time)).LocalFormat());
         $newNode.find(".comment-content")
