@@ -24,6 +24,7 @@ extern crate r2d2_redis;
 extern crate r2d2_diesel;
 extern crate uuid;
 extern crate serde_urlencoded;
+extern crate ammonia;
 
 pub mod api;
 pub mod schema;
