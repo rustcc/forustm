@@ -1,6 +1,7 @@
 use super::super::ruser;
 use super::super::ruser::dsl::ruser as all_rusers;
-use super::super::{sha3_256_encode, random_string, RedisPool, InsertSection, send_reset_password_email};
+use super::super::{sha3_256_encode, random_string, RedisPool, InsertSection,
+                   send_reset_password_email, get_github_primary_email};
 
 use uuid::Uuid;
 use chrono::{NaiveDateTime, Local};
@@ -23,6 +24,7 @@ struct RawUser {
     pub nickname: String,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
+    pub github: Option<String>,
     pub say: Option<String>,
     pub signup_time: NaiveDateTime,
     pub role: i16, // member => 2, manager => 1, admin => 0
@@ -38,6 +40,7 @@ impl RawUser {
             say: self.say,
             avatar: self.avatar,
             wx_openid: self.wx_openid,
+            github: self.github,
             signup_time: self.signup_time,
             role: self.role,
         }
@@ -52,21 +55,25 @@ pub struct RUser {
     pub say: Option<String>,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
+    pub github: Option<String>,
     pub signup_time: NaiveDateTime,
     pub role: i16,
 }
 
 impl RUser {
     pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<RUser, String> {
-        let res = all_rusers.filter(ruser::id.eq(id))
-            .first::<RawUser>(conn);
+        let res = all_rusers.filter(ruser::id.eq(id)).first::<RawUser>(conn);
         match res {
             Ok(data) => Ok(data.into_user_info()),
             Err(e) => Err(format!("{}", e)),
         }
     }
 
-    pub fn view_user_list(conn: &PgConnection, limit: i64, offset: i64) -> Result<Vec<Self>, String> {
+    pub fn view_user_list(
+        conn: &PgConnection,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Self>, String> {
         let res = all_rusers
             .limit(limit)
             .offset(offset)
@@ -74,9 +81,12 @@ impl RUser {
             .get_results::<RawUser>(conn);
         match res {
             Ok(raw_user_list) => {
-                Ok(raw_user_list.into_iter()
-                    .map( |raw_user:RawUser| raw_user.into_user_info())
-                    .collect::<Vec<Self>>())
+                Ok(
+                    raw_user_list
+                        .into_iter()
+                        .map(|raw_user: RawUser| raw_user.into_user_info())
+                        .collect::<Vec<Self>>(),
+                )
             }
             Err(err) => Err(format!("{}", err)),
         }
@@ -110,19 +120,19 @@ impl RUser {
         let salt = random_string(6);
         let new_password = random_string(8);
         let res = diesel::update(all_rusers.filter(ruser::account.eq(&account)))
-            .set((ruser::password.eq(sha3_256_encode(new_password.clone() + &salt)),
-                  ruser::salt.eq(salt)))
+            .set((
+                ruser::password.eq(
+                    sha3_256_encode(new_password.clone() + &salt),
+                ),
+                ruser::salt.eq(salt),
+            ))
             .execute(conn);
         match res {
             Ok(num) => {
-                thread::spawn(move || {
-                    send_reset_password_email(new_password, account)
-                });
+                thread::spawn(move || send_reset_password_email(new_password, account));
                 Ok(num)
             }
-            Err(err) => {
-                Err(format!("{}", err))
-            }
+            Err(err) => Err(format!("{}", err)),
         }
     }
 }
@@ -141,12 +151,14 @@ pub struct LoginUser {
 }
 
 impl LoginUser {
-    pub fn verification(&self,
-                        conn: &PgConnection,
-                        redis_pool: &Arc<RedisPool>,
-                        max_age: &Option<i64>)
-                        -> Result<String, String> {
-        let res = all_rusers.filter(ruser::status.eq(0))
+    pub fn verification(
+        &self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        max_age: &Option<i64>,
+    ) -> Result<String, String> {
+        let res = all_rusers
+            .filter(ruser::status.eq(0))
             .filter(ruser::account.eq(self.account.to_owned()))
             .get_result::<RawUser>(conn);
         match res {
@@ -177,6 +189,62 @@ impl LoginUser {
     pub fn sign_out(redis_pool: &Arc<RedisPool>, cookies: &str) -> bool {
         redis_pool.del(cookies)
     }
+
+    pub fn login_with_github(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        github: String,
+        nickname: String,
+        token: String,
+    ) -> Result<String, String> {
+        let ttl = 24 * 60 * 60;
+        match all_rusers
+            .filter(ruser::status.eq(0))
+            .filter(ruser::github.eq(&github))
+            .get_result::<RawUser>(conn) {
+            // github already exists
+            Ok(data) => {
+                let cookie = sha3_256_encode(random_string(8));
+                redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+                redis_pool.hset(&cookie, "info", json!(data.into_user_info()).to_string());
+                redis_pool.expire(&cookie, ttl);
+                Ok(cookie)
+            }
+            Err(_) => {
+                let email = get_github_primary_email(&token);
+
+                match all_rusers
+                    .filter(ruser::status.eq(0))
+                    .filter(ruser::account.eq(&email))
+                    .get_result::<RawUser>(conn) {
+                    // Account already exists but not linked
+                    Ok(data) => {
+                        let res = diesel::update(all_rusers.filter(ruser::id.eq(data.id)))
+                            .set(ruser::github.eq(github))
+                            .get_result::<RawUser>(conn);
+                        match res {
+                            Ok(info) => {
+                                let cookie = sha3_256_encode(random_string(8));
+                                redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+                                redis_pool.hset(
+                                    &cookie,
+                                    "info",
+                                    json!(info.into_user_info()).to_string(),
+                                );
+                                redis_pool.expire(&cookie, ttl);
+                                Ok(cookie)
+                            }
+                            Err(err) => Err(format!("{}", err)),
+                        }
+                    }
+                    // sign up
+                    Err(_) => {
+                        NewUser::new_with_github(email, github, nickname).insert(conn, redis_pool)
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -188,18 +256,21 @@ pub struct EditUser {
 }
 
 impl EditUser {
-    pub fn edit_user(self,
-                     conn: &PgConnection,
-                     redis_pool: &Arc<RedisPool>,
-                     cookie: &str)
-                     -> Result<usize, String> {
+    pub fn edit_user(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
         let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
             .unwrap();
         let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
-            .set((ruser::nickname.eq(self.nickname),
-                  ruser::say.eq(self.say),
-                  ruser::avatar.eq(self.avatar),
-                  ruser::wx_openid.eq(self.wx_openid)))
+            .set((
+                ruser::nickname.eq(self.nickname),
+                ruser::say.eq(self.say),
+                ruser::avatar.eq(self.avatar),
+                ruser::wx_openid.eq(self.wx_openid),
+            ))
             .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
@@ -218,11 +289,12 @@ pub struct ChangePassword {
 }
 
 impl ChangePassword {
-    pub fn change_password(&self,
-                           conn: &PgConnection,
-                           redis_pool: &Arc<RedisPool>,
-                           cookie: &str)
-                           -> Result<usize, String> {
+    pub fn change_password(
+        &self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
         let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
             .unwrap();
 
@@ -242,7 +314,9 @@ impl ChangePassword {
     }
 
     fn verification(&self, conn: &PgConnection, id: &Uuid) -> bool {
-        let old_user = all_rusers.filter(ruser::id.eq(id)).get_result::<RawUser>(conn);
+        let old_user = all_rusers.filter(ruser::id.eq(id)).get_result::<RawUser>(
+            conn,
+        );
         match old_user {
             Ok(old) => {
                 if old.password == sha3_256_encode(self.old_password.to_owned() + &old.salt) {
@@ -263,6 +337,7 @@ struct NewUser {
     pub password: String,
     pub salt: String,
     pub nickname: String,
+    pub github: Option<String>,
 }
 
 impl NewUser {
@@ -272,12 +347,25 @@ impl NewUser {
             password: sha3_256_encode(reg.password + &salt),
             salt: salt,
             nickname: reg.nickname,
+            github: None,
+        }
+    }
+
+    fn new_with_github(email: String, github: String, nickname: String) -> Self {
+        NewUser {
+            account: email,
+            password: sha3_256_encode(random_string(8)),
+            salt: random_string(6),
+            nickname: nickname,
+            github: Some(github),
         }
     }
 
     fn insert(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
-        match all_rusers.filter(ruser::account.eq(&self.account)).first::<RawUser>(conn) {
-            Ok(_) => { Err("Account already exists".to_string()) },
+        match all_rusers
+            .filter(ruser::account.eq(&self.account))
+            .first::<RawUser>(conn) {
+            Ok(_) => Err("Account already exists".to_string()),
             Err(_) => {
                 match diesel::insert_into(ruser::table)
                     .values(self)
@@ -315,10 +403,11 @@ pub struct RegisteredUser {
 }
 
 impl RegisteredUser {
-    pub fn register(self,
-                    conn: &PgConnection,
-                    redis_pool: &Arc<RedisPool>)
-                    -> Result<String, String> {
+    pub fn register(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+    ) -> Result<String, String> {
         NewUser::new(self, random_string(6)).insert(conn, redis_pool)
     }
 }
