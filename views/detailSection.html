@@ -150,6 +150,9 @@ Rust博客星球 - Rust语言中文社区
             <p>
                 <small>{{ res.description }}</small>
             </p>
+            {% if res.stype == 1 %}
+            <label>Github：</label><a style="display:inline;" class="github" href={{ manager.github }}>{{ manager.github }}</a>
+            {% endif %}
         </div>
         {% endif %}
         <div class="detail padding-square">
