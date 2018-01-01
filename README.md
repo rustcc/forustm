@@ -1,4 +1,4 @@
-Forustm
+# Forustm
 
 Forum for Rust Community, developed in Rust, with [Sapper](https://github.com/sappworks/sapper).
 
