@@ -8,7 +8,7 @@ use uuid::Uuid;
 use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
-use super::super::{get_github_token, get_github_nickname_and_address};
+use super::super::{get_github_token, get_github_nickname_and_address, create_https_client};
 
 pub struct Visitor;
 
@@ -63,14 +63,15 @@ impl Visitor {
 
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+        let https_client = create_https_client();
 
-        let token = get_github_token(code)?;
+        let token = get_github_token(&https_client, code)?;
 
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let (nickname, github_address) = get_github_nickname_and_address(&token);
-        match LoginUser::login_with_github(&pg_pool, redis_pool, github_address, nickname, token) {
+        let (nickname, github_address) = get_github_nickname_and_address(&https_client,&token);
+        match LoginUser::login_with_github(&pg_pool, redis_pool, https_client, github_address, nickname, token) {
             Ok(cookie) => {
                 let res = json!({
                     "status": true,

@@ -12,6 +12,7 @@ use serde_json;
 use std::sync::Arc;
 use std::thread;
 use super::ChangStatus;
+use sapper::Client;
 
 
 #[derive(Queryable)]
@@ -193,6 +194,7 @@ impl LoginUser {
     pub fn login_with_github(
         conn: &PgConnection,
         redis_pool: &Arc<RedisPool>,
+        https_client: Client,
         github: String,
         nickname: String,
         token: String,
@@ -211,7 +213,7 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = get_github_primary_email(&token);
+                let email = get_github_primary_email(&https_client, &token);
 
                 match all_rusers
                     .filter(ruser::status.eq(0))

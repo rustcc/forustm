@@ -36,7 +36,7 @@ pub mod web;
 pub mod web_wechat;
 
 pub(crate) use util::{sha3_256_encode, random_string, markdown_render, send_reset_password_email,
-                      get_github_token, get_github_primary_email, get_github_nickname_and_address};
+                      get_github_token, get_github_primary_email, get_github_nickname_and_address, create_https_client};
 pub(crate) use schema::{article, ruser, section, comment};
 pub(crate) use models::{Article, ArticleBrief, EditArticle, NewArticle, DeleteArticle};
 pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword,
