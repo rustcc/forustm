@@ -9,10 +9,13 @@ use serde_urlencoded;
 use serde_json;
 use sapper::Error as SapperError;
 
-pub fn get_github_token(code: String) -> Result<String, SapperError> {
+pub fn create_https_client() -> Client {
     let ssl = NativeTlsClient::new().unwrap();
     let connector = HttpsConnector::new(ssl);
-    let client = Client::with_connector(connector);
+    Client::with_connector(connector)
+}
+
+pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperError> {
     let body = serde_urlencoded::to_string(
         [
             ("client_id", "3160b870124b1fcfc4cb"),
@@ -41,11 +44,7 @@ pub fn get_github_token(code: String) -> Result<String, SapperError> {
     }
 }
 
-pub fn get_github_nickname_and_address(raw_token: &str) -> (String, String) {
-    let ssl = NativeTlsClient::new().unwrap();
-    let connector = HttpsConnector::new(ssl);
-    let client = Client::with_connector(connector);
-
+pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> (String, String) {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let user_url = format!("https://api.github.com/user?{}", token);
@@ -68,11 +67,7 @@ pub fn get_github_nickname_and_address(raw_token: &str) -> (String, String) {
     (nickname, github_address)
 }
 
-pub fn get_github_primary_email(raw_token: &str) -> String {
-    let ssl = NativeTlsClient::new().unwrap();
-    let connector = HttpsConnector::new(ssl);
-    let client = Client::with_connector(connector);
-
+pub fn get_github_primary_email(client: &Client, raw_token: &str) -> String {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let email_url = format!("https://api.github.com/user/emails?{}", token);
