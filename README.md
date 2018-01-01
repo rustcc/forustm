@@ -2,7 +2,7 @@
 
 Forum for Rust Community, developed in Rust, with [Sapper](https://github.com/sappworks/sapper).
 
-Now works on [Rust](CChttps://rust.cc)
+Now works on [Rust.cc](https://rust.cc)
 
 ## How to run it
 
