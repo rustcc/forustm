@@ -4,7 +4,7 @@ pub mod github_information;
 
 pub use self::redis_pool::{create_redis_pool, RedisPool, Redis};
 pub use self::postgresql_pool::{create_pg_pool, Postgresql};
-pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email, get_github_token};
+pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email, get_github_token, create_https_client};
 
 use rand::{thread_rng, Rng};
 use serde_json;
