@@ -24,11 +24,11 @@ struct RawUser {
     pub nickname: String,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
-    pub github: Option<String>,
     pub say: Option<String>,
     pub signup_time: NaiveDateTime,
     pub role: i16, // member => 2, manager => 1, admin => 0
     pub status: i16, // 0 normal, 1 frozen, 2 deleted
+    pub github: Option<String>,
 }
 
 impl RawUser {
@@ -40,9 +40,9 @@ impl RawUser {
             say: self.say,
             avatar: self.avatar,
             wx_openid: self.wx_openid,
-            github: self.github,
             signup_time: self.signup_time,
             role: self.role,
+            github: self.github,
         }
     }
 }
@@ -55,9 +55,9 @@ pub struct RUser {
     pub say: Option<String>,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
-    pub github: Option<String>,
     pub signup_time: NaiveDateTime,
     pub role: i16,
+    pub github: Option<String>,
 }
 
 impl RUser {
