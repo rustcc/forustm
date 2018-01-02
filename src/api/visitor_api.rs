@@ -70,8 +70,8 @@ impl Visitor {
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let (nickname, github_address) = get_github_nickname_and_address(&https_client,&token);
-        match LoginUser::login_with_github(&pg_pool, redis_pool, https_client, github_address, nickname, token) {
+        let (nickname, github_address) = get_github_nickname_and_address(&https_client,&token)?;
+        match LoginUser::login_with_github(&pg_pool, redis_pool, &https_client, github_address, nickname, token) {
             Ok(cookie) => {
                 let res = json!({
                     "status": true,

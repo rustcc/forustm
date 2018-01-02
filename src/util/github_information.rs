@@ -4,7 +4,6 @@ use hyper_native_tls::NativeTlsClient;
 use std::io::Read;
 use hyper::header::ContentType;
 use hyper::header::Headers;
-use std::collections::HashMap;
 use serde_urlencoded;
 use serde_json;
 use sapper::Error as SapperError;
@@ -25,26 +24,28 @@ pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperE
         ],
     ).unwrap();
 
-    let mut res = client
-        .post("https://github.com/login/oauth/access_token")
+    client.post("https://github.com/login/oauth/access_token")
         .header(ContentType::form_url_encoded())
         .body(&body)
         .send()
-        .unwrap();
-
-    let mut text = String::new();
-    res.read_to_string(&mut text).unwrap();
-
-    let res_decode = serde_urlencoded::from_str::<HashMap<String, String>>(&text).unwrap();
-
-    if res_decode.contains_key("access_token") {
-        Ok(res_decode.get("access_token").unwrap().to_string())
-    } else {
-        Err(SapperError::Custom("No permission".to_string()))
-    }
+        .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
+        .and_then(|mut response|{
+            let mut body = String::new();
+            response.read_to_string(&mut body)
+                .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
+                .map(|_| body)
+        }).and_then(|ref body| {
+        #[derive(Deserialize)]
+        struct Inner {
+            access_token: String
+        }
+        serde_urlencoded::from_str::<Inner>(body)
+            .map_err(|_| SapperError::Custom(String::from("No permission")))
+            .map(|inner| inner.access_token)
+        })
 }
 
-pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> (String, String) {
+pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> Result<(String, String), SapperError> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let user_url = format!("https://api.github.com/user?{}", token);
@@ -52,40 +53,60 @@ pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> (Str
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    let mut raw_user_res = client
-        .get(&user_url)
+    client.get(&user_url)
         .headers(header.clone())
         .send()
-        .unwrap();
-    let mut text = String::new();
-    raw_user_res.read_to_string(&mut text).unwrap();
-
-    let raw_user: serde_json::Value = serde_json::from_str(&text).unwrap();
-    let nickname = raw_user["name"].as_str().unwrap().to_string();
-    let github_address = raw_user["html_url"].as_str().unwrap().to_string();
-
-    (nickname, github_address)
+        .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
+        .and_then(|mut response|{
+            let mut body = String::new();
+            response.read_to_string(&mut body)
+                .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
+                .map(|_| body)
+        }).and_then(|ref body| {
+            serde_json::from_str::<serde_json::Value>(body)
+                .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
+                .and_then(|inner| {
+                    let nickname = match inner["name"].as_str() {
+                        Some(data) => data.to_string(),
+                        None => return Err(SapperError::Custom(format!("read body error")))
+                    };
+                    let github_address = match inner["html_url"].as_str() {
+                        Some(data) => data.to_string(),
+                        None => return Err(SapperError::Custom(format!("read body error")))
+                    };
+                    Ok((nickname, github_address))
+                })
+        })
 }
 
-pub fn get_github_primary_email(client: &Client, raw_token: &str) -> String {
+pub fn get_github_primary_email(client: &Client, raw_token: &str) -> Result<String, String> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let email_url = format!("https://api.github.com/user/emails?{}", token);
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    let mut raw_emails_res = client.get(&email_url).headers(header).send().unwrap();
-    let mut text = String::new();
-    raw_emails_res.read_to_string(&mut text).unwrap();
-
-    let raw_emails: Vec<serde_json::Value> = serde_json::from_str(&text).unwrap();
-    let primary_email = raw_emails
-        .iter()
-        .into_iter()
-        .filter(|x| x["primary"].as_bool().unwrap())
-        .map(|x| x["email"].as_str().unwrap())
-        .collect::<Vec<&str>>()
-        [0];
-
-    primary_email.to_string()
+    client.get(&email_url)
+        .headers(header)
+        .send()
+        .map_err(|e| format!("hyper's io error: '{}'", e))
+        .and_then(|mut response|{
+            let mut body = String::new();
+            response.read_to_string(&mut body)
+                .map_err(|e| format!("read body error: '{}'", e))
+                .map(|_| body)
+        }).and_then(|ref body| {
+        serde_json::from_str::<Vec<serde_json::Value>>(body)
+            .map_err(|e| format!("read body error: '{}'", e))
+            .map(|raw_emails| {
+                let primary_email = raw_emails
+                    .iter()
+                    .into_iter()
+                    .filter(|x| x["primary"].as_bool().unwrap())
+                    .map(|x| x["email"].as_str().unwrap())
+                    .collect::<Vec<&str>>()
+                    [0];
+                primary_email.to_string()
+            })
+    })
 }

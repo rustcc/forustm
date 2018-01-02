@@ -194,7 +194,7 @@ impl LoginUser {
     pub fn login_with_github(
         conn: &PgConnection,
         redis_pool: &Arc<RedisPool>,
-        https_client: Client,
+        https_client: &Client,
         github: String,
         nickname: String,
         token: String,
@@ -213,7 +213,10 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = get_github_primary_email(&https_client, &token);
+                let email = match get_github_primary_email(https_client, &token) {
+                    Ok(data) => data,
+                    Err(e) => return Err(e)
+                };
 
                 match all_rusers
                     .filter(ruser::status.eq(0))
