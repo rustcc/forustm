@@ -23,7 +23,7 @@ pub fn get_github_token(code: &str) -> Result<String, SapperError> {
             let mut body = String::new();
             response.read_to_string(&mut body)
                 .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
-                .map(|_|body)
+                .map(|_| serde_urlencoded::from_str::<String>(&body).unwrap())
     }).and_then(|ref body| {
         #[derive(Deserialize)]
         struct Inner {
