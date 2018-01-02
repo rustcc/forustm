@@ -11,13 +11,12 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_infer_schema;
 extern crate dotenv;
-extern crate hyper;
-extern crate hyper_native_tls;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate r2d2_redis;
 extern crate rand;
 extern crate redis;
+extern crate reqwest;
 extern crate sapper;
 #[macro_use]
 extern crate sapper_std;
@@ -42,7 +41,7 @@ pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser,
 pub(crate) use models::{DeleteComment, NewComment};
 pub(crate) use models::{InsertSection, PubNotice, Section};
 pub(crate) use schema::{article, comment, ruser, section};
-pub(crate) use util::{create_https_client, get_github_nickname_and_address, get_github_primary_email,
+pub(crate) use util::{get_github_nickname_and_address, get_github_primary_email,
                       get_github_token, markdown_render, random_string, send_reset_password_email, sha3_256_encode};
 
 pub use api::{AdminSection, AdminUser, User, Visitor};

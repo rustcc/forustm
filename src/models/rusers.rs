@@ -8,7 +8,6 @@ use chrono::{Local, NaiveDateTime};
 use diesel;
 use diesel::PgConnection;
 use diesel::prelude::*;
-use sapper::Client;
 use serde_json;
 use std::sync::Arc;
 use std::thread;
@@ -183,7 +182,6 @@ impl LoginUser {
     pub fn login_with_github(
         conn: &PgConnection,
         redis_pool: &Arc<RedisPool>,
-        https_client: &Client,
         github: String,
         nickname: String,
         token: &str,
@@ -203,7 +201,7 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = get_github_primary_email(https_client, token);
+                let email = get_github_primary_email(token);
 
                 match all_rusers
                     .filter(ruser::status.eq(0))
