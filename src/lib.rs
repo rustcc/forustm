@@ -1,32 +1,33 @@
-#![recursion_limit="128"]
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+#![recursion_limit = "128"]
 #![deny(warnings)]
 
+extern crate ammonia;
+extern crate chrono;
+extern crate comrak;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
 extern crate diesel_infer_schema;
 extern crate dotenv;
-extern crate chrono;
+extern crate r2d2;
+extern crate r2d2_diesel;
+extern crate r2d2_redis;
+extern crate rand;
+extern crate redis;
+extern crate reqwest;
+extern crate sapper;
+#[macro_use]
+extern crate sapper_std;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate serde;
-extern crate sapper;
-#[macro_use]
-extern crate sapper_std;
-extern crate rand;
-extern crate tiny_keccak;
-extern crate comrak;
-extern crate redis;
-extern crate r2d2;
-extern crate r2d2_redis;
-extern crate r2d2_diesel;
-extern crate uuid;
 extern crate serde_urlencoded;
-extern crate ammonia;
-extern crate hyper;
-extern crate hyper_native_tls;
+extern crate tiny_keccak;
+extern crate uuid;
 
 pub mod api;
 pub mod schema;
@@ -35,18 +36,17 @@ pub mod models;
 pub mod web;
 pub mod web_wechat;
 
-pub(crate) use util::{sha3_256_encode, random_string, markdown_render, send_reset_password_email,
-                      get_github_token, get_github_primary_email, get_github_nickname_and_address, create_https_client};
-pub(crate) use schema::{article, ruser, section, comment};
-pub(crate) use models::{Article, ArticleBrief, EditArticle, NewArticle, DeleteArticle};
-pub(crate) use models::{RUser, RegisteredUser, LoginUser, ChangePermission, ChangePassword,
-                        EditUser, ChangStatus};
-pub(crate) use models::{NewComment, DeleteComment};
+pub(crate) use models::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle};
+pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser, LoginUser, RUser, RegisteredUser};
+pub(crate) use models::{DeleteComment, NewComment};
 pub(crate) use models::{InsertSection, PubNotice, Section};
+pub(crate) use schema::{article, comment, ruser, section};
+pub(crate) use util::{get_github_nickname_and_address, get_github_primary_email,
+                      get_github_token, markdown_render, random_string, send_reset_password_email, sha3_256_encode};
 
-pub use util::{Postgresql, RedisPool, Redis, create_pg_pool, create_redis_pool, get_identity_and_web_context,
-               Permissions, WebContext};
-pub use api::{Visitor, User, AdminUser, AdminSection};
+pub use api::{AdminSection, AdminUser, User, Visitor};
+pub use util::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions, Postgresql, Redis,
+               RedisPool, WebContext};
 
 pub fn page_size() -> i64 {
     20

@@ -1,40 +1,29 @@
-use hyper::Client;
-use hyper::net::HttpsConnector;
-use hyper_native_tls::NativeTlsClient;
 use std::io::Read;
-use hyper::header::ContentType;
-use hyper::header::Headers;
-use serde_urlencoded;
-use serde_json;
+use reqwest::Client;
+use reqwest::header::Headers;
 use sapper::Error as SapperError;
+use serde_json;
+use serde_urlencoded;
 
-pub fn create_https_client() -> Client {
-    let ssl = NativeTlsClient::new().unwrap();
-    let connector = HttpsConnector::new(ssl);
-    Client::with_connector(connector)
-}
+pub fn get_github_token(code: &str) -> Result<String, SapperError> {
+    let params = [
+        ("client_id", "3160b870124b1fcfc4cb"),
+        ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
+        ("code", code),
+        ("accept", "json")
+    ];
 
-pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperError> {
-    let body = serde_urlencoded::to_string(
-        [
-            ("client_id", "3160b870124b1fcfc4cb"),
-            ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
-            ("code", &code),
-            ("accept", "json"),
-        ],
-    ).unwrap();
-
-    client.post("https://github.com/login/oauth/access_token")
-        .header(ContentType::form_url_encoded())
-        .body(&body)
+    Client::new()
+        .post("https://github.com/login/oauth/access_token")
+        .form(&params)
         .send()
-        .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
-        .and_then(|mut response|{
+        .map_err(|e| SapperError::Custom(format!("reqwest's io error: '{}'", e)))
+        .and_then(|mut response| {
             let mut body = String::new();
             response.read_to_string(&mut body)
                 .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
                 .map(|_| body)
-        }).and_then(|ref body| {
+    }).and_then(|ref body| {
         #[derive(Deserialize)]
         struct Inner {
             access_token: String
@@ -42,10 +31,10 @@ pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperE
         serde_urlencoded::from_str::<Inner>(body)
             .map_err(|_| SapperError::Custom(String::from("No permission")))
             .map(|inner| inner.access_token)
-        })
+    })
 }
 
-pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> Result<(String, String), SapperError> {
+pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, String), SapperError> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let user_url = format!("https://api.github.com/user?{}", token);
@@ -53,8 +42,9 @@ pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> Resu
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    client.get(&user_url)
-        .headers(header.clone())
+    Client::new()
+        .get(&user_url)
+        .headers(header)
         .send()
         .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
         .and_then(|mut response|{
@@ -79,14 +69,15 @@ pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> Resu
         })
 }
 
-pub fn get_github_primary_email(client: &Client, raw_token: &str) -> Result<String, String> {
+pub fn get_github_primary_email(raw_token: &str) -> Result<String, String> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let email_url = format!("https://api.github.com/user/emails?{}", token);
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    client.get(&email_url)
+    Client::new()
+        .get(&email_url)
         .headers(header)
         .send()
         .map_err(|e| format!("hyper's io error: '{}'", e))

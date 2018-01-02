@@ -1,12 +1,12 @@
 use std::env;
 use std::sync::Arc;
 
-use redis;
-use r2d2;
 use dotenv;
+use r2d2;
 use r2d2::Pool;
-use sapper::Key;
 use r2d2_redis::RedisConnectionManager;
+use redis;
+use sapper::Key;
 use std::fs::File;
 use std::io::Read;
 
@@ -17,7 +17,8 @@ pub struct RedisPool {
 
 impl RedisPool {
     pub fn new<T>(address: T) -> Self
-        where T: redis::IntoConnectionInfo
+    where
+        T: redis::IntoConnectionInfo,
     {
         let manager = RedisConnectionManager::new(address).unwrap();
         let pool = r2d2::Pool::new(manager).unwrap();
@@ -28,7 +29,8 @@ impl RedisPool {
     }
 
     pub fn new_with_script<T>(address: T, path: &str) -> Self
-        where T: redis::IntoConnectionInfo
+    where
+        T: redis::IntoConnectionInfo,
     {
         let manager = RedisConnectionManager::new(address).unwrap();
         let pool = r2d2::Pool::new(manager).unwrap();
@@ -49,12 +51,7 @@ impl RedisPool {
     }
 
     pub fn expire(&self, redis_key: &str, sec: i64) {
-        let a = |conn: &redis::Connection| {
-            redis::cmd("expire")
-                .arg(redis_key)
-                .arg(sec)
-                .execute(conn)
-        };
+        let a = |conn: &redis::Connection| redis::cmd("expire").arg(redis_key).arg(sec).execute(conn);
         self.with_conn(a);
     }
 
@@ -66,7 +63,8 @@ impl RedisPool {
     }
 
     pub fn hset<T>(&self, redis_key: &str, hash_key: &str, value: T)
-        where T: redis::ToRedisArgs
+    where
+        T: redis::ToRedisArgs,
     {
         let a = |conn: &redis::Connection| {
             redis::cmd("hset")
@@ -79,7 +77,8 @@ impl RedisPool {
     }
 
     pub fn hdel<T>(&self, redis_key: &str, hash_key: T)
-        where T: redis::ToRedisArgs
+    where
+        T: redis::ToRedisArgs,
     {
         let a = |conn: &redis::Connection| {
             redis::cmd("hdel")
@@ -91,7 +90,8 @@ impl RedisPool {
     }
 
     pub fn hget<T>(&self, redis_key: &str, hash_key: &str) -> T
-        where T: redis::FromRedisValue
+    where
+        T: redis::FromRedisValue,
     {
         redis::cmd("hget")
             .arg(redis_key)
@@ -109,33 +109,29 @@ impl RedisPool {
     }
 
     pub fn lpush<T>(&self, redis_key: &str, value: T)
-        where T: redis::ToRedisArgs
+    where
+        T: redis::ToRedisArgs,
     {
-        let a = |conn: &redis::Connection| {
-            redis::cmd("lpush")
-                .arg(redis_key)
-                .arg(value)
-                .execute(conn)
-        };
+        let a = |conn: &redis::Connection| redis::cmd("lpush").arg(redis_key).arg(value).execute(conn);
         self.with_conn(a)
     }
-    
+
     pub fn rpush<T>(&self, redis_key: &str, value: T)
-        where T: redis::ToRedisArgs
+    where
+        T: redis::ToRedisArgs,
     {
-        let a = |conn: &redis::Connection| {
-            redis::cmd("rpush")
-                .arg(redis_key)
-                .arg(value)
-                .execute(conn)
-        };
+        let a = |conn: &redis::Connection| redis::cmd("rpush").arg(redis_key).arg(value).execute(conn);
         self.with_conn(a)
     }
 
     pub fn llen<T>(&self, redis_key: &str) -> T
-        where T: redis::FromRedisValue
+    where
+        T: redis::FromRedisValue,
     {
-        redis::cmd("llen").arg(redis_key).query(&*self.pool.get().unwrap()).unwrap()
+        redis::cmd("llen")
+            .arg(redis_key)
+            .query(&*self.pool.get().unwrap())
+            .unwrap()
     }
 
     pub fn ltrim(&self, redis_key: &str, start: i64, stop: i64) {
@@ -150,7 +146,8 @@ impl RedisPool {
     }
 
     pub fn lrange<T>(&self, redis_key: &str, start: i64, stop: i64) -> T
-        where T: redis::FromRedisValue
+    where
+        T: redis::FromRedisValue,
     {
         redis::cmd("lrange")
             .arg(redis_key)
@@ -183,7 +180,6 @@ pub fn create_redis_pool(path: Option<&str>) -> RedisPool {
         Some(path) => RedisPool::new_with_script(database_url.as_str(), path),
         None => RedisPool::new(database_url.as_str()),
     }
-
 }
 
 pub struct Redis;

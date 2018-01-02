@@ -1,14 +1,14 @@
-use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
+use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
 use sapper::header::{ContentType, Location};
 use sapper::status;
 use sapper_std::{set_cookie, JsonParams, QueryParams};
 use serde_json;
 use uuid::Uuid;
 
-use super::super::{LoginUser, RegisteredUser, Redis, Postgresql, RUser};
+use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser};
+use super::super::{get_github_nickname_and_address, get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
-use super::super::{get_github_token, get_github_nickname_and_address, create_https_client};
 
 pub struct Visitor;
 
@@ -21,9 +21,10 @@ impl Visitor {
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let max_age: Option<i64> = match body.get_remember() {
-            true => Some(24 * 90),
-            false => None,
+        let max_age = if body.get_remember() {
+            Some(24 * 90)
+        } else {
+            None
         };
 
         match body.verification(&pg_pool, redis_pool, &max_age) {
@@ -63,15 +64,20 @@ impl Visitor {
 
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let https_client = create_https_client();
 
-        let token = get_github_token(&https_client, code)?;
+        let token = get_github_token(&code)?;
 
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let (nickname, github_address) = get_github_nickname_and_address(&https_client,&token)?;
-        match LoginUser::login_with_github(&pg_pool, redis_pool, &https_client, github_address, nickname, token) {
+        let (nickname, github_address) = get_github_nickname_and_address(&token)?;
+        match LoginUser::login_with_github(
+            &pg_pool,
+            redis_pool,
+            github_address,
+            nickname,
+            &token,
+        ) {
             Ok(cookie) => {
                 let res = json!({
                     "status": true,
@@ -158,18 +164,14 @@ impl Visitor {
         } else {
             let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
             let res = match RUser::reset_password(&pg_pool, body.account) {
-                Ok(data) => {
-                    json!({
+                Ok(data) => json!({
                     "status": true,
                     "data": data
-                })
-                }
-                Err(err) => {
-                    json!({
+                }),
+                Err(err) => json!({
                     "status": false,
                     "error": err
-                })
-                }
+                }),
             };
             res_json!(res)
         }
@@ -187,17 +189,12 @@ impl Visitor {
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
 
-        let page: i64 = match t_param_default!(query_params, "page", "1").clone().parse() {
+        let page: i64 = match t_param_default!(query_params, "page", "1").parse() {
             Ok(i) => i,
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_with_section_id_paging(
-            &pg_pool,
-            section_id,
-            page,
-            page_size(),
-        ) {
+        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, page_size()) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,
@@ -261,8 +258,7 @@ impl Visitor {
 
         let query_params = get_query_params!(req);
 
-
-        let page: i64 = match t_param_default!(query_params, "page", "1").clone().parse() {
+        let page: i64 = match t_param_default!(query_params, "page", "1").parse() {
             Ok(i) => i,
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
@@ -303,12 +299,10 @@ impl Visitor {
         };
 
         let offset: i64 = t_param_default!(query_params, "offset", "0")
-            .clone()
             .parse()
             .unwrap();
         let _page_size: &str = &*format!("{}", page_size());
         let limit: i64 = t_param_default!(query_params, "limit", _page_size)
-            .clone()
             .parse()
             .unwrap();
 
@@ -334,7 +328,6 @@ impl Visitor {
         Ok(response)
     }
 }
-
 
 impl SapperModule for Visitor {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {

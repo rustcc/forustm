@@ -1,14 +1,14 @@
+use super::super::RedisPool;
 use super::super::section;
 use super::super::section::dsl::section as all_sections;
-use super::super::{RedisPool};
 use sapper_std::Context;
 
-use uuid::Uuid;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use diesel::PgConnection;
 use diesel;
+use diesel::PgConnection;
 use diesel::pg::expression::dsl::any;
+use diesel::prelude::*;
+use uuid::Uuid;
 
 use std::sync::Arc;
 
@@ -25,7 +25,8 @@ pub struct Section {
 
 impl Section {
     pub fn query(conn: &PgConnection) -> Result<Vec<Self>, String> {
-        let res = all_sections.filter(section::status.eq(0))
+        let res = all_sections
+            .filter(section::status.eq(0))
             .order(section::created_time.desc())
             .get_results::<Self>(conn);
         match res {
@@ -35,7 +36,8 @@ impl Section {
     }
 
     pub fn query_by_stype(conn: &PgConnection, stype: i32) -> Result<Vec<Self>, String> {
-        let res = all_sections.filter(section::status.eq(0))
+        let res = all_sections
+            .filter(section::status.eq(0))
             .filter(section::stype.eq(stype))
             .order(section::created_time.desc())
             .get_results::<Self>(conn);
@@ -46,12 +48,13 @@ impl Section {
     }
 
     pub fn query_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
-        let res = all_sections.filter(section::status.eq(0))
+        let res = all_sections
+            .filter(section::status.eq(0))
             .filter(section::id.eq(id))
             .first::<Self>(conn);
         match res {
             Ok(data) => {
-                //println!("data {:?}", data);
+                // println!("data {:?}", data);
                 Ok(data)
             }
             Err(err) => Err(format!("{}", err)),
@@ -59,12 +62,13 @@ impl Section {
     }
 
     pub fn query_with_user_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
-        let res = all_sections.filter(section::status.eq(0))
+        let res = all_sections
+            .filter(section::status.eq(0))
             .filter(section::suser.eq(id))
             .first::<Self>(conn);
         match res {
             Ok(data) => {
-                //println!("data {:?}", data);
+                // println!("data {:?}", data);
                 Ok(data)
             }
             Err(err) => Err(format!("{}", err)),
@@ -78,24 +82,29 @@ impl Section {
             .is_ok()
     }
 
-    pub fn query_with_redis_queue(conn: &PgConnection, redis_pool: &Arc<RedisPool>, key: &'static str) 
-        -> Result<Vec<Self>, String> {
+    pub fn query_with_redis_queue(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        key: &'static str,
+    ) -> Result<Vec<Self>, String> {
         if redis_pool.exists(key) {
-            let section_ids_string  = redis_pool.lrange::<Vec<String>>(key, 0, -1);
-            let section_ids: Vec<Uuid> = section_ids_string.into_iter().map(|id_str| id_str.parse::<Uuid>().unwrap()).collect();
-         
-            let res = all_sections.filter(section::status.eq(0))
-                        .filter(section::id.eq(any(section_ids)))
-                        .get_results::<Self>(conn);
+            let section_ids_string = redis_pool.lrange::<Vec<String>>(key, 0, -1);
+            let section_ids: Vec<Uuid> = section_ids_string
+                .into_iter()
+                .map(|id_str| id_str.parse::<Uuid>().unwrap())
+                .collect();
+
+            let res = all_sections
+                .filter(section::status.eq(0))
+                .filter(section::id.eq(any(section_ids)))
+                .get_results::<Self>(conn);
             match res {
                 Ok(data) => Ok(data),
                 Err(err) => Err(format!("{}", err)),
             }
+        } else {
+            Ok(vec![])
         }
-        else {
-            return Ok(vec![])
-        }
-
     }
 }
 
@@ -125,18 +134,17 @@ pub struct PubNotice {
 }
 
 impl PubNotice {
-    pub fn insert(self, redis_pool: &Arc<RedisPool> ) {
+    pub fn insert(self, redis_pool: &Arc<RedisPool>) {
         redis_pool.hset("pub_notice", "title", self.title);
         redis_pool.hset("pub_notice", "desc", self.desc);
     }
 
     pub fn get(web: &mut Context, redis_pool: &Arc<RedisPool>) {
         if redis_pool.exists("pub_notice") {
-            let title  = redis_pool.hget::<String>("pub_notice", "title");
-            let desc  = redis_pool.hget::<String>("pub_notice", "desc");
+            let title = redis_pool.hget::<String>("pub_notice", "title");
+            let desc = redis_pool.hget::<String>("pub_notice", "desc");
             web.add("title", &title);
             web.add("desc", &desc);
         }
-
     }
 }

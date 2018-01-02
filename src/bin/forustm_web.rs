@@ -33,8 +33,8 @@ fn main() {
     app.address("0.0.0.0")
         .port(port)
         .init_global(Box::new(move |req: &mut Request| {
-            req.ext_mut().insert::<Redis>(redis_pool.clone());
-            req.ext_mut().insert::<Postgresql>(pg_pool.clone());
+            req.ext_mut().insert::<Redis>(Arc::clone(&redis_pool));
+            req.ext_mut().insert::<Postgresql>(Arc::clone(&pg_pool));
             Ok(())
         }))
         .with_shell(Box::new(WebApp))
