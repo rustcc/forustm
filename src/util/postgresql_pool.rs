@@ -1,12 +1,12 @@
 use std::env;
 use std::sync::Arc;
 
+use diesel::pg::PgConnection;
 use dotenv;
-use sapper::Key;
 use r2d2;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use diesel::pg::PgConnection;
+use sapper::Key;
 
 pub fn create_pg_pool() -> Arc<Pool<ConnectionManager<PgConnection>>> {
     dotenv::dotenv().ok();

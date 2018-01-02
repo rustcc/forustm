@@ -1,13 +1,13 @@
 use hyper::Client;
-use hyper::net::HttpsConnector;
-use hyper_native_tls::NativeTlsClient;
-use std::io::Read;
 use hyper::header::ContentType;
 use hyper::header::Headers;
-use std::collections::HashMap;
-use serde_urlencoded;
-use serde_json;
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 use sapper::Error as SapperError;
+use serde_json;
+use serde_urlencoded;
+use std::collections::HashMap;
+use std::io::Read;
 
 pub fn create_https_client() -> Client {
     let ssl = NativeTlsClient::new().unwrap();
@@ -15,15 +15,13 @@ pub fn create_https_client() -> Client {
     Client::with_connector(connector)
 }
 
-pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperError> {
-    let body = serde_urlencoded::to_string(
-        [
-            ("client_id", "3160b870124b1fcfc4cb"),
-            ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
-            ("code", &code),
-            ("accept", "json"),
-        ],
-    ).unwrap();
+pub fn get_github_token(client: &Client, code: &str) -> Result<String, SapperError> {
+    let body = serde_urlencoded::to_string([
+        ("client_id", "3160b870124b1fcfc4cb"),
+        ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
+        ("code", code),
+        ("accept", "json"),
+    ]).unwrap();
 
     let mut res = client
         .post("https://github.com/login/oauth/access_token")
@@ -38,7 +36,7 @@ pub fn get_github_token(client: &Client, code: String) -> Result<String, SapperE
     let res_decode = serde_urlencoded::from_str::<HashMap<String, String>>(&text).unwrap();
 
     if res_decode.contains_key("access_token") {
-        Ok(res_decode.get("access_token").unwrap().to_string())
+        Ok(res_decode["access_token"].to_string())
     } else {
         Err(SapperError::Custom("No permission".to_string()))
     }
@@ -84,8 +82,7 @@ pub fn get_github_primary_email(client: &Client, raw_token: &str) -> String {
         .into_iter()
         .filter(|x| x["primary"].as_bool().unwrap())
         .map(|x| x["email"].as_str().unwrap())
-        .collect::<Vec<&str>>()
-        [0];
+        .collect::<Vec<&str>>()[0];
 
     primary_email.to_string()
 }

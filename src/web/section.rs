@@ -1,8 +1,8 @@
-use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{render, PathParams};
+use super::super::{Article, RUser, Section};
 use super::super::{Postgresql, WebContext};
-use super::super::{Section, Article, RUser};
 use super::super::page_size;
+use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper_std::{render, PathParams};
 use uuid::Uuid;
 
 pub struct WebSection;
@@ -19,7 +19,7 @@ impl WebSection {
 
         let path_params = get_path_params!(req);
 
-        let id: Uuid = match t_param!(path_params, "id").clone().parse() {
+        let id: Uuid = match t_param!(path_params, "id").parse() {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
@@ -41,7 +41,7 @@ impl WebSection {
                 let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, page_size());
                 match articles {
                     Ok(arts) => {
-                        //println!("articles: {:?}", &arts);
+                        // println!("articles: {:?}", &arts);
                         web.add("articles", &arts.articles);
                         web.add("total", &arts.total);
                         web.add("max_page", &arts.max_page);
@@ -68,7 +68,7 @@ impl WebSection {
 
         let path_params = get_path_params!(req);
 
-        let id: Uuid = match t_param!(path_params, "id").clone().parse() {
+        let id: Uuid = match t_param!(path_params, "id").parse() {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
@@ -89,7 +89,7 @@ impl WebSection {
                 let articles = Article::query_articles_with_section_id_paging(&pg_conn, r.id, page, page_size());
                 match articles {
                     Ok(arts) => {
-                        //println!("articles: {:?}", &arts);
+                        // println!("articles: {:?}", &arts);
                         web.add("articles", &arts.articles);
                         web.add("total", &arts.total);
                         web.add("max_page", &arts.max_page);
@@ -121,10 +121,9 @@ impl WebSection {
                 web.add("total", &r.total);
                 web.add("max_page", &r.max_page);
                 res_html!("detailSection.html", web)
-            },
+            }
             Err(e) => res_400!(format!("blogs not found: {}", e)),
         }
-
     }
 }
 

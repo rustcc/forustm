@@ -1,15 +1,15 @@
+use super::super::{markdown_render, RUser, RedisPool};
+use super::super::{comment, ruser};
 use super::super::comment::dsl::comment as all_comments;
 use super::super::ruser::dsl::ruser as all_rusers;
-use super::super::{ comment, ruser };
-use super::super::{ markdown_render, RedisPool, RUser };
 
-use uuid::Uuid;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use diesel::PgConnection;
 use diesel;
-use std::sync::Arc;
+use diesel::PgConnection;
+use diesel::prelude::*;
 use serde_json;
+use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct CommentWithNickName {
@@ -31,19 +31,17 @@ pub struct CommentsWithTotal<T> {
 }
 
 impl CommentWithNickName {
-    pub fn query(conn: &PgConnection,
-                 limit: i64,
-                 offset: i64,
-                 article_id: Uuid)
-                 -> Result<Vec<Self>, String> {
+    pub fn query(conn: &PgConnection, limit: i64, offset: i64, article_id: Uuid) -> Result<Vec<Self>, String> {
         let res = all_comments
-            .inner_join(all_rusers.on(
-                comment::author_id.eq(ruser::id)
-            ))
+            .inner_join(all_rusers.on(comment::author_id.eq(ruser::id)))
             .select((
-                comment::id, comment::content, comment::article_id,
-                comment::author_id, comment::created_time, comment::status,
-                ruser::nickname
+                comment::id,
+                comment::content,
+                comment::article_id,
+                comment::author_id,
+                comment::created_time,
+                comment::status,
+                ruser::nickname,
             ))
             .filter(comment::status.eq(0))
             .filter(comment::article_id.eq(article_id))
@@ -58,40 +56,39 @@ impl CommentWithNickName {
         }
     }
 
-    pub fn comments_with_article_id_paging(conn: &PgConnection, id: Uuid, page: i64, page_size: i64)
-        -> Result<CommentsWithTotal<Self>, String> {
+    pub fn comments_with_article_id_paging(
+        conn: &PgConnection,
+        id: Uuid,
+        page: i64,
+        page_size: i64,
+    ) -> Result<CommentsWithTotal<Self>, String> {
         let _res = all_comments
             .filter(comment::article_id.eq(id))
             .filter(comment::status.eq(0));
 
-        let res = _res
-            .inner_join(all_rusers.on(
-                comment::author_id.eq(ruser::id)
-            ))
+        let res = _res.inner_join(all_rusers.on(comment::author_id.eq(ruser::id)))
             .select((
-                comment::id, comment::content, comment::article_id,
-                comment::author_id, comment::created_time, comment::status,
-                ruser::nickname
+                comment::id,
+                comment::content,
+                comment::article_id,
+                comment::author_id,
+                comment::created_time,
+                comment::status,
+                ruser::nickname,
             ))
             .order(comment::created_time)
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<Self>(conn);
 
-        let all_count: i64 = _res
-            .count()
-            .get_result(conn).unwrap();
+        let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
-            Ok(data) => {
-                Ok(
-                    CommentsWithTotal {
-                        comments: data,
-                        total: all_count,
-                        max_page: (all_count as f64 / page_size as f64).ceil() as i64,
-                    }
-                )
-            }
+            Ok(data) => Ok(CommentsWithTotal {
+                comments: data,
+                total: all_count,
+                max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+            }),
             Err(err) => Err(format!("{}", err)),
         }
     }
@@ -144,8 +141,7 @@ impl NewComment {
     }
 
     pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> bool {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
-            .unwrap();
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         self.into_insert_comments(info.id).insert(conn)
     }
 }
@@ -157,21 +153,21 @@ pub struct DeleteComment {
 }
 
 impl DeleteComment {
-    pub fn delete(self,
-                  conn: &PgConnection,
-                  redis_pool: &Arc<RedisPool>,
-                  cookie: &str,
-                  permission: &Option<i16>)
-                  -> bool {
-        match permission {
-            &Some(0) | &Some(1) => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
+    pub fn delete(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+        permission: &Option<i16>,
+    ) -> bool {
+        match *permission {
+            Some(0) | Some(1) => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
             _ => {
-                let info =
-                    serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
-                        .unwrap();
-                match self.author_id == info.id {
-                    true => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
-                    false => false,
+                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                if self.author_id == info.id {
+                    CommentWithNickName::delete_with_comment_id(conn, self.comment_id)
+                } else {
+                    false
                 }
             }
         }
