@@ -70,7 +70,7 @@ impl Visitor {
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let (nickname, github_address) = get_github_nickname_and_address(&token);
+        let (nickname, github_address) = get_github_nickname_and_address(&token)?;
         match LoginUser::login_with_github(
             &pg_pool,
             redis_pool,

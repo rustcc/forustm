@@ -201,7 +201,10 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = get_github_primary_email(token);
+                let email = match get_github_primary_email(token) {
+                    Ok(data) => data,
+                    Err(e) => return Err(e)
+                };
 
                 match all_rusers
                     .filter(ruser::status.eq(0))
