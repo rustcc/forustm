@@ -116,7 +116,7 @@ ul li {
             <ul>
             {% for blog in blogs %} 
                 <li>
-                    <a href="/article/{{ blog.id }}">{{ blog.title }}</a>
+			<a href="/article/{{ blog.id }}">{{ blog.author_name }}：{{ blog.title }}</a>
                     <!--
                     <span class="right">
                         <span class="tags">{{ blog.tags }}</span>

@@ -13,7 +13,8 @@ CREATE TABLE ruser (
   say VARCHAR,
   signup_time timestamp not null default current_timestamp,
   role smallint not null default 2,
-  status smallint not null default 0
+  status smallint not null default 0,
+  github varchar unique
 );
 
 Create index user_account on ruser (account);
