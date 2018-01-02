@@ -1,15 +1,15 @@
+use super::super::{markdown_render, RUser, RedisPool};
+use super::super::{article, ruser, Section};
 use super::super::article::dsl::article as all_articles;
 use super::super::ruser::dsl::ruser as all_rusers;
-use super::super::{article, ruser, Section};
-use super::super::{markdown_render, RUser, RedisPool};
 
 use chrono::NaiveDateTime;
-use uuid::Uuid;
 use diesel;
-use diesel::prelude::*;
 use diesel::PgConnection;
-use std::sync::Arc;
+use diesel::prelude::*;
 use serde_json;
+use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Queryable)]
 struct RawArticles {
@@ -119,11 +119,10 @@ pub struct ArticlesWithTotal<T> {
     pub max_page: i64,
 }
 
-
-
 impl Article {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.ne(2))
+        let res = all_articles
+            .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
         match res {
@@ -133,7 +132,8 @@ impl Article {
     }
 
     pub fn query_article_md(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.ne(2))
+        let res = all_articles
+            .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
         match res {
@@ -143,7 +143,8 @@ impl Article {
     }
 
     pub fn query_blogs(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.ne(2))
+        let res = all_articles
+            .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .filter(article::stype.eq(1))
             .get_result::<RawArticles>(conn);
@@ -154,7 +155,8 @@ impl Article {
     }
 
     pub fn query_raw_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles.filter(article::status.ne(2))
+        let res = all_articles
+            .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
         match res {
@@ -163,10 +165,9 @@ impl Article {
         }
     }
 
-    fn raw_articles_with_section_id(conn: &PgConnection,
-                                    id: Uuid)
-                                    -> Result<Vec<RawArticles>, String> {
-        let res = all_articles.filter(article::section_id.eq(id))
+    fn raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<RawArticles>, String> {
+        let res = all_articles
+            .filter(article::section_id.eq(id))
             .filter(article::status.ne(2))
             .order(article::created_time.desc())
             .get_results::<RawArticles>(conn);
@@ -176,27 +177,25 @@ impl Article {
         }
     }
 
-    pub fn query_articles_with_section_id(conn: &PgConnection,
-                                          id: Uuid)
-                                          -> Result<Vec<Article>, String> {
+    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Article>, String> {
         match Article::raw_articles_with_section_id(conn, id) {
-            Ok(raw_articles) => {
-                Ok(raw_articles.into_iter()
-                    .map(|art| art.into_html())
-                    .collect::<Vec<Article>>())
-            }
+            Ok(raw_articles) => Ok(raw_articles
+                .into_iter()
+                .map(|art| art.into_html())
+                .collect::<Vec<Article>>()),
             Err(err) => Err(err),
         }
     }
 
-
     #[allow(warnings)]
-    fn raw_articles_with_section_id_paging(conn: &PgConnection,
-                                           id: Uuid,
-                                           page: i64,
-                                           page_size: i64)
-                                           -> Result<ArticlesWithTotal<RawArticles>, String> {
-        let _res = all_articles.filter(article::section_id.eq(id))
+    fn raw_articles_with_section_id_paging(
+        conn: &PgConnection,
+        id: Uuid,
+        page: i64,
+        page_size: i64,
+    ) -> Result<ArticlesWithTotal<RawArticles>, String> {
+        let _res = all_articles
+            .filter(article::section_id.eq(id))
             .filter(article::status.ne(2));
 
         let res = _res.order(article::created_time.desc())
@@ -204,94 +203,88 @@ impl Article {
             .limit(page_size)
             .get_results::<RawArticles>(conn);
 
-        let all_count: i64 = _res.count()
-            .get_result(conn)
-            .unwrap();
+        let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
-            Ok(data) => {
-                Ok(ArticlesWithTotal {
-                    articles: data,
-                    total: all_count,
-                    max_page: (all_count as f64 / page_size as f64).ceil() as i64,
-                })
-            }
+            Ok(data) => Ok(ArticlesWithTotal {
+                articles: data,
+                total: all_count,
+                max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+            }),
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    pub fn query_articles_with_section_id_paging
-        (conn: &PgConnection,
-         id: Uuid,
-         page: i64,
-         page_size: i64)
-         -> Result<ArticlesWithTotal<ArticleBrief>, String> {
-        let _res = all_articles.filter(article::section_id.eq(id))
+    pub fn query_articles_with_section_id_paging(
+        conn: &PgConnection,
+        id: Uuid,
+        page: i64,
+        page_size: i64,
+    ) -> Result<ArticlesWithTotal<ArticleBrief>, String> {
+        let _res = all_articles
+            .filter(article::section_id.eq(id))
             .filter(article::status.ne(2));
 
         let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
-            .select((article::id,
-                     article::title,
-                     article::author_id,
-                     article::tags,
-                     article::created_time,
-                     ruser::nickname))
+            .select((
+                article::id,
+                article::title,
+                article::author_id,
+                article::tags,
+                article::created_time,
+                ruser::nickname,
+            ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
 
-        let all_count: i64 = _res.count()
-            .get_result(conn)
-            .unwrap();
+        let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
-            Ok(data) => {
-                Ok(ArticlesWithTotal {
-                    articles: data,
-                    total: all_count,
-                    max_page: (all_count as f64 / page_size as f64).ceil() as i64,
-                })
-            }
+            Ok(data) => Ok(ArticlesWithTotal {
+                articles: data,
+                total: all_count,
+                max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+            }),
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    pub fn query_articles_with_section_id_and_stype_paging
-        (conn: &PgConnection,
-         id: Uuid,
-         stype: i32,
-         page: i64,
-         page_size: i64)
-         -> Result<ArticlesWithTotal<ArticleBrief>, String> {
-        let _res = all_articles.filter(article::section_id.eq(id))
+    pub fn query_articles_with_section_id_and_stype_paging(
+        conn: &PgConnection,
+        id: Uuid,
+        stype: i32,
+        page: i64,
+        page_size: i64,
+    ) -> Result<ArticlesWithTotal<ArticleBrief>, String> {
+        let _res = all_articles
+            .filter(article::section_id.eq(id))
             .filter(article::stype.eq(stype))
             .filter(article::status.ne(2));
 
         let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
-            .select((article::id,
-                     article::title,
-                     article::author_id,
-                     article::tags,
-                     article::created_time,
-                     ruser::nickname))
+            .select((
+                article::id,
+                article::title,
+                article::author_id,
+                article::tags,
+                article::created_time,
+                ruser::nickname,
+            ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
 
-        let all_count: i64 = _res.count()
-            .get_result(conn)
-            .unwrap();
+        let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
-            Ok(data) => {
-                Ok(ArticlesWithTotal {
-                    articles: data,
-                    total: all_count,
-                    max_page: (all_count as f64 / page_size as f64).ceil() as i64,
-                })
-            }
+            Ok(data) => Ok(ArticlesWithTotal {
+                articles: data,
+                total: all_count,
+                max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+            }),
             Err(err) => Err(format!("{}", err)),
         }
     }
@@ -325,38 +318,38 @@ impl Article {
     //     }
     // }
 
-    pub fn query_blogs_paging(conn: &PgConnection,
-                                          stype: i32,
-                                          page: i64,
-                                          page_size: i64)
-                                          -> Result<ArticlesWithTotal<BlogBrief>, String> {
-        let _res = all_articles.filter(article::stype.eq(stype))
+    pub fn query_blogs_paging(
+        conn: &PgConnection,
+        stype: i32,
+        page: i64,
+        page_size: i64,
+    ) -> Result<ArticlesWithTotal<BlogBrief>, String> {
+        let _res = all_articles
+            .filter(article::stype.eq(stype))
             .filter(article::status.ne(2));
 
         let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
-            .select((article::id,
-                     article::title,
-                     article::author_id,
-                     article::tags,
-                     article::created_time,
-                     ruser::nickname))
+            .select((
+                article::id,
+                article::title,
+                article::author_id,
+                article::tags,
+                article::created_time,
+                ruser::nickname,
+            ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<BlogBrief>(conn);
 
-        let all_count: i64 = _res.count()
-            .get_result(conn)
-            .unwrap();
-        
+        let all_count: i64 = _res.count().get_result(conn).unwrap();
+
         match res {
-            Ok(data) => {
-                Ok(ArticlesWithTotal {
-                    articles: data,
-                    total: all_count,
-                    max_page: (all_count as f64 / page_size as f64).ceil() as i64,
-                })
-            }
+            Ok(data) => Ok(ArticlesWithTotal {
+                articles: data,
+                total: all_count,
+                max_page: (all_count as f64 / page_size as f64).ceil() as i64,
+            }),
             Err(err) => Err(format!("{}", err)),
         }
     }
@@ -419,15 +412,10 @@ pub struct NewArticle {
 }
 
 impl NewArticle {
-    pub fn insert(self,
-                  conn: &PgConnection,
-                  redis_pool: &Arc<RedisPool>,
-                  cookie: &str)
-                  -> Result<usize, String> {
-        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie))
-            .unwrap();
+    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
+        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
         if self.stype == 1 {
-            let blog_owner = Section::query_with_section_id(conn, self.section_id.clone())
+            let blog_owner = Section::query_with_section_id(conn, self.section_id)
                 .unwrap()
                 .suser
                 .unwrap();
@@ -452,19 +440,16 @@ pub struct EditArticle {
 }
 
 impl EditArticle {
-    pub fn edit_article(self,
-                        conn: &PgConnection,
-                        redis_pool: &Arc<RedisPool>,
-                        cookie: &str)
-                        -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
-            .unwrap();
+    pub fn edit_article(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
+        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         if self.author_id == info.id {
             let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
-                .set((article::title.eq(self.title),
-                      article::content.eq(markdown_render(&self.raw_content)),
-                      article::raw_content.eq(self.raw_content),
-                      article::tags.eq(self.tags)))
+                .set((
+                    article::title.eq(self.title),
+                    article::content.eq(markdown_render(&self.raw_content)),
+                    article::raw_content.eq(self.raw_content),
+                    article::tags.eq(self.tags),
+                ))
                 .execute(conn);
             match res {
                 Ok(data) => Ok(data),
@@ -483,21 +468,21 @@ pub struct DeleteArticle {
 }
 
 impl DeleteArticle {
-    pub fn delete(self,
-                  conn: &PgConnection,
-                  redis_pool: &Arc<RedisPool>,
-                  cookie: &str,
-                  permission: &Option<i16>)
-                  -> bool {
-        match permission {
-            &Some(0) | &Some(1) => Article::delete_with_id(conn, self.article_id).is_ok(),
+    pub fn delete(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+        permission: &Option<i16>,
+    ) -> bool {
+        match *permission {
+            Some(0) | Some(1) => Article::delete_with_id(conn, self.article_id).is_ok(),
             _ => {
-                let logged_user =
-                    serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info"))
-                        .unwrap();
-                match self.user_id == logged_user.id {
-                    true => Article::delete_with_id(conn, self.article_id).is_ok(),
-                    false => false,
+                let logged_user = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                if self.user_id == logged_user.id {
+                    Article::delete_with_id(conn, self.article_id).is_ok()
+                } else {
+                    false
                 }
             }
         }
