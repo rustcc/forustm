@@ -1,9 +1,9 @@
-use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult};
-use sapper_std::{render, PathParams};
-use super::super::{Postgresql};
-use super::super::{Article, RUser, Permissions, WebContext};
+use super::super::{Article, Permissions, RUser, WebContext};
+use super::super::Postgresql;
 use super::super::models::CommentWithNickName;
 use super::super::page_size;
+use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper_std::{render, PathParams};
 use uuid::Uuid;
 
 pub struct WebArticle;
@@ -13,7 +13,7 @@ impl WebArticle {
         let mut web = req.ext().get::<WebContext>().unwrap().clone();
 
         let params = get_path_params!(req);
-        let id: Result<Uuid, _> = t_param!(params, "id").clone().parse();
+        let id: Result<Uuid, _> = t_param!(params, "id").parse();
         if let Err(e) = id {
             return res_400!(format!("UUID invalid: {}", e));
         }
@@ -43,7 +43,7 @@ impl WebArticle {
                         web.add("max_page", &com.max_page);
 
                         res_html!("detailArticle.html", web)
-                    },
+                    }
                     Err(e) => res_500!(e),
                 }
             }
@@ -55,7 +55,7 @@ impl WebArticle {
         let web = req.ext().get::<WebContext>().unwrap().clone();
         match *req.ext().get::<Permissions>().unwrap() {
             Some(_) => res_html!("editArticle.html", web),
-            None => res_redirect!("/login")
+            None => res_redirect!("/login"),
         }
     }
 }

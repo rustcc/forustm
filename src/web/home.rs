@@ -1,7 +1,7 @@
-use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult, Error as SapperError};
-use sapper_std::{render};
+use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper_std::render;
 
-use super::super::{ Permissions, WebContext };
+use super::super::{Permissions, WebContext};
 
 pub struct Home;
 
@@ -15,11 +15,9 @@ impl Home {
 impl SapperModule for Home {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
         let permission = req.ext().get::<Permissions>().unwrap();
-        match permission {
-            &Some(_) => Ok(()),
-            &None => {
-                Err(SapperError::TemporaryRedirect("/login".to_owned()))
-            }
+        match *permission {
+            Some(_) => Ok(()),
+            None => Err(SapperError::TemporaryRedirect("/login".to_owned())),
         }
     }
 

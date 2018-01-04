@@ -19,8 +19,7 @@ authors = ["Mike Tang <miketang84@outlook.com>"]
  r2d2-diesel = '^1.0.0-beta1'
  serde_urlencoded = "^0.5.1"
  ammonia = "^1.0.1"
- hyper-native-tls = "^0.2.4"
- hyper = "^0.10.13"
+ reqwest = "^0.8"
 
 [dependencies.diesel]
 features = ["postgres", "chrono", "uuid"]
@@ -37,6 +36,10 @@ version = "^1.0.0-beta1"
 [dependencies.uuid]
 features = ["serde", "v4"]
 version = "^0.5.1"
+
+[dependencies.clippy]
+optional = true
+version = "^0.0.177"
 
 #[patch.crates-io]
 #sapper_std = { git = 'https://github.com/sappworks/sapper_std.git'}

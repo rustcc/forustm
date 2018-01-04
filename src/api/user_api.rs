@@ -1,10 +1,9 @@
-use sapper::{SapperModule, SapperRouter, Response, Request, Result as SapperResult,
-             Error as SapperError};
+use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule, SapperRouter};
 use sapper_std::{JsonParams, SessionVal};
 use serde_json;
 
-use super::super::{LoginUser, Permissions, Redis, ChangePassword, EditUser, Postgresql, RUser,
-                   NewComment, DeleteComment, NewArticle, DeleteArticle, EditArticle};
+use super::super::{ChangePassword, DeleteArticle, DeleteComment, EditArticle, EditUser, LoginUser, NewArticle,
+                   NewComment, Permissions, Postgresql, RUser, Redis};
 
 pub struct User;
 
@@ -25,18 +24,14 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let res = match body.edit_user(&pg_pool, redis_pool, cookie) {
-            Ok(num_edit) => {
-                json!({
+            Ok(num_edit) => json!({
                 "status": true,
                 "num_edit": num_edit
-            })
-            }
-            Err(err) => {
-                json!({
+            }),
+            Err(err) => json!({
                 "status": false,
                 "error": err
-            })
-            }
+            }),
         };
         res_json!(res)
     }
@@ -47,18 +42,14 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let res = match body.change_password(&pg_pool, redis_pool, cookie) {
-            Ok(data) => {
-                json!({
+            Ok(data) => json!({
                     "status": true,
                     "data": data
-                })
-            }
-            Err(err) => {
-                json!({
+                }),
+            Err(err) => json!({
                     "status": false,
                     "error": err
-                })
-            }
+                }),
         };
         res_json!(res)
     }
@@ -79,19 +70,9 @@ impl User {
         let cookie = req.ext().get::<SessionVal>().unwrap();
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let res = match body.insert(&pg_pool, redis_pool, cookie) {
-            true => {
-                json!({
-                "status": true
-            })
-            }
-            false => {
-                json!({
-                "status": false
-            })
-            }
-        };
-        res_json!(res)
+        res_json!(json!({
+            "status": body.insert(&pg_pool, redis_pool, cookie)
+        }))
     }
 
     fn delete_comment(req: &mut Request) -> SapperResult<Response> {
@@ -100,19 +81,9 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let permission = req.ext().get::<Permissions>().unwrap();
-        let res = match body.delete(&pg_pool, redis_pool, cookie, permission) {
-            true => {
-                json!({
-                "status": true
-            })
-            }
-            false => {
-                json!({
-                "status": false
-            })
-            }
-        };
-        res_json!(res)
+        res_json!(json!({
+            "status": body.delete(&pg_pool, redis_pool, cookie, permission)
+        }))
     }
 
     fn new_article(req: &mut Request) -> SapperResult<Response> {
@@ -123,7 +94,7 @@ impl User {
         match body.insert(&pg_pool, redis_pool, cookie) {
             Ok(_) => res_json!(json!({"status": true})),
 
-            Err(t) => res_json!(json!({"status": false, "error": t}))
+            Err(t) => res_json!(json!({"status": false, "error": t})),
         }
     }
 
@@ -133,15 +104,9 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let permission = req.ext().get::<Permissions>().unwrap();
         let cookie = req.ext().get::<SessionVal>().unwrap();
-        let res = match body.delete(&pg_pool, redis_pool, cookie, permission) {
-            true => json!({
-                "status": true
-            }),
-            false => json!({
-                "status": false
-            }),
-        };
-        res_json!(res)
+        res_json!(json!({
+            "status": body.delete(&pg_pool, redis_pool, cookie, permission)
+        }))
     }
 
     fn edit_article(req: &mut Request) -> SapperResult<Response> {
@@ -151,18 +116,14 @@ impl User {
         let cookie = req.ext().get::<SessionVal>().unwrap();
 
         let res = match body.edit_article(&pg_pool, redis_pool, cookie) {
-            Ok(num_update) => {
-                json!({
+            Ok(num_update) => json!({
                     "status": true,
                     "num_update": num_update
-                })
-            }
-            Err(err) => {
-                json!({
+                }),
+            Err(err) => json!({
                     "status": false,
                     "error": format!("{}", err)
-                })
-            }
+                }),
         };
         res_json!(res)
     }
@@ -171,9 +132,9 @@ impl User {
 impl SapperModule for User {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
         let permission = req.ext().get::<Permissions>().unwrap();
-        match permission {
-            &Some(_) => Ok(()),
-            &None => {
+        match *permission {
+            Some(_) => Ok(()),
+            None => {
                 let res = json!({
                     "status": false,
                     "error": String::from("Verification error")
