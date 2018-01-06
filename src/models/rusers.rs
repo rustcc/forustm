@@ -12,6 +12,7 @@ use serde_json;
 use std::sync::Arc;
 use std::thread;
 use uuid::Uuid;
+use hyper::Client;
 
 #[derive(Queryable)]
 struct RawUser {
@@ -182,6 +183,7 @@ impl LoginUser {
     pub fn login_with_github(
         conn: &PgConnection,
         redis_pool: &Arc<RedisPool>,
+        client: &Client,
         github: String,
         nickname: String,
         token: &str,
@@ -201,7 +203,7 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = match get_github_primary_email(token) {
+                let email = match get_github_primary_email(client, token) {
                     Ok(data) => data,
                     Err(e) => return Err(e)
                 };
