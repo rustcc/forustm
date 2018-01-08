@@ -42,7 +42,7 @@ pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser,
 pub(crate) use models::{DeleteComment, NewComment};
 pub(crate) use models::{InsertSection, PubNotice, Section};
 pub(crate) use schema::{article, comment, ruser, section};
-pub(crate) use util::{get_github_nickname_and_address, get_github_primary_email, create_https_client,
+pub(crate) use util::{get_github_nickname_and_address, get_github_primary_email,
                       get_github_token, markdown_render, random_string, send_reset_password_email, sha3_256_encode};
 
 pub use api::{AdminSection, AdminUser, User, Visitor};
