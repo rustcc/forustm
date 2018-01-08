@@ -1,23 +1,34 @@
 use std::io::Read;
-use reqwest::Client;
-use reqwest::header::Headers;
 use sapper::Error as SapperError;
 use serde_json;
 use serde_urlencoded;
+use hyper_native_tls::NativeTlsClient;
+use hyper::net::HttpsConnector;
+use hyper::Client;
+use hyper::header::Headers;
+use hyper::header::ContentType;
 
-pub fn get_github_token(code: &str) -> Result<String, SapperError> {
-    let params = [
-        ("client_id", "3160b870124b1fcfc4cb"),
-        ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
-        ("code", code),
-        ("accept", "json")
-    ];
+pub fn create_https_client() -> Client {
+    let ssl = NativeTlsClient::new().unwrap();
+    let connector = HttpsConnector::new(ssl);
+    Client::with_connector(connector)
+}
 
-    Client::new()
-        .post("https://github.com/login/oauth/access_token")
-        .form(&params)
+pub fn get_github_token(client: &Client, code: &str) -> Result<String, SapperError> {
+    let params = serde_urlencoded::to_string(
+        [
+            ("client_id", "3160b870124b1fcfc4cb"),
+            ("client_secret", "1c970d6de12edb776bc2907689c16902c1eb909f"),
+            ("code", code),
+            ("accept", "json"),
+        ],
+    ).unwrap();
+
+    client.post("https://github.com/login/oauth/access_token")
+        .header(ContentType::form_url_encoded())
+        .body(&params)
         .send()
-        .map_err(|e| SapperError::Custom(format!("reqwest's io error: '{}'", e)))
+        .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
         .and_then(|mut response| {
             let mut body = String::new();
             response.read_to_string(&mut body)
@@ -34,7 +45,7 @@ pub fn get_github_token(code: &str) -> Result<String, SapperError> {
     })
 }
 
-pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, String), SapperError> {
+pub fn get_github_nickname_and_address(client: &Client, raw_token: &str) -> Result<(String, String), SapperError> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let user_url = format!("https://api.github.com/user?{}", token);
@@ -42,8 +53,7 @@ pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, Strin
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    Client::new()
-        .get(&user_url)
+    client.get(&user_url)
         .headers(header)
         .send()
         .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
@@ -69,15 +79,14 @@ pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, Strin
         })
 }
 
-pub fn get_github_primary_email(raw_token: &str) -> Result<String, String> {
+pub fn get_github_primary_email(client: &Client, raw_token: &str) -> Result<String, String> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let email_url = format!("https://api.github.com/user/emails?{}", token);
     let mut header = Headers::new();
     header.append_raw("User-Agent", b"rustcc".to_vec());
 
-    Client::new()
-        .get(&email_url)
+    client.get(&email_url)
         .headers(header)
         .send()
         .map_err(|e| format!("hyper's io error: '{}'", e))

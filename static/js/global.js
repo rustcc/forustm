@@ -108,8 +108,28 @@ Date.prototype.Format = function (fmt) { //author: meizz
 
 Date.prototype.LocalFormat = function () {
     //return new Date(this.getTime() + 3600000 * 8).Format("yyyy-MM-dd hh:mm:ss");
-    return new Date(this.getTime()).Format("yyyy-MM-dd hh:mm:ss");
+    return this.Format("yyyy-MM-dd hh:mm:ss");
 };
+
+// reslove iso date not endwith 'Z' cause display incorrect
+var _Date = Date;
+Date = function () {
+    var time = arguments[0];
+    var isoReg = /^\d{4}\-\d{1,2}\-\d{1,2}T\d{1,2}\:\d{1,2}\:\d{1,2}\.\d*$/;
+    if (time && isoReg.test(time)) {
+        arguments[0] = time + 'Z';
+    }
+    var args = [].slice.call(arguments);
+    args.unshift(_Date);
+    if (this instanceof Date) {
+        return new(_Date.bind.apply(_Date, args))();
+    }
+    return (_Date.bind.apply(_Date, args))();
+}
+Date.prototype = _Date.prototype;
+Date.UTC = _Date.UTC;
+Date.now = _Date.now;
+Date.parse = _Date.parse;
 
 
 function ctrlEnterThen($DOMs, callback) {
