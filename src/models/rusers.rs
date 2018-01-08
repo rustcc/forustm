@@ -1,4 +1,4 @@
-use super::super::{get_github_primary_email, random_string, send_reset_password_email, InsertSection, RedisPool,
+use super::super::{inner_get_github_primary_email, random_string, send_reset_password_email, InsertSection, RedisPool,
                    sha3_256_encode};
 use super::super::ruser;
 use super::super::ruser::dsl::ruser as all_rusers;
@@ -201,7 +201,7 @@ impl LoginUser {
                 Ok(cookie)
             }
             Err(_) => {
-                let email = match get_github_primary_email(token) {
+                let email = match inner_get_github_primary_email(token) {
                     Ok(data) => data,
                     Err(e) => return Err(e)
                 };

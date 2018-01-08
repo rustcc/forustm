@@ -6,7 +6,7 @@ use serde_json;
 use uuid::Uuid;
 
 use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser};
-use super::super::{get_github_nickname_and_address, get_github_token};
+use super::super::{inner_get_github_nickname_and_address, inner_get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
 
@@ -65,12 +65,12 @@ impl Visitor {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
 
-        let token = get_github_token(&code)?;
+        let token = inner_get_github_token(&code)?;
 
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
-        let (nickname, github_address) = get_github_nickname_and_address(&token)?;
+        let (nickname, github_address) = inner_get_github_nickname_and_address(&token)?;
         match LoginUser::login_with_github(
             &pg_pool,
             redis_pool,

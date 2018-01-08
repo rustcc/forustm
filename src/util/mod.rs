@@ -1,9 +1,12 @@
 pub mod redis_pool;
 pub mod postgresql_pool;
+pub mod inner_http;
 pub mod github_information;
 
+pub use self::inner_http::{inner_get_github_nickname_and_address, inner_get_github_primary_email,
+                                   inner_get_github_token};
 pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email,
-                                   get_github_token, create_https_client};
+                                   get_github_token};
 pub use self::postgresql_pool::{create_pg_pool, Postgresql};
 pub use self::redis_pool::{create_redis_pool, Redis, RedisPool};
 
@@ -72,7 +75,6 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
 }
 
 /// send email
-#[inline]
 pub fn send_reset_password_email(new_password: &str, email: &str) {
     let client = Client::new();
     let xsmtpapi = json!({
