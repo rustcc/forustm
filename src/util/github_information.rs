@@ -108,7 +108,7 @@ pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, Strin
     received
 }
 
-pub fn get_github_primary_email(raw_token: &str) -> Result<String, String> {
+pub fn get_github_primary_email(raw_token: &str) -> Result<String, SapperError> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let (tx, rx) = mpsc::channel();
@@ -122,15 +122,15 @@ pub fn get_github_primary_email(raw_token: &str) -> Result<String, String> {
         let ret = client.get(&email_url)
             .headers(header)
             .send()
-            .map_err(|e| format!("hyper's io error: '{}'", e))
+            .map_err(|e| SapperError::Custom(format!("hyper's io error: '{}'", e)))
             .and_then(|mut response|{
                 let mut body = String::new();
                 response.read_to_string(&mut body)
-                    .map_err(|e| format!("read body error: '{}'", e))
+                    .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
                     .map(|_| body)
             }).and_then(|ref body| {
                 serde_json::from_str::<Vec<serde_json::Value>>(body)
-                    .map_err(|e| format!("read body error: '{}'", e))
+                    .map_err(|e| SapperError::Custom(format!("read body error: '{}'", e)))
                     .map(|raw_emails| {
                         let primary_email = raw_emails
                             .iter()
@@ -146,7 +146,7 @@ pub fn get_github_primary_email(raw_token: &str) -> Result<String, String> {
         tx.send(ret).unwrap();
     });
 
-    let received: Result<String, String> = rx.recv().unwrap();
+    let received: Result<String, SapperError> = rx.recv().unwrap();
     println!("Got: {:?}", received);
 
     received

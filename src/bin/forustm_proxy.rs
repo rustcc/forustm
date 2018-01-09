@@ -2,7 +2,6 @@ extern crate sapper;
 extern crate sapper_std;
 extern crate forustm;
 
-use std::sync::Arc;
 use sapper::{SapperApp, SapperAppShell, Request, Response, Result as SapperResult};
 use forustm::proxy::ProxyModule;
 
@@ -21,8 +20,6 @@ impl SapperAppShell for WebApp {
 }
 
 fn main() {
-    let redis_pool = Arc::new(create_redis_pool(None));
-    let pg_pool = create_pg_pool();
     let mut app = SapperApp::new();
     let port = 7777;
     app.address("0.0.0.0")
