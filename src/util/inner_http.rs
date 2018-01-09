@@ -123,7 +123,7 @@ pub fn inner_get_github_primary_email(raw_token: &str) -> Result<String, String>
     thread::spawn(move || {
         let client = Client::new();
 
-        let email_url = format!("http://127.0.0.1/inner/get_github_primary_email?{}", token);
+        let email_url = format!("http://127.0.0.1:7777/inner/get_github_primary_email?{}", token);
 
         let ret = client.get(&email_url)
             .send()
