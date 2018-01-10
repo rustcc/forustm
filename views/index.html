@@ -69,10 +69,11 @@ ul li {
 
 .body-content .category-section {
     margin-top: 15px;
+    margin-right: -15px;
 }
 
 .one-section {
-    width: 28%;
+    width: calc(31% - 15px);
     margin-right: 15px;
     margin-bottom: 15px;
     padding: 10px;
@@ -80,6 +81,12 @@ ul li {
     height: 104px;
     float: left;
     min-width: 276px;
+}
+
+@media screen and (max-width: 960px) {
+    .one-section {
+        width: calc(100% - 50px);
+    }
 }
 
 .body-content .incubation-area .incubation-area-container {
