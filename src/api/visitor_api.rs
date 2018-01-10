@@ -5,10 +5,11 @@ use sapper_std::{set_cookie, JsonParams, QueryParams};
 use serde_json;
 use uuid::Uuid;
 
-use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser};
+use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser, NewArticleStats};
 use super::super::{inner_get_github_nickname_and_address, inner_get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
+use super::super::{get_ruser_from_session, get_real_ip_from_req, get_user_agent_from_req};
 
 pub struct Visitor;
 
@@ -231,10 +232,19 @@ impl Visitor {
 
         match Article::query_article_md(&pg_pool, article_id) {
             Ok(data) => {
+                // create article view record
+                let article_stats = NewArticleStats {
+                    article_id: article_id,
+                    ruser_id: get_ruser_from_session(req).map(|user| user.id),
+                    user_agent: get_user_agent_from_req(req),
+                    visitor_ip: get_real_ip_from_req(req),
+                };
+                article_stats.insert(&pg_pool).unwrap();
+
                 let res = json!({
-                "status": true,
-                "data": data,
-            });
+                    "status": true,
+                    "data": data,
+                });
 
                 response.write_body(serde_json::to_string(&res).unwrap());
             }
