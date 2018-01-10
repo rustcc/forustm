@@ -62,6 +62,7 @@ $(".modify :button").click(function (event) {
     event.preventDefault();
     var nickname = $("#nickname").val().replace(/(^\s*)|(\s*$)/g, "");
     var say = $("#say").val();
+    var custom_css = $("#custom_css").val();
     var avatar = $("#avatar").val().replace(/(^\s*)|(\s*$)/g, "");
     var wx_openid = $("#wx_openid").val();
     $(".text-danger").remove();
@@ -70,7 +71,7 @@ $(".modify :button").click(function (event) {
             url: "/api/v1/user/edit",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "nickname": nickname, "say": say, "avatar": avatar, "wx_openid": wx_openid }),
+            data: JSON.stringify({ "nickname": nickname, "say": say, "custom_css": custom_css, "avatar": avatar, "wx_openid": wx_openid }),
             headers: { "Content-Type": "application/json" },
             success: function (res) {
                 if (res.status) {
@@ -86,6 +87,7 @@ $(".modify :button").click(function (event) {
 function getInfo() {
     $("#nickname").val($(".nickname").text());
     $("#say").val($(".say").text());
+    $("#custom_css").val($(".custom_css").text());
     $("#wx_openid").val($(".wx_openid").text());
     $("#avatar").val($("#path")[0].src)
 }

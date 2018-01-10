@@ -1,0 +1,63 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  cache:
+    image: redis
+    container_name: cache
+    restart: always
+  
+  web:
+    build: .
+    container_name: web
+    restart: always
+    links:
+      - db:postgres
+      - cache:redis
+    entrypoint: /home/forustm/forustm_web
+    env_file:
+      - .env
+    volumes:
+      - ../target/debug:/home/forustm
+      - ../static:/home/forustm/static
+      - ../views:/home/forustm/views
+  api:
+    build: .
+    container_name: api
+    restart: always
+    links:
+      - db:postgres
+      - cache:redis
+    entrypoint: /home/forustm/forustm_api
+    env_file:
+      - .env
+    volumes:
+      - ../target/debug:/home/forustm
+  nginx:
+    image: nginx
+    container_name: nginx
+    restart: always
+    links:
+      - api
+      - web
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+      - 443:443
+
+volumes:
+  db-data:
+

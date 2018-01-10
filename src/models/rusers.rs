@@ -28,6 +28,7 @@ struct RawUser {
     pub role: i16,   // member => 2, manager => 1, admin => 0
     pub status: i16, // 0 normal, 1 frozen, 2 deleted
     pub github: Option<String>,
+    pub custom_css: Option<String>,
 }
 
 impl RawUser {
@@ -42,6 +43,7 @@ impl RawUser {
             signup_time: self.signup_time,
             role: self.role,
             github: self.github,
+	    custom_css: self.custom_css,
         }
     }
 }
@@ -57,6 +59,7 @@ pub struct RUser {
     pub signup_time: NaiveDateTime,
     pub role: i16,
     pub github: Option<String>,
+    pub custom_css: Option<String>,
 }
 
 impl RUser {
@@ -241,6 +244,7 @@ pub struct EditUser {
     pub say: Option<String>,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
+    pub custom_css: Option<String>,
 }
 
 impl EditUser {
@@ -252,6 +256,7 @@ impl EditUser {
                 ruser::say.eq(self.say),
                 ruser::avatar.eq(self.avatar),
                 ruser::wx_openid.eq(self.wx_openid),
+		ruser::custom_css.eq(self.custom_css),
             ))
             .get_result::<RawUser>(conn);
         match res {

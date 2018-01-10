@@ -36,6 +36,9 @@
     <div><label>签名：</label>
         <p style="display:inline;" class="say">{{ user.say }}</p>
     </div>
+    <div><label>自定义CSS：</label>
+        <p style="display:inline;" class="custom_css">{{ user.custom_css }}</p>
+    </div>
     <div><label>创建时间：</label><p style="display:inline;" class="signup_time">{{ user.signup_time }}</p></div>
     <br />
 </div>
@@ -48,6 +51,9 @@
         </div>
         <div class="form-group">
             <label>签名:</label><textarea id="say" rows="5"></textarea>
+        </div>
+	<div class="form-group">
+            <label>自定义CSS:</label><textarea id="custom_css" rows="10"></textarea>
         </div>
         <div class="form-group">
             <label>头像地址:</label><input id="avatar" type="text">
