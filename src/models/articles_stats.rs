@@ -27,15 +27,6 @@ pub struct NewArticleStats {
 }
 
 impl NewArticleStats {
-    pub fn new(self, conn: &PgConnection) -> Result<usize, String> {
-        let res = diesel::insert_into(all_articles_stats)
-            .values(&self)
-            .execute(conn);
-        match res {
-            Ok(data) => Ok(data),
-            Err(err) => Err(format!("{}", err)),
-        }
-    }
     pub fn insert(self, conn: &PgConnection) -> Result<usize, String> {
         let res = diesel::insert_into(all_articles_stats)
             .values(&self)
