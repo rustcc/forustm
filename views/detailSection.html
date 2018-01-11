@@ -83,7 +83,10 @@ Rust博客星球 - Rust语言中文社区
         cursor: pointer;
     }
 
-    .body-content .tags, .body-content .createdTime, .author  {
+    .body-content .tags,
+    .body-content .createdTime,
+    .author,
+    .body-content .show-count  {
         color: #666;
         font-size: 14px;
     }
@@ -166,6 +169,7 @@ Rust博客星球 - Rust语言中文社区
                                 <li class="item padding-small-rectangle {% if not loop.last %} underline {% else %} last {% endif %}"
                                     data-index="{{ loop.index0 }}">
                                     <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                    <span class="show-count" title="浏览：{{article.view_count}}，评论：{{article.comment_count}}">({{article.view_count}},{{article.comment_count}})</span>
                                     <span class="right">
                                         <span class="tags">{{ article.tags }}</span>
                                         <span class="author">{{ article.author_name }}</span> 

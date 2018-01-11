@@ -10,6 +10,9 @@ use diesel::prelude::*;
 use serde_json;
 use std::sync::Arc;
 use uuid::Uuid;
+use diesel::dsl::*;
+use diesel::types::BigInt;
+use diesel::expression::SqlLiteral;
 
 #[derive(Queryable)]
 struct RawArticles {
@@ -23,6 +26,41 @@ struct RawArticles {
     stype: i32, // 0 section, 1 user blog
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
+
+    view_count: i64,
+    comment_count: i64,
+}
+
+type SelectRawArticles = (
+    article::id,
+    article::title,
+    article::raw_content,
+    article::content,
+    article::section_id,
+    article::author_id,
+    article::tags,
+    article::stype,
+    article::created_time,
+    article::status,
+    SqlLiteral<BigInt>,
+    SqlLiteral<BigInt>,
+);
+
+fn select_raw_articles() -> SelectRawArticles {
+    (
+        article::id,
+        article::title,
+        article::raw_content,
+        article::content,
+        article::section_id,
+        article::author_id,
+        article::tags,
+        article::stype,
+        article::created_time,
+        article::status,
+        sql::<BigInt>("(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)"),
+        sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
+    )
 }
 
 impl RawArticles {
@@ -37,6 +75,9 @@ impl RawArticles {
             created_time: self.created_time,
             status: self.status,
             stype: self.stype,
+
+            view_count: self.view_count,
+            comment_count: self.comment_count,
         }
     }
 
@@ -51,6 +92,9 @@ impl RawArticles {
             created_time: self.created_time,
             status: self.status,
             stype: self.stype,
+
+            view_count: self.view_count,
+            comment_count: self.comment_count,
         }
     }
 
@@ -78,6 +122,9 @@ pub struct Article {
     pub created_time: NaiveDateTime,
     pub status: i16,
     pub stype: i32,
+
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
@@ -89,6 +136,8 @@ pub struct ArticleBrief {
     pub created_time: NaiveDateTime,
 
     pub author_name: String,
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -110,6 +159,9 @@ pub struct BlogBrief {
     pub tags: String,
     pub created_time: NaiveDateTime,
     pub author_name: String,
+
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Debug)]
@@ -122,6 +174,7 @@ pub struct ArticlesWithTotal<T> {
 impl Article {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
         let res = all_articles
+            .select(select_raw_articles())
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
@@ -135,6 +188,7 @@ impl Article {
         let res = all_articles
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_markdown()),
@@ -147,6 +201,7 @@ impl Article {
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .filter(article::stype.eq(1))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_html()),
@@ -158,6 +213,7 @@ impl Article {
         let res = all_articles
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_markdown()),
@@ -169,6 +225,7 @@ impl Article {
         let res = all_articles
             .filter(article::section_id.eq(id))
             .filter(article::status.ne(2))
+            .select(select_raw_articles())
             .order(article::created_time.desc())
             .get_results::<RawArticles>(conn);
         match res {
@@ -198,7 +255,8 @@ impl Article {
             .filter(article::section_id.eq(id))
             .filter(article::status.ne(2));
 
-        let res = _res.order(article::created_time.desc())
+        let res = _res.select(select_raw_articles())
+            .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<RawArticles>(conn);
@@ -233,6 +291,8 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
@@ -271,12 +331,14 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
-
+        
         let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
@@ -336,6 +398,8 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
