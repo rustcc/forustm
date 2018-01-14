@@ -11,6 +11,7 @@ pub use self::postgresql_pool::{create_pg_pool, Postgresql};
 pub use self::redis_pool::{create_redis_pool, Redis, RedisPool};
 
 use super::RUser;
+use super::UserNotify;
 use ammonia::clean;
 use comrak::{markdown_to_html, ComrakOptions};
 use rand::{thread_rng, Rng};
@@ -66,6 +67,8 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
             if redis_pool.exists(cookie) {
                 let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
                 web.add("user", &info);
+                let user_notifys = UserNotify::get_notifys(info.id, &redis_pool);
+                web.add("user_notifys", &user_notifys);
                 (Some(info.role), web)
             } else {
                 (None, web)

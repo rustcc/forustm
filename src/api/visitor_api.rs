@@ -5,7 +5,7 @@ use sapper_std::{set_cookie, JsonParams, QueryParams};
 use serde_json;
 use uuid::Uuid;
 
-use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser, NewArticleStats};
+use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser, NewArticleStats, UserNotify};
 use super::super::{inner_get_github_nickname_and_address, inner_get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
@@ -220,7 +220,7 @@ impl Visitor {
 
     fn article_query(req: &mut Request) -> SapperResult<Response> {
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-
+        let redis_pool = req.ext().get::<Redis>().unwrap();
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
@@ -232,14 +232,20 @@ impl Visitor {
 
         match Article::query_article_md(&pg_pool, article_id) {
             Ok(data) => {
+                let session_user = get_ruser_from_session(req);
                 // create article view record
                 let article_stats = NewArticleStats {
                     article_id: article_id,
-                    ruser_id: get_ruser_from_session(req).map(|user| user.id),
+                    ruser_id: session_user.clone().map(|user| user.id),
                     user_agent: get_user_agent_from_req(req),
                     visitor_ip: get_real_ip_from_req(req),
                 };
                 article_stats.insert(&pg_pool).unwrap();
+
+                // remove user's notify about this article
+                if let Some(user) = session_user.clone() {
+                    UserNotify::remove_notifys_for_article(user.id, article_id, &redis_pool);
+                }
 
                 let res = json!({
                     "status": true,

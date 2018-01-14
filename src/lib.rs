@@ -38,8 +38,9 @@ pub mod web;
 pub mod web_wechat;
 pub mod proxy;
 
-pub(crate) use models::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle};
+pub(crate) use models::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle, SimpleArticle};
 pub(crate) use models::{NewArticleStats};
+pub(crate) use models::{UserNotify};
 pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser, LoginUser, RUser, RegisteredUser};
 pub(crate) use models::{DeleteComment, NewComment};
 pub(crate) use models::{InsertSection, PubNotice, Section};
