@@ -429,6 +429,31 @@ impl Article {
     }
 }
 
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+pub struct SimpleArticle {
+    pub id: Uuid,
+    pub title: String,
+    pub author_id: Uuid,
+}
+
+impl SimpleArticle {
+    pub fn query_simple_article(conn: &PgConnection, id: Uuid) -> Result<SimpleArticle, String> {
+        let res = all_articles
+            .filter(article::status.ne(2))
+            .filter(article::id.eq(id))
+            .select((
+                article::id,
+                article::title,
+                article::author_id,
+            ))
+            .get_result::<SimpleArticle>(conn);
+        match res {
+            Ok(data) => Ok(data),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+}
+
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "article"]
 struct InsertArticle {

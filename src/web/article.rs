@@ -1,5 +1,5 @@
-use super::super::{Article, Permissions, RUser, WebContext, NewArticleStats};
-use super::super::Postgresql;
+use super::super::{Article, Permissions, RUser, WebContext, NewArticleStats, UserNotify};
+use super::super::{Postgresql, Redis};
 use super::super::models::CommentWithNickName;
 use super::super::page_size;
 use super::super::{get_ruser_from_session, get_real_ip_from_req, get_user_agent_from_req};
@@ -18,20 +18,28 @@ impl WebArticle {
         if let Err(e) = id {
             return res_400!(format!("UUID invalid: {}", e));
         }
-
+        let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let id = id.unwrap();
         let res = Article::query_article(&pg_conn, id);
         match res {
             Ok(r) => {
+                let session_user = get_ruser_from_session(req);
                 // create article view record
                 let article_stats = NewArticleStats {
                     article_id: r.id,
-                    ruser_id: get_ruser_from_session(req).map(|user| user.id),
+                    ruser_id: session_user.clone().map(|user| user.id),
                     user_agent: get_user_agent_from_req(req),
                     visitor_ip: get_real_ip_from_req(req),
                 };
                 article_stats.insert(&pg_conn).unwrap();
+
+                // remove user's notify about this article
+                if let Some(user) = session_user.clone() {
+                    UserNotify::remove_notifys_for_article(user.id, r.id, &redis_pool);
+                    let user_notifys = UserNotify::get_notifys(user.id, &redis_pool);
+                    web.add("user_notifys", &user_notifys);
+                }
 
                 // article
                 web.add("res", &r);

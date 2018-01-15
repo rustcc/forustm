@@ -127,8 +127,9 @@ impl InsertComment {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct NewComment {
-    content: String,
-    article_id: Uuid,
+    pub content: String,
+    pub article_id: Uuid,
+    pub reply_user_id: Option<Uuid>,
 }
 
 impl NewComment {
