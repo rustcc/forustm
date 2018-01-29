@@ -194,6 +194,7 @@ Rust博客星球 - Rust语言中文社区
 
                             <li class="item padding-small-rectangle underline template" data-index="" style="display: none">
                                 <a href=""></a>
+                                <span class="show-count" title=""></span>
                                 <span class="right">
                                     <span class="tags"></span>
                                     <span class="author"></span>
@@ -208,6 +209,7 @@ Rust博客星球 - Rust语言中文社区
                                           data-author-id=""
                                           data-user-id="">编辑</span>
                                 </span>
+                                <div style="clear:both;"></div>
                             </li>
                         </ul>
                     {% endif %}
@@ -285,6 +287,9 @@ Rust博客星球 - Rust语言中文社区
         $newNode.find("a")
             .attr("href", "/article/"+content.id)
             .text(content.title);
+        $newNode.find(".show-count")
+            .attr("title", "浏览："+ (content.view_count || 0) +"，评论："+ (content.comment_count || 0))
+            .text("("+(content.view_count || 0)+","+(content.comment_count || 0)+")");
         $newNode.find(".tags")
             .text(content.tags);
         $newNode.find(".author")
