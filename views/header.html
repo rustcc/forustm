@@ -102,6 +102,7 @@
             <a class="dropbtn" href="#">{{ user.nickname }}</a>
             <div class="dropdown-content">
                 <a href="/home">个人主页</a>
+                <a href="/blog/{{ user.id }}">我的博客</a>
                 <a id="sign_out" href="/api/v1/user/sign_out">退出</a>
             </div>
         </div>
