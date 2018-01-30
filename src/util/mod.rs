@@ -12,6 +12,7 @@ pub use self::redis_pool::{create_redis_pool, Redis, RedisPool};
 
 use super::RUser;
 use super::UserNotify;
+use super::Section;
 use ammonia::clean;
 use comrak::{markdown_to_html, ComrakOptions};
 use rand::{thread_rng, Rng};
@@ -62,6 +63,7 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
     let mut web = Context::new();
     let cookie = req.ext().get::<SessionVal>();
     let redis_pool = req.ext().get::<Redis>().unwrap();
+    let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
     match cookie {
         Some(cookie) => {
             if redis_pool.exists(cookie) {
@@ -69,6 +71,10 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
                 web.add("user", &info);
                 let user_notifys = UserNotify::get_notifys(info.id, &redis_pool);
                 web.add("user_notifys", &user_notifys);
+                let res = Section::query_with_user_id(&pg_conn, info.id);
+                if let Ok(r) = res {
+                    web.add("user_blog_section", &r);
+                }
                 (Some(info.role), web)
             } else {
                 (None, web)
