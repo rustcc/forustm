@@ -1,4 +1,5 @@
-use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule,
+             SapperRouter};
 use sapper_std::JsonParams;
 use serde_json;
 

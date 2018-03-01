@@ -59,7 +59,9 @@ pub fn inner_get_github_token(code: &str) -> Result<String, SapperError> {
     received
 }
 
-pub fn inner_get_github_nickname_and_address(raw_token: &str) -> Result<(String, String), SapperError> {
+pub fn inner_get_github_nickname_and_address(
+    raw_token: &str,
+) -> Result<(String, String), SapperError> {
     let token = serde_urlencoded::to_string([("access_token", raw_token)]).unwrap();
 
     let (tx, rx) = mpsc::channel();

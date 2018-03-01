@@ -92,11 +92,15 @@ pub fn get_github_nickname_and_address(raw_token: &str) -> Result<(String, Strin
                     .and_then(|inner| {
                         let nickname = match inner["name"].as_str() {
                             Some(data) => data.to_string(),
-                            None => return Err(SapperError::Custom(String::from("read body error"))),
+                            None => {
+                                return Err(SapperError::Custom(String::from("read body error")))
+                            }
                         };
                         let github_address = match inner["html_url"].as_str() {
                             Some(data) => data.to_string(),
-                            None => return Err(SapperError::Custom(String::from("read body error"))),
+                            None => {
+                                return Err(SapperError::Custom(String::from("read body error")))
+                            }
                         };
                         Ok((nickname, github_address))
                     })

@@ -45,7 +45,11 @@ impl UserNotify {
         }
     }
 
-    pub fn remove_notifys_for_article(user_id: Uuid, article_id: Uuid, redis_pool: &Arc<RedisPool>) {
+    pub fn remove_notifys_for_article(
+        user_id: Uuid,
+        article_id: Uuid,
+        redis_pool: &Arc<RedisPool>,
+    ) {
         let user_notify_key = format!("user:notify:{}", user_id.hyphenated().to_string());
         let notifys: Vec<String> = redis_pool.lrange(&user_notify_key, 0, -1);
         if notifys.len() > 0 {

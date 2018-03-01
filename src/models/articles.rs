@@ -224,7 +224,10 @@ impl Article {
         }
     }
 
-    fn raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<RawArticles>, String> {
+    fn raw_articles_with_section_id(
+        conn: &PgConnection,
+        id: Uuid,
+    ) -> Result<Vec<RawArticles>, String> {
         let res = all_articles
             .filter(article::section_id.eq(id))
             .filter(article::status.ne(2))
@@ -237,7 +240,10 @@ impl Article {
         }
     }
 
-    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Article>, String> {
+    pub fn query_articles_with_section_id(
+        conn: &PgConnection,
+        id: Uuid,
+    ) -> Result<Vec<Article>, String> {
         match Article::raw_articles_with_section_id(conn, id) {
             Ok(raw_articles) => Ok(raw_articles
                 .into_iter()
@@ -500,8 +506,14 @@ pub struct NewArticle {
 }
 
 impl NewArticle {
-    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+    pub fn insert(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
+        let user: RUser =
+            serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
         if self.stype == 1 {
             let blog_owner = Section::query_with_section_id(conn, self.section_id)
                 .unwrap()
@@ -528,8 +540,14 @@ pub struct EditArticle {
 }
 
 impl EditArticle {
-    pub fn edit_article(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+    pub fn edit_article(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         if self.author_id == info.id {
             let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
                 .set((
@@ -566,7 +584,9 @@ impl DeleteArticle {
         match *permission {
             Some(0) | Some(1) => Article::delete_with_id(conn, self.article_id).is_ok(),
             _ => {
-                let logged_user = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                let logged_user = serde_json::from_str::<RUser>(&redis_pool
+                    .hget::<String>(cookie, "info"))
+                    .unwrap();
                 if self.user_id == logged_user.id {
                     Article::delete_with_id(conn, self.article_id).is_ok()
                 } else {

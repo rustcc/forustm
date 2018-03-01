@@ -3,8 +3,8 @@ extern crate sapper;
 extern crate sapper_std;
 
 use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
-use forustm::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions, Postgresql, Redis, User,
-              Visitor};
+use forustm::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions,
+              Postgresql, Redis, User, Visitor};
 use forustm::{AdminSection, AdminUser};
 use std::sync::Arc;
 

@@ -1,9 +1,11 @@
-use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule,
+             SapperRouter};
 use sapper_std::{JsonParams, SessionVal};
 use serde_json;
 
-use super::super::{ChangePassword, DeleteArticle, DeleteComment, EditArticle, EditUser, LoginUser, NewArticle,
-                   NewComment, Permissions, Postgresql, RUser, Redis, SimpleArticle, UserNotify};
+use super::super::{ChangePassword, DeleteArticle, DeleteComment, EditArticle, EditUser, LoginUser,
+                   NewArticle, NewComment, Permissions, Postgresql, RUser, Redis, SimpleArticle,
+                   UserNotify};
 use super::super::get_ruser_from_session;
 pub struct User;
 
@@ -70,7 +72,8 @@ impl User {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let user = get_ruser_from_session(req).unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let article: SimpleArticle = SimpleArticle::query_simple_article(&pg_pool, body.article_id).unwrap();
+        let article: SimpleArticle =
+            SimpleArticle::query_simple_article(&pg_pool, body.article_id).unwrap();
         if let Some(reply_user_id) = body.reply_user_id {
             if user.id != reply_user_id {
                 let user_reply_notify = UserNotify {

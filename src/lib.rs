@@ -37,22 +37,25 @@ pub mod web;
 pub mod web_wechat;
 pub mod proxy;
 
-pub(crate) use models::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle, SimpleArticle};
+pub(crate) use models::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle,
+                        SimpleArticle};
 pub(crate) use models::NewArticleStats;
 pub(crate) use models::UserNotify;
-pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser, LoginUser, RUser, RegisteredUser};
+pub(crate) use models::{ChangStatus, ChangePassword, ChangePermission, EditUser, LoginUser, RUser,
+                        RegisteredUser};
 pub(crate) use models::{DeleteComment, NewComment};
 pub(crate) use models::{InsertSection, PubNotice, Section};
 pub(crate) use schema::{article, article_stats, comment, ruser, section};
-pub(crate) use util::{inner_get_github_nickname_and_address, inner_get_github_primary_email, inner_get_github_token,
-                      markdown_render, random_string, send_reset_password_email, sha3_256_encode};
+pub(crate) use util::{inner_get_github_nickname_and_address, inner_get_github_primary_email,
+                      inner_get_github_token, markdown_render, random_string,
+                      send_reset_password_email, sha3_256_encode};
 pub(crate) use util::{get_github_nickname_and_address, get_github_primary_email, get_github_token};
 pub(crate) use util::{get_real_ip_from_req, get_ruser_from_session, get_user_agent_from_req};
 
 pub use api::{AdminSection, AdminUser, User, Visitor};
 pub use proxy::ProxyModule;
-pub use util::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions, Postgresql, Redis,
-               RedisPool, WebContext};
+pub use util::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions,
+               Postgresql, Redis, RedisPool, WebContext};
 
 pub fn page_size() -> i64 {
     20

@@ -5,7 +5,8 @@ use sapper_std::{set_cookie, JsonParams, QueryParams};
 use serde_json;
 use uuid::Uuid;
 
-use super::super::{LoginUser, NewArticleStats, Postgresql, RUser, Redis, RegisteredUser, UserNotify};
+use super::super::{LoginUser, NewArticleStats, Postgresql, RUser, Redis, RegisteredUser,
+                   UserNotify};
 use super::super::{inner_get_github_nickname_and_address, inner_get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
@@ -189,7 +190,12 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, page_size()) {
+        match Article::query_articles_with_section_id_paging(
+            &pg_pool,
+            section_id,
+            page,
+            page_size(),
+        ) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,

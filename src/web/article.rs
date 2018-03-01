@@ -50,7 +50,12 @@ impl WebArticle {
 
                 // comments
                 let page = 1;
-                let comments = CommentWithNickName::comments_with_article_id_paging(&pg_conn, id, page, page_size());
+                let comments = CommentWithNickName::comments_with_article_id_paging(
+                    &pg_conn,
+                    id,
+                    page,
+                    page_size(),
+                );
                 match comments {
                     Ok(com) => {
                         web.add("page_size", &page_size());

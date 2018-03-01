@@ -38,7 +38,8 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Article::query_articles_with_section_id_paging(&pg_conn, id, page, page_size());
+                let articles =
+                    Article::query_articles_with_section_id_paging(&pg_conn, id, page, page_size());
                 match articles {
                     Ok(arts) => {
                         // println!("articles: {:?}", &arts);
@@ -86,7 +87,12 @@ impl WebSection {
 
                 web.add("res", &r);
 
-                let articles = Article::query_articles_with_section_id_paging(&pg_conn, r.id, page, page_size());
+                let articles = Article::query_articles_with_section_id_paging(
+                    &pg_conn,
+                    r.id,
+                    page,
+                    page_size(),
+                );
                 match articles {
                     Ok(arts) => {
                         // println!("articles: {:?}", &arts);
