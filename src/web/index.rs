@@ -1,4 +1,5 @@
-use super::super::{Article, ArticleBrief, Permissions, Postgresql, PubNotice, Redis, Section, WebContext};
+use super::super::{Article, ArticleBrief, Permissions, Postgresql, PubNotice, Redis, Section,
+                   WebContext};
 use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
 use sapper_std::render;
 use std::collections::HashMap;
@@ -28,7 +29,13 @@ impl Index {
             let cate_sections_len = cate_sections_vec.len();
             web.add("cate_sections_len", &cate_sections_len);
             for (idx, section) in cate_sections_vec.iter().enumerate() {
-                let res = Article::query_articles_with_section_id_and_stype_paging(&pg_conn, section.id, 0, 1, 3);
+                let res = Article::query_articles_with_section_id_and_stype_paging(
+                    &pg_conn,
+                    section.id,
+                    0,
+                    1,
+                    3,
+                );
                 if res.is_ok() {
                     sections_hash.insert(
                         idx,
@@ -47,7 +54,13 @@ impl Index {
             let proj_sections_vec = proj_sections.unwrap();
             web.add("proj_sections_len", &proj_sections_vec.len());
             for (idx, section) in proj_sections_vec.iter().enumerate() {
-                let res = Article::query_articles_with_section_id_and_stype_paging(&pg_conn, section.id, 0, 1, 3);
+                let res = Article::query_articles_with_section_id_and_stype_paging(
+                    &pg_conn,
+                    section.id,
+                    0,
+                    1,
+                    3,
+                );
                 if res.is_ok() {
                     projects_hash.insert(
                         idx,

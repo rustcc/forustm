@@ -4,7 +4,7 @@ pub mod inner_http;
 pub mod github_information;
 
 pub use self::inner_http::{inner_get_github_nickname_and_address, inner_get_github_primary_email,
-                                   inner_get_github_token};
+                           inner_get_github_token};
 pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email,
                                    get_github_token};
 pub use self::postgresql_pool::{create_pg_pool, Postgresql};
@@ -67,7 +67,9 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
     match cookie {
         Some(cookie) => {
             if redis_pool.exists(cookie) {
-                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                let info = serde_json::from_str::<RUser>(&redis_pool
+                    .hget::<String>(cookie, "info"))
+                    .unwrap();
                 web.add("user", &info);
                 let user_notifys = UserNotify::get_notifys(info.id, &redis_pool);
                 web.add("user_notifys", &user_notifys);
@@ -118,12 +120,13 @@ pub fn get_ruser_from_session(req: &Request) -> Option<RUser> {
         Some(cookie) => {
             if redis_pool.exists(cookie) {
                 let redis_pool = req.ext().get::<Redis>().unwrap();
-                let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+                let user: RUser =
+                    serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
                 Some(user)
             } else {
                 None
             }
-        },
+        }
         None => None,
     }
 }
@@ -132,19 +135,17 @@ pub fn get_ruser_from_session(req: &Request) -> Option<RUser> {
 pub fn get_real_ip_from_req(req: &Request) -> Option<String> {
     match req.headers().get_raw("X-Real-IP") {
         Some(fip) => String::from_utf8((*fip)[0].clone()).ok(),
-        None => {
-            serde_json::to_string(&req.remote_addr().ip()).ok().map(|s| {
-                String::from(&s[1..s.len() - 1])
-            })
-        }
+        None => serde_json::to_string(&req.remote_addr().ip())
+            .ok()
+            .map(|s| String::from(&s[1..s.len() - 1])),
     }
 }
 
 /// get request's user-agent
 pub fn get_user_agent_from_req(req: &Request) -> Option<String> {
-    req.headers().get::<UserAgent>().map(|user_agent| {
-        String::from(user_agent.trim())
-    })
+    req.headers()
+        .get::<UserAgent>()
+        .map(|user_agent| String::from(user_agent.trim()))
 }
 
 pub struct Permissions;

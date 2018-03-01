@@ -51,7 +51,8 @@ impl RedisPool {
     }
 
     pub fn expire(&self, redis_key: &str, sec: i64) {
-        let a = |conn: &redis::Connection| redis::cmd("expire").arg(redis_key).arg(sec).execute(conn);
+        let a =
+            |conn: &redis::Connection| redis::cmd("expire").arg(redis_key).arg(sec).execute(conn);
         self.with_conn(a);
     }
 
@@ -112,7 +113,8 @@ impl RedisPool {
     where
         T: redis::ToRedisArgs,
     {
-        let a = |conn: &redis::Connection| redis::cmd("lpush").arg(redis_key).arg(value).execute(conn);
+        let a =
+            |conn: &redis::Connection| redis::cmd("lpush").arg(redis_key).arg(value).execute(conn);
         self.with_conn(a)
     }
 
@@ -120,7 +122,8 @@ impl RedisPool {
     where
         T: redis::ToRedisArgs,
     {
-        let a = |conn: &redis::Connection| redis::cmd("rpush").arg(redis_key).arg(value).execute(conn);
+        let a =
+            |conn: &redis::Connection| redis::cmd("rpush").arg(redis_key).arg(value).execute(conn);
         self.with_conn(a)
     }
 
@@ -146,7 +149,7 @@ impl RedisPool {
     }
 
     pub fn lrem<T>(&self, redis_key: &str, count: i64, value: T)
-    where 
+    where
         T: redis::ToRedisArgs,
     {
         let a = |conn: &redis::Connection| {

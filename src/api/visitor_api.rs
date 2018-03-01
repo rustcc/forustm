@@ -5,11 +5,12 @@ use sapper_std::{set_cookie, JsonParams, QueryParams};
 use serde_json;
 use uuid::Uuid;
 
-use super::super::{LoginUser, Postgresql, RUser, Redis, RegisteredUser, NewArticleStats, UserNotify};
+use super::super::{LoginUser, NewArticleStats, Postgresql, RUser, Redis, RegisteredUser,
+                   UserNotify};
 use super::super::{inner_get_github_nickname_and_address, inner_get_github_token};
 use super::super::models::{Article, CommentWithNickName};
 use super::super::page_size;
-use super::super::{get_ruser_from_session, get_real_ip_from_req, get_user_agent_from_req};
+use super::super::{get_real_ip_from_req, get_ruser_from_session, get_user_agent_from_req};
 
 pub struct Visitor;
 
@@ -72,13 +73,7 @@ impl Visitor {
         response.headers_mut().set(ContentType::json());
 
         let (nickname, github_address) = inner_get_github_nickname_and_address(&token)?;
-        match LoginUser::login_with_github(
-            &pg_pool,
-            redis_pool,
-            github_address,
-            nickname,
-            &token,
-        ) {
+        match LoginUser::login_with_github(&pg_pool, redis_pool, github_address, nickname, &token) {
             Ok(cookie) => {
                 let res = json!({
                     "status": true,
@@ -195,7 +190,12 @@ impl Visitor {
             Err(err) => return res_400!(format!("missing page param: {}", err)),
         };
 
-        match Article::query_articles_with_section_id_paging(&pg_pool, section_id, page, page_size()) {
+        match Article::query_articles_with_section_id_paging(
+            &pg_pool,
+            section_id,
+            page,
+            page_size(),
+        ) {
             Ok(arts_with_count) => {
                 let res = json!({
                 "status": true,
