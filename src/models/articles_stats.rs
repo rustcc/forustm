@@ -1,4 +1,4 @@
-use super::super::{article_stats};
+use super::super::article_stats;
 use super::super::article_stats::dsl::article_stats as all_articles_stats;
 
 use chrono::NaiveDateTime;

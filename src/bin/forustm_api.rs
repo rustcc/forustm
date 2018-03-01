@@ -1,11 +1,11 @@
+extern crate forustm;
 extern crate sapper;
 extern crate sapper_std;
-extern crate forustm;
 
-use sapper::{ SapperApp, SapperAppShell, Request, Response, Result as SapperResult };
-use forustm::{ Redis, create_redis_pool, create_pg_pool, Postgresql, get_identity_and_web_context, Permissions,
-               Visitor, User };
-use forustm::{ AdminUser, AdminSection };
+use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
+use forustm::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions, Postgresql, Redis, User,
+              Visitor};
+use forustm::{AdminSection, AdminUser};
 use std::sync::Arc;
 
 struct ApiApp;
@@ -30,13 +30,11 @@ fn main() {
     let mut app = SapperApp::new();
     app.address("0.0.0.0")
         .port(8888)
-        .init_global(
-            Box::new(move |req: &mut Request| {
-                req.ext_mut().insert::<Redis>(Arc::clone(&redis_pool));
-                req.ext_mut().insert::<Postgresql>(Arc::clone(&pg_pool));
-                Ok(())
-            })
-        )
+        .init_global(Box::new(move |req: &mut Request| {
+            req.ext_mut().insert::<Redis>(Arc::clone(&redis_pool));
+            req.ext_mut().insert::<Postgresql>(Arc::clone(&pg_pool));
+            Ok(())
+        }))
         .with_shell(Box::new(ApiApp))
         .add_module(Box::new(Visitor))
         .add_module(Box::new(User))

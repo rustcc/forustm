@@ -203,7 +203,7 @@ impl LoginUser {
             Err(_) => {
                 let email = match inner_get_github_primary_email(token) {
                     Ok(data) => data,
-                    Err(e) => return Err(e)
+                    Err(e) => return Err(e),
                 };
 
                 match all_rusers

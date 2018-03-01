@@ -11,7 +11,7 @@ use serde_json;
 use std::sync::Arc;
 use uuid::Uuid;
 use diesel::dsl::*;
-use diesel::types::BigInt;
+use diesel::sql_types::BigInt;
 use diesel::expression::SqlLiteral;
 
 #[derive(Queryable)]
@@ -26,7 +26,6 @@ struct RawArticles {
     stype: i32, // 0 section, 1 user blog
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
-
     view_count: i64,
     comment_count: i64,
 }
@@ -58,8 +57,12 @@ fn select_raw_articles() -> SelectRawArticles {
         article::stype,
         article::created_time,
         article::status,
-        sql::<BigInt>("(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)"),
-        sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
+        sql::<BigInt>(
+            "(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)",
+        ),
+        sql::<BigInt>(
+            "(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)",
+        ),
     )
 }
 
@@ -338,7 +341,7 @@ impl Article {
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
-        
+
         let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
@@ -441,11 +444,7 @@ impl SimpleArticle {
         let res = all_articles
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
-            .select((
-                article::id,
-                article::title,
-                article::author_id,
-            ))
+            .select((article::id, article::title, article::author_id))
             .get_result::<SimpleArticle>(conn);
         match res {
             Ok(data) => Ok(data),

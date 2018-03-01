@@ -2,9 +2,8 @@ use sapper::{Error as SapperError, Request, Response, Result as SapperResult, Sa
 use sapper_std::{JsonParams, SessionVal};
 use serde_json;
 
-use super::super::{ChangePassword, DeleteArticle, DeleteComment, EditArticle,
-                   EditUser, LoginUser, NewArticle, SimpleArticle, UserNotify,
-                   NewComment, Permissions, Postgresql, RUser, Redis};
+use super::super::{ChangePassword, DeleteArticle, DeleteComment, EditArticle, EditUser, LoginUser, NewArticle,
+                   NewComment, Permissions, Postgresql, RUser, Redis, SimpleArticle, UserNotify};
 use super::super::get_ruser_from_session;
 pub struct User;
 

@@ -146,7 +146,7 @@ impl RedisPool {
     }
 
     pub fn lrem<T>(&self, redis_key: &str, count: i64, value: T)
-    where 
+    where
         T: redis::ToRedisArgs,
     {
         let a = |conn: &redis::Connection| {

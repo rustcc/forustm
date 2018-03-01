@@ -4,9 +4,8 @@ pub mod inner_http;
 pub mod github_information;
 
 pub use self::inner_http::{inner_get_github_nickname_and_address, inner_get_github_primary_email,
-                                   inner_get_github_token};
-pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email,
-                                   get_github_token};
+                           inner_get_github_token};
+pub use self::github_information::{get_github_nickname_and_address, get_github_primary_email, get_github_token};
 pub use self::postgresql_pool::{create_pg_pool, Postgresql};
 pub use self::redis_pool::{create_redis_pool, Redis, RedisPool};
 
@@ -123,7 +122,7 @@ pub fn get_ruser_from_session(req: &Request) -> Option<RUser> {
             } else {
                 None
             }
-        },
+        }
         None => None,
     }
 }
@@ -132,19 +131,17 @@ pub fn get_ruser_from_session(req: &Request) -> Option<RUser> {
 pub fn get_real_ip_from_req(req: &Request) -> Option<String> {
     match req.headers().get_raw("X-Real-IP") {
         Some(fip) => String::from_utf8((*fip)[0].clone()).ok(),
-        None => {
-            serde_json::to_string(&req.remote_addr().ip()).ok().map(|s| {
-                String::from(&s[1..s.len() - 1])
-            })
-        }
+        None => serde_json::to_string(&req.remote_addr().ip())
+            .ok()
+            .map(|s| String::from(&s[1..s.len() - 1])),
     }
 }
 
 /// get request's user-agent
 pub fn get_user_agent_from_req(req: &Request) -> Option<String> {
-    req.headers().get::<UserAgent>().map(|user_agent| {
-        String::from(user_agent.trim())
-    })
+    req.headers()
+        .get::<UserAgent>()
+        .map(|user_agent| String::from(user_agent.trim()))
 }
 
 pub struct Permissions;
