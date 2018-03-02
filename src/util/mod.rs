@@ -87,12 +87,12 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
 }
 
 /// send email
-pub fn send_reset_password_email(new_password: &str, email: &str) {
+pub fn send_reset_password_email(cookie: &str, email: &str) {
     let client = Client::new();
     let xsmtpapi = json!({
 		"to": [email],
 		"sub": {
-			"%password%": [new_password],
+			"%cookie%": [cookie],
 			}
 	});
     let body = serde_urlencoded::to_string([
