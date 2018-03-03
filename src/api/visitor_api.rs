@@ -177,16 +177,14 @@ impl Visitor {
         #[derive(Deserialize, Serialize)]
         struct Massage {
             password: String,
-            cookie: String
+            cookie: String,
         }
-
         let mut response = Response::new();
         response.headers_mut().set(ContentType::json());
 
         let body: Massage = get_json_params!(req);
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-
 
         match RUser::reset_pwd(&pg_pool, redis_pool, body.password, body.cookie) {
             Ok(cookie) => {
@@ -205,7 +203,7 @@ impl Visitor {
                     None,
                     None,
                 );
-            },
+            }
             Err(err) => {
                 let res = json!({
                     "status": false,

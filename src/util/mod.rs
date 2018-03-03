@@ -97,8 +97,8 @@ pub fn send_reset_password_email(cookie: &str, email: &str) {
 	});
     let body = serde_urlencoded::to_string([
         ("apiUser", "rustcc"),
-        ("apiKey", "Cb2HNnzRBRGq6QLa"),
-        ("templateInvokeName", "reset_password"),
+        ("apiKey", "********"),
+        ("templateInvokeName", "send_reset_url"),
         ("xsmtpapi", &xsmtpapi.to_string()),
         ("from", "admin@rust.cc"),
         ("fromName", "Admin"),

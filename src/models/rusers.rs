@@ -114,7 +114,11 @@ impl RUser {
         redis_pool.hget::<String>(cookie, "info")
     }
 
-    pub fn send_reset_pwd_email(conn: &PgConnection, redis_pool: &Arc<RedisPool>, account: String) -> Result<(), String> {
+    pub fn send_reset_pwd_email(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        account: String,
+    ) -> Result<(), String> {
         let res = all_rusers
             .filter(ruser::status.eq(0))
             .filter(ruser::account.eq(&account))
@@ -131,7 +135,12 @@ impl RUser {
         }
     }
 
-    pub fn reset_pwd(conn: &PgConnection, redis_pool: &Arc<RedisPool>, pwd: String, cookie: String) -> Result<String, String> {
+    pub fn reset_pwd(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        pwd: String,
+        cookie: String,
+    ) -> Result<String, String> {
         let info =
             serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&cookie, "info")).unwrap();
         let salt = random_string(6);
@@ -143,7 +152,7 @@ impl RUser {
             Ok(_) => {
                 redis_pool.expire(&cookie, 24 * 60 * 60);
                 Ok(cookie)
-            },
+            }
             Err(err) => Err(format!("{}", err)),
         }
     }

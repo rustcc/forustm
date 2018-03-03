@@ -1,6 +1,7 @@
 use super::super::{Article, ArticleBrief, Permissions, Postgresql, PubNotice, Redis, Section,
                    WebContext};
-use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter, Error as SapperError, PathParams};
+use sapper::{Error as SapperError, PathParams, Request, Response, Result as SapperResult,
+             SapperModule, SapperRouter};
 use sapper_std::render;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -93,7 +94,9 @@ impl Index {
         if redis_pool.exists(&cookie) {
             res_html!("reset_password.html", web)
         } else {
-            Err(SapperError::Custom(String::from("Reset password has expired, please re-apply")))
+            Err(SapperError::Custom(String::from(
+                "Reset password has expired, please re-apply",
+            )))
         }
     }
 }
