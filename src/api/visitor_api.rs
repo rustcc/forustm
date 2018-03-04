@@ -145,7 +145,7 @@ impl Visitor {
         Ok(response)
     }
 
-    fn reset_pwd(req: &mut Request) -> SapperResult<Response> {
+    fn send_reset_pwd_email(req: &mut Request) -> SapperResult<Response> {
         #[derive(Deserialize, Serialize)]
         struct Account {
             account: String,
@@ -159,10 +159,10 @@ impl Visitor {
             res_json!(res)
         } else {
             let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-            let res = match RUser::reset_password(&pg_pool, body.account) {
-                Ok(data) => json!({
-                    "status": true,
-                    "data": data
+            let redis_pool = req.ext().get::<Redis>().unwrap();
+            let res = match RUser::send_reset_pwd_email(&pg_pool, redis_pool, body.account) {
+                Ok(_) => json!({
+                    "status": true
                 }),
                 Err(err) => json!({
                     "status": false,
@@ -171,6 +171,49 @@ impl Visitor {
             };
             res_json!(res)
         }
+    }
+
+    fn reset_pwd(req: &mut Request) -> SapperResult<Response> {
+        #[derive(Deserialize, Serialize)]
+        struct Massage {
+            password: String,
+            cookie: String,
+        }
+        let mut response = Response::new();
+        response.headers_mut().set(ContentType::json());
+
+        let body: Massage = get_json_params!(req);
+        let redis_pool = req.ext().get::<Redis>().unwrap();
+        let pg_pool = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+
+        match RUser::reset_pwd(&pg_pool, redis_pool, body.password, body.cookie) {
+            Ok(cookie) => {
+                let res = json!({
+                    "status": true,
+                });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+
+                let _ = set_cookie(
+                    &mut response,
+                    "forustm_session".to_string(),
+                    cookie,
+                    None,
+                    Some("/".to_string()),
+                    None,
+                    None,
+                );
+            }
+            Err(err) => {
+                let res = json!({
+                    "status": false,
+                    "error": format!("{}", err)
+                });
+
+                response.write_body(serde_json::to_string(&res).unwrap());
+            }
+        };
+        Ok(response)
     }
 
     fn articles_paging(req: &mut Request) -> SapperResult<Response> {
@@ -349,6 +392,7 @@ impl SapperModule for Visitor {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
         router.post("/user/login", Visitor::login);
         router.post("/user/sign_up", Visitor::sign_up);
+        router.post("/user/send_reset_pwd_email", Visitor::send_reset_pwd_email);
         router.post("/user/reset_pwd", Visitor::reset_pwd);
 
         router.get("/article/paging", Visitor::articles_paging);

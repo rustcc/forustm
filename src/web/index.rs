@@ -1,6 +1,7 @@
 use super::super::{Article, ArticleBrief, Permissions, Postgresql, PubNotice, Redis, Section,
                    WebContext};
-use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper::{Error as SapperError, PathParams, Request, Response, Result as SapperResult,
+             SapperModule, SapperRouter};
 use sapper_std::render;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -82,6 +83,22 @@ impl Index {
             None => res_html!("login.html", web),
         }
     }
+
+    fn reset_password(req: &mut Request) -> SapperResult<Response> {
+        let web = req.ext().get::<WebContext>().unwrap().clone();
+
+        let params = get_path_params!(req);
+        let cookie: String = t_param!(params, "cookie").parse().unwrap();
+        let redis_pool = req.ext().get::<Redis>().unwrap();
+
+        if redis_pool.exists(&cookie) {
+            res_html!("reset_password.html", web)
+        } else {
+            Err(SapperError::Custom(String::from(
+                "Reset password has expired, please re-apply",
+            )))
+        }
+    }
 }
 
 impl SapperModule for Index {
@@ -89,6 +106,8 @@ impl SapperModule for Index {
         router.get("/", Index::index);
 
         router.get("/login", Index::login);
+
+        router.get("/reset_password/:cookie", Index::reset_password);
 
         Ok(())
     }

@@ -114,19 +114,44 @@ impl RUser {
         redis_pool.hget::<String>(cookie, "info")
     }
 
-    pub fn reset_password(conn: &PgConnection, account: String) -> Result<usize, String> {
+    pub fn send_reset_pwd_email(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        account: String,
+    ) -> Result<(), String> {
+        let res = all_rusers
+            .filter(ruser::status.eq(0))
+            .filter(ruser::account.eq(&account))
+            .get_result::<RawUser>(conn);
+        match res {
+            Ok(data) => {
+                let cookie = sha3_256_encode(&random_string(8));
+                redis_pool.hset(&cookie, "info", json!(data.into_user_info()).to_string());
+                redis_pool.expire(&cookie, 60 * 10);
+                thread::spawn(move || send_reset_password_email(&cookie, &account));
+                Ok(())
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn reset_pwd(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        pwd: String,
+        cookie: String,
+    ) -> Result<String, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&cookie, "info")).unwrap();
         let salt = random_string(6);
-        let new_password = random_string(8);
-        let res = diesel::update(all_rusers.filter(ruser::account.eq(&account)))
-            .set((
-                ruser::password.eq(sha3_256_encode(&format!("{}{}", new_password, salt))),
-                ruser::salt.eq(salt),
-            ))
+        let password = sha3_256_encode(&format!("{}{}", pwd, salt));
+        let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
+            .set((ruser::password.eq(&password), ruser::salt.eq(&salt)))
             .execute(conn);
         match res {
-            Ok(num) => {
-                thread::spawn(move || send_reset_password_email(&new_password, &account));
-                Ok(num)
+            Ok(_) => {
+                redis_pool.expire(&cookie, 24 * 60 * 60);
+                Ok(cookie)
             }
             Err(err) => Err(format!("{}", err)),
         }

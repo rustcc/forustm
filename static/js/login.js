@@ -123,7 +123,7 @@ function reset_account() {
     $(".text-danger").remove();
     if (account !== "") {
         $.ajax({
-            url: "/api/v1/user/reset_pwd",
+            url: "/api/v1/user/send_reset_pwd_email",
             type: "post",
             dataType: "json",
             data: JSON.stringify({ "account": account }),
