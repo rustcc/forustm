@@ -37,6 +37,9 @@
     padding: 6px 16px;
     text-decoration: none;
     display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 /* Change color of dropdown links on hover */
@@ -44,6 +47,23 @@
 
 /* Show the dropdown menu on hover */
 .userinfo-text:hover .dropdown-content {
+    display: block;
+}
+
+.user-notifys {
+    float: left;
+    font-size: 14px;
+    position: relative;
+    display: inline-block;
+    padding: 0 6px;
+    line-height: 42px;
+}
+
+.user-notifys .dropdown-content {
+    max-width: 315px;
+}
+
+.user-notifys:hover .dropdown-content {
     display: block;
 }
 
@@ -60,12 +80,34 @@
 
     <div class="userinfo right">
       {% if user %}
+        {% if user_notifys | length != 0 %}
+        <div class="user-notifys">
+            <a href="#">消息({{ user_notifys | length }})</a>
+            <div class="dropdown-content">
+                {% for notify in user_notifys %}
+                <a href="/article/{{ notify.article_id }}"
+                    target="_blank"
+                    title="{{ notify.send_user_name }} {% if notify.notify_type == "reply" %} 回复 {% elif notify.notify_type == "comment" %} 评论 {%else %} 搞事情！{% endif %} 了你，帖子: {{ notify.article_title }}">
+                    {{ notify.send_user_name }}
+                    {% if notify.notify_type == "reply" %} 回复
+                    {% elif notify.notify_type == "comment" %} 评论
+                    {% else %} 搞事情！{% endif %}
+                    了你，帖子: {{ notify.article_title }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         <div class="userinfo-text">
-          <a class="dropbtn" href="#">{{ user.nickname }}</a>
-          <div class="dropdown-content">
-            <a href="/home">个人主页</a>
-            <a id="sign_out" href="/api/v1/user/sign_out">退出</a>
-          </div>
+            <a class="dropbtn" href="#">{{ user.nickname }}</a>
+            <div class="dropdown-content">
+                <a href="/home">个人主页</a>
+                <a href="/blog/{{ user.id }}">我的博客</a>
+                {% if user_blog_section %}
+                <a href="/user/article/edit?sectionID={{user_blog_section.id}}&stype=1">写博客</a>
+                {% endif %}
+                <a id="sign_out" href="/api/v1/user/sign_out">退出</a>
+            </div>
         </div>
         {% else %}
             <span class="userinfo-text"><a href="/login">登录</a></span>

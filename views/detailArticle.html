@@ -439,6 +439,8 @@
             var $this = $(this);
 
             var nickname = $this.data("nickname");
+            // comment author id
+            var replyUserId = $this.data("author-id");
 
             /* @current aaa @xx bbb @xx cc */
             var originText = "@" + nickname + " "
@@ -457,6 +459,7 @@
                 .show()
                 .find("textarea")
                 .data("markdown", markdown)
+                .data("reply-user-id", replyUserId)
                 .focus();
         });
     }
@@ -481,16 +484,21 @@
             // clear reply hidden text
             $textarea.data("markdown", "");
         }
+        var replyData = {
+            content: content,
+            article_id: getArticleID()
+        };
+        var replyUserId = $textarea.data("reply-user-id");
+        if (replyUserId && replyUserId.length) {
+            replyData['reply_user_id'] = replyUserId;
+        }
 
         $.ajax({
             type: "POST",
             url: $("button[name='submit']").data("api"),
             contentType: 'application/json; charset=utf-8',
             dataType: "json",
-            data: JSON.stringify({
-                content: content,
-                article_id: getArticleID()
-            }),
+            data: JSON.stringify(replyData),
             success: function (response) {
                 if (response.status === true) {
                     window.location.reload();

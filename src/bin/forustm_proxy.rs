@@ -1,8 +1,8 @@
+extern crate forustm;
 extern crate sapper;
 extern crate sapper_std;
-extern crate forustm;
 
-use sapper::{SapperApp, SapperAppShell, Request, Response, Result as SapperResult};
+use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
 use forustm::proxy::ProxyModule;
 
 struct WebApp;

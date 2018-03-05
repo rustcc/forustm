@@ -1,5 +1,5 @@
-use super::super::{inner_get_github_primary_email, random_string, send_reset_password_email, InsertSection, RedisPool,
-                   sha3_256_encode};
+use super::super::{inner_get_github_primary_email, random_string, send_reset_password_email,
+                   InsertSection, RedisPool, sha3_256_encode};
 use super::super::ruser;
 use super::super::ruser::dsl::ruser as all_rusers;
 
@@ -68,7 +68,11 @@ impl RUser {
         }
     }
 
-    pub fn view_user_list(conn: &PgConnection, limit: i64, offset: i64) -> Result<Vec<Self>, String> {
+    pub fn view_user_list(
+        conn: &PgConnection,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Self>, String> {
         let res = all_rusers
             .limit(limit)
             .offset(offset)
@@ -93,7 +97,10 @@ impl RUser {
         }
     }
 
-    pub fn change_permission(conn: &PgConnection, data: &ChangePermission) -> Result<usize, String> {
+    pub fn change_permission(
+        conn: &PgConnection,
+        data: &ChangePermission,
+    ) -> Result<usize, String> {
         let res = diesel::update(all_rusers.filter(ruser::id.eq(data.id)))
             .set(ruser::role.eq(data.permission))
             .execute(conn);
@@ -107,19 +114,44 @@ impl RUser {
         redis_pool.hget::<String>(cookie, "info")
     }
 
-    pub fn reset_password(conn: &PgConnection, account: String) -> Result<usize, String> {
+    pub fn send_reset_pwd_email(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        account: String,
+    ) -> Result<(), String> {
+        let res = all_rusers
+            .filter(ruser::status.eq(0))
+            .filter(ruser::account.eq(&account))
+            .get_result::<RawUser>(conn);
+        match res {
+            Ok(data) => {
+                let cookie = sha3_256_encode(&random_string(8));
+                redis_pool.hset(&cookie, "info", json!(data.into_user_info()).to_string());
+                redis_pool.expire(&cookie, 60 * 10);
+                thread::spawn(move || send_reset_password_email(&cookie, &account));
+                Ok(())
+            }
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    pub fn reset_pwd(
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        pwd: String,
+        cookie: String,
+    ) -> Result<String, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&cookie, "info")).unwrap();
         let salt = random_string(6);
-        let new_password = random_string(8);
-        let res = diesel::update(all_rusers.filter(ruser::account.eq(&account)))
-            .set((
-                ruser::password.eq(sha3_256_encode(&format!("{}{}", new_password, salt))),
-                ruser::salt.eq(salt),
-            ))
+        let password = sha3_256_encode(&format!("{}{}", pwd, salt));
+        let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
+            .set((ruser::password.eq(&password), ruser::salt.eq(&salt)))
             .execute(conn);
         match res {
-            Ok(num) => {
-                thread::spawn(move || send_reset_password_email(&new_password, &account));
-                Ok(num)
+            Ok(_) => {
+                redis_pool.expire(&cookie, 24 * 60 * 60);
+                Ok(cookie)
             }
             Err(err) => Err(format!("{}", err)),
         }
@@ -203,7 +235,7 @@ impl LoginUser {
             Err(_) => {
                 let email = match inner_get_github_primary_email(token) {
                     Ok(data) => data,
-                    Err(e) => return Err(e)
+                    Err(e) => return Err(e),
                 };
 
                 match all_rusers
@@ -220,7 +252,11 @@ impl LoginUser {
                             Ok(info) => {
                                 let cookie = sha3_256_encode(&random_string(8));
                                 redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
-                                redis_pool.hset(&cookie, "info", json!(info.into_user_info()).to_string());
+                                redis_pool.hset(
+                                    &cookie,
+                                    "info",
+                                    json!(info.into_user_info()).to_string(),
+                                );
                                 redis_pool.expire(&cookie, ttl);
                                 Ok(cookie)
                             }
@@ -228,7 +264,9 @@ impl LoginUser {
                         }
                     }
                     // sign up
-                    Err(_) => NewUser::new_with_github(email, github, nickname).insert(conn, redis_pool),
+                    Err(_) => {
+                        NewUser::new_with_github(email, github, nickname).insert(conn, redis_pool)
+                    }
                 }
             }
         }
@@ -244,8 +282,14 @@ pub struct EditUser {
 }
 
 impl EditUser {
-    pub fn edit_user(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+    pub fn edit_user(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
             .set((
                 ruser::nickname.eq(self.nickname),
@@ -277,7 +321,8 @@ impl ChangePassword {
         redis_pool: &Arc<RedisPool>,
         cookie: &str,
     ) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
 
         if !self.verification(conn, &info.id) {
             return Err("Verification error".to_string());
@@ -299,7 +344,9 @@ impl ChangePassword {
             .filter(ruser::id.eq(id))
             .get_result::<RawUser>(conn);
         match old_user {
-            Ok(old) => old.password == sha3_256_encode(&format!("{}{}", self.old_password, old.salt)),
+            Ok(old) => {
+                old.password == sha3_256_encode(&format!("{}{}", self.old_password, old.salt))
+            }
             Err(_) => false,
         }
     }
@@ -378,7 +425,11 @@ pub struct RegisteredUser {
 }
 
 impl RegisteredUser {
-    pub fn register(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
+    pub fn register(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+    ) -> Result<String, String> {
         NewUser::new(self, random_string(6)).insert(conn, redis_pool)
     }
 }

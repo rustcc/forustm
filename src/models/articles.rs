@@ -10,6 +10,9 @@ use diesel::prelude::*;
 use serde_json;
 use std::sync::Arc;
 use uuid::Uuid;
+use diesel::dsl::*;
+use diesel::sql_types::BigInt;
+use diesel::expression::SqlLiteral;
 
 #[derive(Queryable)]
 struct RawArticles {
@@ -23,6 +26,44 @@ struct RawArticles {
     stype: i32, // 0 section, 1 user blog
     created_time: NaiveDateTime,
     status: i16, // 0 normal, 1 frozen, 2 deleted
+    view_count: i64,
+    comment_count: i64,
+}
+
+type SelectRawArticles = (
+    article::id,
+    article::title,
+    article::raw_content,
+    article::content,
+    article::section_id,
+    article::author_id,
+    article::tags,
+    article::stype,
+    article::created_time,
+    article::status,
+    SqlLiteral<BigInt>,
+    SqlLiteral<BigInt>,
+);
+
+fn select_raw_articles() -> SelectRawArticles {
+    (
+        article::id,
+        article::title,
+        article::raw_content,
+        article::content,
+        article::section_id,
+        article::author_id,
+        article::tags,
+        article::stype,
+        article::created_time,
+        article::status,
+        sql::<BigInt>(
+            "(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)",
+        ),
+        sql::<BigInt>(
+            "(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)",
+        ),
+    )
 }
 
 impl RawArticles {
@@ -37,6 +78,9 @@ impl RawArticles {
             created_time: self.created_time,
             status: self.status,
             stype: self.stype,
+
+            view_count: self.view_count,
+            comment_count: self.comment_count,
         }
     }
 
@@ -51,6 +95,9 @@ impl RawArticles {
             created_time: self.created_time,
             status: self.status,
             stype: self.stype,
+
+            view_count: self.view_count,
+            comment_count: self.comment_count,
         }
     }
 
@@ -78,6 +125,9 @@ pub struct Article {
     pub created_time: NaiveDateTime,
     pub status: i16,
     pub stype: i32,
+
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
@@ -89,6 +139,8 @@ pub struct ArticleBrief {
     pub created_time: NaiveDateTime,
 
     pub author_name: String,
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -110,6 +162,9 @@ pub struct BlogBrief {
     pub tags: String,
     pub created_time: NaiveDateTime,
     pub author_name: String,
+
+    pub view_count: i64,
+    pub comment_count: i64,
 }
 
 #[derive(Debug)]
@@ -122,6 +177,7 @@ pub struct ArticlesWithTotal<T> {
 impl Article {
     pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
         let res = all_articles
+            .select(select_raw_articles())
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .get_result::<RawArticles>(conn);
@@ -135,6 +191,7 @@ impl Article {
         let res = all_articles
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_markdown()),
@@ -147,6 +204,7 @@ impl Article {
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
             .filter(article::stype.eq(1))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_html()),
@@ -158,6 +216,7 @@ impl Article {
         let res = all_articles
             .filter(article::status.ne(2))
             .filter(article::id.eq(id))
+            .select(select_raw_articles())
             .get_result::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data.into_markdown()),
@@ -165,10 +224,14 @@ impl Article {
         }
     }
 
-    fn raw_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<RawArticles>, String> {
+    fn raw_articles_with_section_id(
+        conn: &PgConnection,
+        id: Uuid,
+    ) -> Result<Vec<RawArticles>, String> {
         let res = all_articles
             .filter(article::section_id.eq(id))
             .filter(article::status.ne(2))
+            .select(select_raw_articles())
             .order(article::created_time.desc())
             .get_results::<RawArticles>(conn);
         match res {
@@ -177,7 +240,10 @@ impl Article {
         }
     }
 
-    pub fn query_articles_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Vec<Article>, String> {
+    pub fn query_articles_with_section_id(
+        conn: &PgConnection,
+        id: Uuid,
+    ) -> Result<Vec<Article>, String> {
         match Article::raw_articles_with_section_id(conn, id) {
             Ok(raw_articles) => Ok(raw_articles
                 .into_iter()
@@ -198,7 +264,8 @@ impl Article {
             .filter(article::section_id.eq(id))
             .filter(article::status.ne(2));
 
-        let res = _res.order(article::created_time.desc())
+        let res = _res.select(select_raw_articles())
+            .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<RawArticles>(conn);
@@ -233,6 +300,8 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
@@ -271,6 +340,8 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
@@ -336,6 +407,8 @@ impl Article {
                 article::tags,
                 article::created_time,
                 ruser::nickname,
+                sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
+                sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
             .order(article::created_time.desc())
             .offset(page_size * (page - 1) as i64)
@@ -358,6 +431,27 @@ impl Article {
         let res = diesel::update(all_articles.filter(article::id.eq(id)))
             .set(article::status.eq(2))
             .execute(conn);
+        match res {
+            Ok(data) => Ok(data),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+}
+
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+pub struct SimpleArticle {
+    pub id: Uuid,
+    pub title: String,
+    pub author_id: Uuid,
+}
+
+impl SimpleArticle {
+    pub fn query_simple_article(conn: &PgConnection, id: Uuid) -> Result<SimpleArticle, String> {
+        let res = all_articles
+            .filter(article::status.ne(2))
+            .filter(article::id.eq(id))
+            .select((article::id, article::title, article::author_id))
+            .get_result::<SimpleArticle>(conn);
         match res {
             Ok(data) => Ok(data),
             Err(err) => Err(format!("{}", err)),
@@ -412,8 +506,14 @@ pub struct NewArticle {
 }
 
 impl NewArticle {
-    pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let user: RUser = serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
+    pub fn insert(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
+        let user: RUser =
+            serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
         if self.stype == 1 {
             let blog_owner = Section::query_with_section_id(conn, self.section_id)
                 .unwrap()
@@ -440,8 +540,14 @@ pub struct EditArticle {
 }
 
 impl EditArticle {
-    pub fn edit_article(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> Result<usize, String> {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+    pub fn edit_article(
+        self,
+        conn: &PgConnection,
+        redis_pool: &Arc<RedisPool>,
+        cookie: &str,
+    ) -> Result<usize, String> {
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         if self.author_id == info.id {
             let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
                 .set((
@@ -478,7 +584,9 @@ impl DeleteArticle {
         match *permission {
             Some(0) | Some(1) => Article::delete_with_id(conn, self.article_id).is_ok(),
             _ => {
-                let logged_user = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                let logged_user = serde_json::from_str::<RUser>(&redis_pool
+                    .hget::<String>(cookie, "info"))
+                    .unwrap();
                 if self.user_id == logged_user.id {
                     Article::delete_with_id(conn, self.article_id).is_ok()
                 } else {

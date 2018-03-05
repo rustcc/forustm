@@ -16,15 +16,14 @@ authors = ["Mike Tang <miketang84@outlook.com>"]
  redis = '^0.8.0'
  r2d2 = '^0.8.1'
  r2d2_redis = '^0.7.0'
- r2d2-diesel = '^1.0.0-beta1'
  serde_urlencoded = "^0.5.1"
  ammonia = "^1.0.1"
  hyper-native-tls = "^0.2.4"
  hyper = "^0.10.13"
 
 [dependencies.diesel]
-features = ["postgres", "chrono", "uuid"]
-version = "^1.0.0-beta1"
+features = ["postgres", "chrono", "uuid", "r2d2"]
+version = "^1.1.1"
 
 [dependencies.chrono]
 features = ["serde"]
@@ -32,7 +31,7 @@ version = "^0.4.0"
 
 [dependencies.diesel_infer_schema]
 features = ["postgres"]
-version = "^1.0.0-beta1"
+version = "^1.1.0"
 
 [dependencies.uuid]
 features = ["serde", "v4"]

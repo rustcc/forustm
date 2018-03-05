@@ -1,10 +1,10 @@
+extern crate forustm;
 extern crate sapper;
 extern crate sapper_std;
-extern crate forustm;
 
 use std::sync::Arc;
-use sapper::{SapperApp, SapperAppShell, Request, Response, Result as SapperResult};
-use forustm::{Redis, create_redis_pool, create_pg_pool, Postgresql};
+use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
+use forustm::{create_pg_pool, create_redis_pool, Postgresql, Redis};
 use forustm::web::*;
 use forustm::{get_identity_and_web_context, Permissions, WebContext};
 

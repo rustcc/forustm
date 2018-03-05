@@ -31,7 +31,12 @@ pub struct CommentsWithTotal<T> {
 }
 
 impl CommentWithNickName {
-    pub fn query(conn: &PgConnection, limit: i64, offset: i64, article_id: Uuid) -> Result<Vec<Self>, String> {
+    pub fn query(
+        conn: &PgConnection,
+        limit: i64,
+        offset: i64,
+        article_id: Uuid,
+    ) -> Result<Vec<Self>, String> {
         let res = all_comments
             .inner_join(all_rusers.on(comment::author_id.eq(ruser::id)))
             .select((
@@ -127,8 +132,9 @@ impl InsertComment {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct NewComment {
-    content: String,
-    article_id: Uuid,
+    pub content: String,
+    pub article_id: Uuid,
+    pub reply_user_id: Option<Uuid>,
 }
 
 impl NewComment {
@@ -141,7 +147,8 @@ impl NewComment {
     }
 
     pub fn insert(self, conn: &PgConnection, redis_pool: &Arc<RedisPool>, cookie: &str) -> bool {
-        let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+        let info =
+            serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         self.into_insert_comments(info.id).insert(conn)
     }
 }
@@ -163,7 +170,9 @@ impl DeleteComment {
         match *permission {
             Some(0) | Some(1) => CommentWithNickName::delete_with_comment_id(conn, self.comment_id),
             _ => {
-                let info = serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
+                let info = serde_json::from_str::<RUser>(&redis_pool
+                    .hget::<String>(cookie, "info"))
+                    .unwrap();
                 if self.author_id == info.id {
                     CommentWithNickName::delete_with_comment_id(conn, self.comment_id)
                 } else {
