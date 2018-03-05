@@ -145,7 +145,7 @@
         var title = $("input[name='title']").val();
         var tags = $("input[name='tags']").val();
         var rawContent = $("textarea[name='raw-content']").val();
-
+        var thisButton = $("button[name='submit']").text("正在Biu中...");
         if (title.trim().length === 0 || rawContent.trim().length === 0) {
             alert("请输入文章标题和内容！");
             return;
