@@ -1,18 +1,25 @@
-use super::super::{markdown_render, RUser, RedisPool};
-use super::super::{comment, ruser};
-use super::super::comment::dsl::comment as all_comments;
-use super::super::ruser::dsl::ruser as all_rusers;
+use super::RUserDto;
+use super::super::util::markdown_render;
+use super::super::db::RedisPool;
 
+use schema::comment as comment_schema;
+use schema::comment::table as comment_table;
+
+use schema::ruser as ruser_schema;
+use schema::ruser::table as ruser_table;
+
+use std::sync::Arc;
+use uuid::Uuid;
 use chrono::NaiveDateTime;
+
 use diesel;
 use diesel::PgConnection;
 use diesel::prelude::*;
 use serde_json;
-use std::sync::Arc;
-use uuid::Uuid;
+
 
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
-pub struct CommentWithNickName {
+pub struct CommentWithNickNameDto {
     id: Uuid,
     content: String,
     article_id: Uuid,
@@ -23,37 +30,30 @@ pub struct CommentWithNickName {
     nickname: String,
 }
 
-#[derive(Debug)]
-pub struct CommentsWithTotal<T> {
-    pub comments: Vec<T>,
-    pub total: i64,
-    pub max_page: i64,
-}
-
-impl CommentWithNickName {
+impl CommentWithNickNameDto {
     pub fn query(
         conn: &PgConnection,
         limit: i64,
         offset: i64,
         article_id: Uuid,
     ) -> Result<Vec<Self>, String> {
-        let res = all_comments
-            .inner_join(all_rusers.on(comment::author_id.eq(ruser::id)))
+        let res = comment_table
+            .inner_join(ruser_table.on(comment_schema::author_id.eq(ruser::id)))
             .select((
-                comment::id,
-                comment::content,
-                comment::article_id,
-                comment::author_id,
-                comment::created_time,
-                comment::status,
+                comment_schema::id,
+                comment_schema::content,
+                comment_schema::article_id,
+                comment_schema::author_id,
+                comment_schema::created_time,
+                comment_schema::status,
                 ruser::nickname,
             ))
-            .filter(comment::status.eq(0))
-            .filter(comment::article_id.eq(article_id))
-            .order(comment::created_time)
+            .filter(comment_schema::status.eq(0))
+            .filter(comment_schema::article_id.eq(article_id))
+            .order(comment_schema::created_time)
             .limit(limit)
             .offset(offset)
-            .get_results::<CommentWithNickName>(conn);
+            .get_results::<CommentWithNickNameDto>(conn);
 
         match res {
             Ok(data) => Ok(data),
@@ -66,22 +66,22 @@ impl CommentWithNickName {
         id: Uuid,
         page: i64,
         page_size: i64,
-    ) -> Result<CommentsWithTotal<Self>, String> {
-        let _res = all_comments
-            .filter(comment::article_id.eq(id))
-            .filter(comment::status.eq(0));
+    ) -> Result<CommentsWithTotalDto<Self>, String> {
+        let _res = comment_table
+            .filter(comment_schema::article_id.eq(id))
+            .filter(comment_schema::status.eq(0));
 
-        let res = _res.inner_join(all_rusers.on(comment::author_id.eq(ruser::id)))
+        let res = _res.inner_join(ruser_table.on(comment_schema::author_id.eq(ruser::id)))
             .select((
-                comment::id,
-                comment::content,
-                comment::article_id,
-                comment::author_id,
-                comment::created_time,
-                comment::status,
+                comment_schema::id,
+                comment_schema::content,
+                comment_schema::article_id,
+                comment_schema::author_id,
+                comment_schema::created_time,
+                comment_schema::status,
                 ruser::nickname,
             ))
-            .order(comment::created_time)
+            .order(comment_schema::created_time)
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<Self>(conn);
@@ -89,7 +89,7 @@ impl CommentWithNickName {
         let all_count: i64 = _res.count().get_result(conn).unwrap();
 
         match res {
-            Ok(data) => Ok(CommentsWithTotal {
+            Ok(data) => Ok(CommentsWithTotalDto {
                 comments: data,
                 total: all_count,
                 max_page: (all_count as f64 / page_size as f64).ceil() as i64,
@@ -99,31 +99,39 @@ impl CommentWithNickName {
     }
 
     fn delete_with_comment_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::update(all_comments.filter(comment::id.eq(id)))
-            .set(comment::status.eq(2))
+        diesel::update(comment_table.filter(comment_schema::id.eq(id)))
+            .set(comment_schema::status.eq(2))
             .execute(conn)
             .is_ok()
     }
 
     pub fn delete_with_author_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::update(all_comments.filter(comment::author_id.eq(id)))
-            .set(comment::status.eq(2))
+        diesel::update(comment_table.filter(comment_schema::author_id.eq(id)))
+            .set(comment_schema::status.eq(2))
             .execute(conn)
             .is_ok()
     }
 }
 
+#[derive(Debug)]
+pub struct CommentsWithTotalDto<T> {
+    pub comments: Vec<T>,
+    pub total: i64,
+    pub max_page: i64,
+}
+
+
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "comment"]
-struct InsertComment {
+struct InsertCommentDmo {
     content: String,
     article_id: Uuid,
     author_id: Uuid,
 }
 
-impl InsertComment {
+impl InsertCommentDmo {
     fn insert(self, conn: &PgConnection) -> bool {
-        diesel::insert_into(comment::table)
+        diesel::insert_into(comment_table)
             .values(&self)
             .execute(conn)
             .is_ok()
@@ -131,13 +139,13 @@ impl InsertComment {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct NewComment {
+pub struct NewCommentDmo {
     pub content: String,
     pub article_id: Uuid,
     pub reply_user_id: Option<Uuid>,
 }
 
-impl NewComment {
+impl NewCommentDmo {
     fn into_insert_comments(self, author_id: Uuid) -> InsertComment {
         InsertComment {
             content: markdown_render(&self.content),
@@ -154,12 +162,12 @@ impl NewComment {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct DeleteComment {
+pub struct DeleteCommentDmo {
     comment_id: Uuid,
     author_id: Uuid,
 }
 
-impl DeleteComment {
+impl DeleteCommentDmo {
     pub fn delete(
         self,
         conn: &PgConnection,

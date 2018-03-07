@@ -1,8 +1,8 @@
-use super::super::RedisPool;
-
-use serde_json;
 use std::sync::Arc;
+use serde_json;
 use uuid::Uuid;
+
+use super::super::db::RedisPool;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserNotify {
@@ -28,32 +28,32 @@ impl UserNotify {
         redis_pool.ltrim(&user_notify_key, 0, 99);
     }
 
-    pub fn get_notifys(user_id: Uuid, redis_pool: &Arc<RedisPool>) -> Option<Vec<UserNotify>> {
+    pub fn get_notifies(user_id: Uuid, redis_pool: &Arc<RedisPool>) -> Option<Vec<UserNotify>> {
         let user_notify_key = format!("user:notify:{}", user_id.hyphenated().to_string());
-        let notifys: Vec<String> = redis_pool.lrange(&user_notify_key, 0, -1);
-        if notifys.len() > 0 {
-            let notifys: Vec<UserNotify> = notifys
+        let notifies: Vec<String> = redis_pool.lrange(&user_notify_key, 0, -1);
+        if notifies.len() > 0 {
+            let notifies: Vec<UserNotify> = notifies
                 .iter()
                 .map(|notify_string| {
                     let user_notify: UserNotify = serde_json::from_str(&notify_string).unwrap();
                     user_notify
                 })
                 .collect();
-            Some(notifys)
+            Some(notifies)
         } else {
             None
         }
     }
 
-    pub fn remove_notifys_for_article(
+    pub fn remove_notifies_for_article(
         user_id: Uuid,
         article_id: Uuid,
         redis_pool: &Arc<RedisPool>,
     ) {
         let user_notify_key = format!("user:notify:{}", user_id.hyphenated().to_string());
-        let notifys: Vec<String> = redis_pool.lrange(&user_notify_key, 0, -1);
-        if notifys.len() > 0 {
-            for notify_string in notifys {
+        let notifies: Vec<String> = redis_pool.lrange(&user_notify_key, 0, -1);
+        if notifies.len() > 0 {
+            for notify_string in notifies {
                 if notify_string.contains(&article_id.hyphenated().to_string()) {
                     redis_pool.lrem(&user_notify_key, 0, notify_string);
                 }

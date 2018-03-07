@@ -18,7 +18,8 @@ use diesel::PgConnection;
 use diesel::sql_types::BigInt;
 use diesel::expression::SqlLiteral;
 
-use super::super::{markdown_render, RedisPool};
+use super::super::util::markdown_render;
+use super::super::db::RedisPool;
 
 
 type SelectRawArticles = (
@@ -611,4 +612,11 @@ impl DeleteArticleDmo {
             }
         }
     }
+}
+
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ChangStatusDmo {
+    pub id: Uuid,
+    pub status: i16,
 }

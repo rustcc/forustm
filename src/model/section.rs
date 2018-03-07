@@ -1,16 +1,17 @@
-use super::super::RedisPool;
-use super::super::section;
-use super::super::section::dsl::section as all_sections;
-use sapper_std::Context;
+use super::super::db::RedisPool;
+use schema::section as section_schema;
+use schema::section::table as section_table;
 
+use std::sync::Arc;
+use sapper_std::Context;
+use uuid::Uuid;
 use chrono::NaiveDateTime;
+
 use diesel;
 use diesel::PgConnection;
 use diesel::pg::expression::dsl::any;
 use diesel::prelude::*;
-use uuid::Uuid;
 
-use std::sync::Arc;
 
 //
 // MODEL
@@ -29,9 +30,9 @@ pub struct Section {
 
 impl Section {
     pub fn query(conn: &PgConnection) -> Result<Vec<Self>, String> {
-        let res = all_sections
-            .filter(section::status.eq(0))
-            .order(section::created_time.desc())
+        let res = section_table
+            .filter(section_schema::status.eq(0))
+            .order(section_schema::created_time.desc())
             .get_results::<Self>(conn);
         match res {
             Ok(data) => Ok(data),
@@ -40,10 +41,10 @@ impl Section {
     }
 
     pub fn query_by_stype(conn: &PgConnection, stype: i32) -> Result<Vec<Self>, String> {
-        let res = all_sections
-            .filter(section::status.eq(0))
-            .filter(section::stype.eq(stype))
-            .order(section::created_time.desc())
+        let res = section_table
+            .filter(section_schema::status.eq(0))
+            .filter(section_schema::stype.eq(stype))
+            .order(section_schema::created_time.desc())
             .get_results::<Self>(conn);
         match res {
             Ok(data) => Ok(data),
@@ -52,9 +53,9 @@ impl Section {
     }
 
     pub fn query_with_section_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
-        let res = all_sections
-            .filter(section::status.eq(0))
-            .filter(section::id.eq(id))
+        let res = section_table
+            .filter(section_schema::status.eq(0))
+            .filter(section_schema::id.eq(id))
             .first::<Self>(conn);
         match res {
             Ok(data) => {
@@ -66,9 +67,9 @@ impl Section {
     }
 
     pub fn query_with_user_id(conn: &PgConnection, id: Uuid) -> Result<Self, String> {
-        let res = all_sections
-            .filter(section::status.eq(0))
-            .filter(section::suser.eq(id))
+        let res = section_table
+            .filter(section_schema::status.eq(0))
+            .filter(section_schema::suser.eq(id))
             .first::<Self>(conn);
         match res {
             Ok(data) => {
@@ -80,8 +81,8 @@ impl Section {
     }
 
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> bool {
-        diesel::update(all_sections.filter(section::id.eq(id)))
-            .set(section::status.eq(2))
+        diesel::update(section_table.filter(section_schema::id.eq(id)))
+            .set(section_schema::status.eq(2))
             .execute(conn)
             .is_ok()
     }
@@ -98,9 +99,9 @@ impl Section {
                 .map(|id_str| id_str.parse::<Uuid>().unwrap())
                 .collect();
 
-            let res = all_sections
-                .filter(section::status.eq(0))
-                .filter(section::id.eq(any(section_ids)))
+            let res = section_table
+                .filter(section_schema::status.eq(0))
+                .filter(section_schema::id.eq(any(section_ids)))
                 .get_results::<Self>(conn);
             match res {
                 Ok(data) => Ok(data),
@@ -114,16 +115,16 @@ impl Section {
 
 #[derive(Insertable, Debug, Clone, Deserialize, Serialize)]
 #[table_name = "section"]
-pub struct InsertSection {
+pub struct InsertSectionDmo {
     pub title: String,
     pub description: String,
     pub stype: i32,
     pub suser: Option<Uuid>,
 }
 
-impl InsertSection {
+impl InsertSectionDmo {
     pub fn insert(self, conn: &PgConnection) -> bool {
-        diesel::insert_into(section::table)
+        diesel::insert_into(section_table)
             .values(&self)
             .execute(conn)
             .is_ok()

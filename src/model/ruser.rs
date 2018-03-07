@@ -1,24 +1,34 @@
-use super::super::{inner_get_github_primary_email, random_string, send_reset_password_email,
-                   InsertSection, RedisPool, sha3_256_encode};
-use super::super::ruser;
-use super::super::ruser::dsl::ruser as all_rusers;
+use super::super::util::{
+    random_string, 
+    sha3_256_encode};
 
-use super::ChangStatus;
-use chrono::{Local, NaiveDateTime};
-use diesel;
-use diesel::PgConnection;
-use diesel::prelude::*;
-use serde_json;
+use super::super::thirdparts::{
+    inner_get_github_primary_email, 
+    send_reset_password_email};
+
+use super::super::db::RedisPool;
+
+use schema::ruser as ruser_schema;
+use schema::ruser::table as ruser_table;
+
+
+
 use std::sync::Arc;
 use std::thread;
 use uuid::Uuid;
+use chrono::{Local, NaiveDateTime};
+use serde_json;
+
+use diesel;
+use diesel::PgConnection;
+use diesel::prelude::*;
 
 //
 // MODEL
 //
 
 #[derive(Queryable)]
-struct RawUser {
+struct RUser {
     pub id: Uuid,
     // email
     pub account: String,
@@ -34,9 +44,9 @@ struct RawUser {
     pub github: Option<String>,
 }
 
-impl RawUser {
-    fn into_user_info(self) -> RUser {
-        RUser {
+impl RUser {
+    fn into_user_info(self) -> RUserDto {
+        RUserDto {
             id: self.id,
             account: self.account,
             nickname: self.nickname,
@@ -53,7 +63,7 @@ impl RawUser {
 
 #[derive(Insertable, Debug, Clone, Deserialize, Serialize)]
 #[table_name = "ruser"]
-struct NewUser {
+struct NewUserDmo {
     pub account: String,
     pub password: String,
     pub salt: String,
@@ -61,7 +71,7 @@ struct NewUser {
     pub github: Option<String>,
 }
 
-impl NewUser {
+impl NewUserDmo {
     fn new(reg: RegisteredUser, salt: String) -> Self {
         NewUser {
             account: reg.account,
@@ -83,19 +93,19 @@ impl NewUser {
     }
 
     fn insert(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
-        match all_rusers
-            .filter(ruser::account.eq(&self.account))
+        match ruser_table
+            .filter(ruser_schema::account.eq(&self.account))
             .first::<RawUser>(conn)
         {
             Ok(_) => Err("Account already exists".to_string()),
-            Err(_) => match diesel::insert_into(ruser::table)
+            Err(_) => match diesel::insert_into(ruser_table)
                 .values(self)
                 .get_result::<RawUser>(conn)
             {
                 Ok(info) => {
                     let section = InsertSection {
                         title: info.nickname.clone(),
-                        description: format!("{}的博客", info.nickname),
+                        description: format!("{}'s blog", info.nickname),
                         stype: 1,
                         suser: Some(info.id),
                     };
@@ -121,7 +131,7 @@ impl NewUser {
 //
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RUser {
+pub struct RUserDto {
     pub id: Uuid,
     pub account: String,
     pub nickname: String,
@@ -133,9 +143,9 @@ pub struct RUser {
     pub github: Option<String>,
 }
 
-impl RUser {
-    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<RUser, String> {
-        let res = all_rusers.filter(ruser::id.eq(id)).first::<RawUser>(conn);
+impl RUserDto {
+    pub fn query_with_id(conn: &PgConnection, id: Uuid) -> Result<RUserDto, String> {
+        let res = ruser_table.filter(ruser_schema::id.eq(id)).first::<RUser>(conn);
         match res {
             Ok(data) => Ok(data.into_user_info()),
             Err(e) => Err(format!("{}", e)),
@@ -147,10 +157,10 @@ impl RUser {
         limit: i64,
         offset: i64,
     ) -> Result<Vec<Self>, String> {
-        let res = all_rusers
+        let res = ruser_table
             .limit(limit)
             .offset(offset)
-            .order(ruser::signup_time)
+            .order(ruser_schema::signup_time)
             .get_results::<RawUser>(conn);
         match res {
             Ok(raw_user_list) => Ok(raw_user_list
@@ -161,9 +171,9 @@ impl RUser {
         }
     }
 
-    pub fn change_status(conn: &PgConnection, data: &ChangStatus) -> Result<usize, String> {
-        let res = diesel::update(all_rusers.find(data.id))
-            .set(ruser::status.eq(data.status))
+    pub fn change_status(conn: &PgConnection, data: &ChangStatusDmo) -> Result<usize, String> {
+        let res = diesel::update(ruser_table.find(data.id))
+            .set(ruser_schema::status.eq(data.status))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),
@@ -175,8 +185,8 @@ impl RUser {
         conn: &PgConnection,
         data: &ChangePermission,
     ) -> Result<usize, String> {
-        let res = diesel::update(all_rusers.filter(ruser::id.eq(data.id)))
-            .set(ruser::role.eq(data.permission))
+        let res = diesel::update(ruser_table.filter(ruser_schema::id.eq(data.id)))
+            .set(ruser_schema::role.eq(data.permission))
             .execute(conn);
         match res {
             Ok(num_update) => Ok(num_update),
@@ -193,9 +203,9 @@ impl RUser {
         redis_pool: &Arc<RedisPool>,
         account: String,
     ) -> Result<(), String> {
-        let res = all_rusers
-            .filter(ruser::status.eq(0))
-            .filter(ruser::account.eq(&account))
+        let res = ruser_table
+            .filter(ruser_schema::status.eq(0))
+            .filter(ruser_schema::account.eq(&account))
             .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
@@ -219,8 +229,8 @@ impl RUser {
             serde_json::from_str::<RUser>(&redis_pool.hget::<String>(&cookie, "info")).unwrap();
         let salt = random_string(6);
         let password = sha3_256_encode(&format!("{}{}", pwd, salt));
-        let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
-            .set((ruser::password.eq(&password), ruser::salt.eq(&salt)))
+        let res = diesel::update(ruser_table.filter(ruser_schema::id.eq(info.id)))
+            .set((ruser_schema::password.eq(&password), ruser_schema::salt.eq(&salt)))
             .execute(conn);
         match res {
             Ok(_) => {
@@ -234,28 +244,28 @@ impl RUser {
 
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ChangePermission {
+pub struct ChangePermissionDmo {
     pub id: Uuid,
     pub permission: i16,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LoginUser {
+pub struct LoginUserDto {
     account: String,
     password: String,
     remember: bool,
 }
 
-impl LoginUser {
+impl LoginUserDto {
     pub fn verification(
         &self,
         conn: &PgConnection,
         redis_pool: &Arc<RedisPool>,
         max_age: &Option<i64>,
     ) -> Result<String, String> {
-        let res = all_rusers
-            .filter(ruser::status.eq(0))
-            .filter(ruser::account.eq(self.account.to_owned()))
+        let res = ruser_table
+            .filter(ruser_schema::status.eq(0))
+            .filter(ruser_schema::account.eq(self.account.to_owned()))
             .get_result::<RawUser>(conn);
         match res {
             Ok(data) => {
@@ -271,7 +281,7 @@ impl LoginUser {
                     redis_pool.expire(&cookie, ttl);
                     Ok(cookie)
                 } else {
-                    Err("用户或密码错误".into())
+                    Err("account or password error".into())
                 }
             }
             Err(err) => Err(format!("{}", err)),
@@ -294,9 +304,9 @@ impl LoginUser {
         token: &str,
     ) -> Result<String, String> {
         let ttl = 24 * 60 * 60;
-        match all_rusers
-            .filter(ruser::status.eq(0))
-            .filter(ruser::github.eq(&github))
+        match ruser_table
+            .filter(ruser_schema::status.eq(0))
+            .filter(ruser_schema::github.eq(&github))
             .get_result::<RawUser>(conn)
         {
             // github already exists
@@ -313,15 +323,15 @@ impl LoginUser {
                     Err(e) => return Err(e),
                 };
 
-                match all_rusers
-                    .filter(ruser::status.eq(0))
-                    .filter(ruser::account.eq(&email))
+                match ruser_table
+                    .filter(ruser_schema::status.eq(0))
+                    .filter(ruser_schema::account.eq(&email))
                     .get_result::<RawUser>(conn)
                 {
                     // Account already exists but not linked
                     Ok(data) => {
-                        let res = diesel::update(all_rusers.filter(ruser::id.eq(data.id)))
-                            .set(ruser::github.eq(github))
+                        let res = diesel::update(ruser_table.filter(ruser_schema::id.eq(data.id)))
+                            .set(ruser_schema::github.eq(github))
                             .get_result::<RawUser>(conn);
                         match res {
                             Ok(info) => {
@@ -349,14 +359,14 @@ impl LoginUser {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct EditUser {
+pub struct EditUserDmo {
     pub nickname: String,
     pub say: Option<String>,
     pub avatar: Option<String>,
     pub wx_openid: Option<String>,
 }
 
-impl EditUser {
+impl EditUserDmo {
     pub fn edit_user(
         self,
         conn: &PgConnection,
@@ -365,12 +375,12 @@ impl EditUser {
     ) -> Result<usize, String> {
         let info =
             serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
-        let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
+        let res = diesel::update(ruser_table.filter(ruser_schema::id.eq(info.id)))
             .set((
-                ruser::nickname.eq(self.nickname),
-                ruser::say.eq(self.say),
-                ruser::avatar.eq(self.avatar),
-                ruser::wx_openid.eq(self.wx_openid),
+                ruser_schema::nickname.eq(self.nickname),
+                ruser_schema::say.eq(self.say),
+                ruser_schema::avatar.eq(self.avatar),
+                ruser_schema::wx_openid.eq(self.wx_openid),
             ))
             .get_result::<RawUser>(conn);
         match res {
@@ -384,12 +394,12 @@ impl EditUser {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ChangePassword {
+pub struct ChangePasswordDmo {
     pub old_password: String,
     pub new_password: String,
 }
 
-impl ChangePassword {
+impl ChangePasswordDmo {
     pub fn change_password(
         &self,
         conn: &PgConnection,
@@ -405,8 +415,8 @@ impl ChangePassword {
 
         let salt = random_string(6);
         let password = sha3_256_encode(&format!("{}{}", self.new_password, salt));
-        let res = diesel::update(all_rusers.filter(ruser::id.eq(info.id)))
-            .set((ruser::password.eq(&password), ruser::salt.eq(&salt)))
+        let res = diesel::update(ruser_table.filter(ruser_schema::id.eq(info.id)))
+            .set((ruser_schema::password.eq(&password), ruser_schema::salt.eq(&salt)))
             .execute(conn);
         match res {
             Ok(num_update) => Ok(num_update),
@@ -415,8 +425,8 @@ impl ChangePassword {
     }
 
     fn verification(&self, conn: &PgConnection, id: &Uuid) -> bool {
-        let old_user = all_rusers
-            .filter(ruser::id.eq(id))
+        let old_user = ruser_table
+            .filter(ruser_schema::id.eq(id))
             .get_result::<RawUser>(conn);
         match old_user {
             Ok(old) => {
@@ -429,13 +439,13 @@ impl ChangePassword {
 
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RegisteredUser {
+pub struct RegisteredUserDmo {
     pub account: String,
     pub password: String,
     pub nickname: String,
 }
 
-impl RegisteredUser {
+impl RegisteredUserDmo {
     pub fn register(
         self,
         conn: &PgConnection,
@@ -443,4 +453,11 @@ impl RegisteredUser {
     ) -> Result<String, String> {
         NewUser::new(self, random_string(6)).insert(conn, redis_pool)
     }
+}
+
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ChangStatusDmo {
+    pub id: Uuid,
+    pub status: i16,
 }

@@ -23,7 +23,6 @@ extern crate uuid;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_infer_schema;
 
-mod schema;
 
 extern crate sapper;
 extern crate sapper_std;
@@ -31,16 +30,57 @@ extern crate sapper_std;
 use std::sync::Arc;
 use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
 
-mod model;
-use model::*;
-
+mod schema;
 mod util;
-use util::{create_pg_pool, create_redis_pool, Postgresql, Redis, get_identity_and_web_context, Permissions, WebContext};
-
+mod db;
+mod thirdparts;
+mod model;
 mod web;
-use web::*;
+
+
+pub struct Permissions;
+
+impl Key for Permissions {
+    type Value = Option<i16>;
+}
+
+pub struct WebContext;
+
+impl Key for WebContext {
+    type Value = Context;
+}
 
 struct WebApp;
+
+
+/// Get visitor status and web context
+pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
+    let mut web = Context::new();
+    let cookie = req.ext().get::<SessionVal>();
+    let redis_pool = req.ext().get::<Redis>().unwrap();
+    let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
+    match cookie {
+        Some(cookie) => {
+            if redis_pool.exists(cookie) {
+                let info = serde_json::from_str::<RUser>(&redis_pool
+                    .hget::<String>(cookie, "info"))
+                    .unwrap();
+                web.add("user", &info);
+                let user_notifys = UserNotify::get_notifys(info.id, &redis_pool);
+                web.add("user_notifys", &user_notifys);
+                let res = Section::query_with_user_id(&pg_conn, info.id);
+                if let Ok(r) = res {
+                    web.add("user_blog_section", &r);
+                }
+                (Some(info.role), web)
+            } else {
+                (None, web)
+            }
+        }
+        None => (None, web),
+    }
+}
+
 
 impl SapperAppShell for WebApp {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
@@ -70,11 +110,11 @@ fn main() {
             Ok(())
         }))
         .with_shell(Box::new(WebApp))
-        .add_module(Box::new(Index))
-        .add_module(Box::new(WebSection))
-        .add_module(Box::new(WebArticle))
-        .add_module(Box::new(Home))
-        .add_module(Box::new(WebAdminSection))
+        .add_module(Box::new(web::Index))
+        .add_module(Box::new(web::WebSection))
+        .add_module(Box::new(web::WebArticle))
+        .add_module(Box::new(web::Home))
+        .add_module(Box::new(web::WebAdminSection))
         .static_service(true);
 
     println!("Start listen on http://{}:{}", "0.0.0.0", port);
