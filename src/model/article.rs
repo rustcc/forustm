@@ -1,21 +1,68 @@
-use super::super::{markdown_render, RUser, RedisPool};
-use super::super::{article, ruser, Section};
-use super::super::article::dsl::article as all_articles;
-use super::super::ruser::dsl::ruser as all_rusers;
+use super::{RUserDto, Section}
 
-use chrono::NaiveDateTime;
-use diesel;
-use diesel::PgConnection;
-use diesel::prelude::*;
-use serde_json;
+use schema::article as article_schema;
+use schema::article::table as article_table;
+
+use schema::ruser as ruser_schema;
+use schema::ruser::table as ruser_table;
+
 use std::sync::Arc;
+use chrono::NaiveDateTime;
+use serde_json;
 use uuid::Uuid;
+
+use diesel;
+use diesel::prelude::*;
 use diesel::dsl::*;
+use diesel::PgConnection;
 use diesel::sql_types::BigInt;
 use diesel::expression::SqlLiteral;
 
+use super::super::{markdown_render, RedisPool};
+
+
+type SelectRawArticles = (
+    article_schema::id,
+    article_schema::title,
+    article_schema::raw_content,
+    article_schema::content,
+    article_schema::section_id,
+    article_schema::author_id,
+    article_schema::tags,
+    article_schema::stype,
+    article_schema::created_time,
+    article_schema::status,
+    SqlLiteral<BigInt>,
+    SqlLiteral<BigInt>,
+);
+
+fn select_raw_articles() -> SelectRawArticles {
+    (
+        article_schema::id,
+        article_schema::title,
+        article_schema::raw_content,
+        article_schema::content,
+        article_schema::section_id,
+        article_schema::author_id,
+        article_schema::tags,
+        article_schema::stype,
+        article_schema::created_time,
+        article_schema::status,
+        sql::<BigInt>(
+            "(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)",
+        ),
+        sql::<BigInt>(
+            "(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)",
+        ),
+    )
+}
+
+//
+// MODEL
+//
+
 #[derive(Queryable)]
-struct RawArticles {
+struct Article {
     id: Uuid,
     title: String,
     raw_content: String,
@@ -30,43 +77,7 @@ struct RawArticles {
     comment_count: i64,
 }
 
-type SelectRawArticles = (
-    article::id,
-    article::title,
-    article::raw_content,
-    article::content,
-    article::section_id,
-    article::author_id,
-    article::tags,
-    article::stype,
-    article::created_time,
-    article::status,
-    SqlLiteral<BigInt>,
-    SqlLiteral<BigInt>,
-);
-
-fn select_raw_articles() -> SelectRawArticles {
-    (
-        article::id,
-        article::title,
-        article::raw_content,
-        article::content,
-        article::section_id,
-        article::author_id,
-        article::tags,
-        article::stype,
-        article::created_time,
-        article::status,
-        sql::<BigInt>(
-            "(select (count(article_stats.id) + 1) from article_stats where article_stats.article_id = article.id)",
-        ),
-        sql::<BigInt>(
-            "(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)",
-        ),
-    )
-}
-
-impl RawArticles {
+impl Article {
     fn into_html(self) -> Article {
         Article {
             id: self.id,
@@ -115,7 +126,7 @@ impl RawArticles {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Article {
+pub struct ArticleDto {
     pub id: Uuid,
     pub title: String,
     pub content: String,
@@ -130,94 +141,53 @@ pub struct Article {
     pub comment_count: i64,
 }
 
-#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
-pub struct ArticleBrief {
-    pub id: Uuid,
-    pub title: String,
-    pub author_id: Uuid,
-    pub tags: String,
-    pub created_time: NaiveDateTime,
-
-    pub author_name: String,
-    pub view_count: i64,
-    pub comment_count: i64,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Blog {
-    pub id: Uuid,
-    pub title: String,
-    pub author_id: Uuid,
-    pub section_id: Uuid,
-    pub tags: String,
-    pub content: String,
-    pub created_time: NaiveDateTime,
-}
-
-#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
-pub struct BlogBrief {
-    pub id: Uuid,
-    pub title: String,
-    pub author_id: Uuid,
-    pub tags: String,
-    pub created_time: NaiveDateTime,
-    pub author_name: String,
-
-    pub view_count: i64,
-    pub comment_count: i64,
-}
-
-#[derive(Debug)]
-pub struct ArticlesWithTotal<T> {
-    pub articles: Vec<T>,
-    pub total: i64,
-    pub max_page: i64,
-}
-
-impl Article {
-    pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles
+impl ArticleDto {
+    pub fn query_article(conn: &PgConnection, id: Uuid) -> Result<ArticleDto, String> {
+        let res = article_table
             .select(select_raw_articles())
-            .filter(article::status.ne(2))
-            .filter(article::id.eq(id))
-            .get_result::<RawArticles>(conn);
+            .filter(article_schema::status.ne(2))
+            .filter(article_schema::id.eq(id))
+            .get_result::<Article>(conn);
+        
         match res {
             Ok(data) => Ok(data.into_html()),
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    pub fn query_article_md(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles
-            .filter(article::status.ne(2))
-            .filter(article::id.eq(id))
+    pub fn query_article_md(conn: &PgConnection, id: Uuid) -> Result<ArticleDto, String> {
+        let res = article_table
+            .filter(article_schema::status.ne(2))
+            .filter(article_schema::id.eq(id))
             .select(select_raw_articles())
-            .get_result::<RawArticles>(conn);
+            .get_result::<Article>(conn);
+
         match res {
             Ok(data) => Ok(data.into_markdown()),
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    pub fn query_blogs(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles
-            .filter(article::status.ne(2))
-            .filter(article::id.eq(id))
-            .filter(article::stype.eq(1))
+    pub fn query_blogs(conn: &PgConnection, id: Uuid) -> Result<ArticleDto, String> {
+        let res = article_table
+            .filter(article_schema::status.ne(2))
+            .filter(article_schema::id.eq(id))
+            .filter(article_schema::stype.eq(1))
             .select(select_raw_articles())
-            .get_result::<RawArticles>(conn);
+            .get_result::<Article>(conn);
+
         match res {
             Ok(data) => Ok(data.into_html()),
             Err(err) => Err(format!("{}", err)),
         }
     }
 
-    pub fn query_raw_article(conn: &PgConnection, id: Uuid) -> Result<Article, String> {
-        let res = all_articles
-            .filter(article::status.ne(2))
-            .filter(article::id.eq(id))
+    pub fn query_raw_article(conn: &PgConnection, id: Uuid) -> Result<ArticleDto, String> {
+        let res = article_table
+            .filter(article_schema::status.ne(2))
+            .filter(article_schema::id.eq(id))
             .select(select_raw_articles())
-            .get_result::<RawArticles>(conn);
+            .get_result::<Article>(conn);
         match res {
             Ok(data) => Ok(data.into_markdown()),
             Err(err) => Err(format!("{}", err)),
@@ -228,11 +198,11 @@ impl Article {
         conn: &PgConnection,
         id: Uuid,
     ) -> Result<Vec<RawArticles>, String> {
-        let res = all_articles
-            .filter(article::section_id.eq(id))
-            .filter(article::status.ne(2))
+        let res = article_table
+            .filter(article_schema::section_id.eq(id))
+            .filter(article_schema::status.ne(2))
             .select(select_raw_articles())
-            .order(article::created_time.desc())
+            .order(article_schema::created_time.desc())
             .get_results::<RawArticles>(conn);
         match res {
             Ok(data) => Ok(data),
@@ -260,12 +230,12 @@ impl Article {
         page: i64,
         page_size: i64,
     ) -> Result<ArticlesWithTotal<RawArticles>, String> {
-        let _res = all_articles
-            .filter(article::section_id.eq(id))
-            .filter(article::status.ne(2));
+        let _res = article_table
+            .filter(article_schema::section_id.eq(id))
+            .filter(article_schema::status.ne(2));
 
         let res = _res.select(select_raw_articles())
-            .order(article::created_time.desc())
+            .order(article_schema::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<RawArticles>(conn);
@@ -288,22 +258,22 @@ impl Article {
         page: i64,
         page_size: i64,
     ) -> Result<ArticlesWithTotal<ArticleBrief>, String> {
-        let _res = all_articles
-            .filter(article::section_id.eq(id))
-            .filter(article::status.ne(2));
+        let _res = article_table
+            .filter(article_schema::section_id.eq(id))
+            .filter(article_schema::status.ne(2));
 
-        let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
+        let res = _res.inner_join(ruser_table.on(article_schema::author_id.eq(ruser::id)))
             .select((
-                article::id,
-                article::title,
-                article::author_id,
-                article::tags,
-                article::created_time,
+                article_schema::id,
+                article_schema::title,
+                article_schema::author_id,
+                article_schema::tags,
+                article_schema::created_time,
                 ruser::nickname,
                 sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
                 sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
-            .order(article::created_time.desc())
+            .order(article_schema::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
@@ -327,23 +297,23 @@ impl Article {
         page: i64,
         page_size: i64,
     ) -> Result<ArticlesWithTotal<ArticleBrief>, String> {
-        let _res = all_articles
-            .filter(article::section_id.eq(id))
-            .filter(article::stype.eq(stype))
-            .filter(article::status.ne(2));
+        let _res = article_table
+            .filter(article_schema::section_id.eq(id))
+            .filter(article_schema::stype.eq(stype))
+            .filter(article_schema::status.ne(2));
 
-        let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
+        let res = _res.inner_join(ruser_table.on(article_schema::author_id.eq(ruser::id)))
             .select((
-                article::id,
-                article::title,
-                article::author_id,
-                article::tags,
-                article::created_time,
+                article_schema::id,
+                article_schema::title,
+                article_schema::author_id,
+                article_schema::tags,
+                article_schema::created_time,
                 ruser::nickname,
                 sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
                 sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
-            .order(article::created_time.desc())
+            .order(article_schema::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<ArticleBrief>(conn);
@@ -365,10 +335,10 @@ impl Article {
     //                                 page: i64,
     //                                 page_size: i64)
     //                                 -> Result<ArticlesWithTotal<RawArticles>, String> {
-    //     let _res = all_articles.filter(article::stype.eq(stype))
-    //         .filter(article::status.ne(2));
+    //     let _res = article_table.filter(article_schema::stype.eq(stype))
+    //         .filter(article_schema::status.ne(2));
 
-    //     let res = _res.order(article::created_time.desc())
+    //     let res = _res.order(article_schema::created_time.desc())
     //         .offset(page_size * (page - 1) as i64)
     //         .limit(page_size)
     //         .get_results::<RawArticles>(conn);
@@ -395,22 +365,22 @@ impl Article {
         page: i64,
         page_size: i64,
     ) -> Result<ArticlesWithTotal<BlogBrief>, String> {
-        let _res = all_articles
-            .filter(article::stype.eq(stype))
-            .filter(article::status.ne(2));
+        let _res = article_table
+            .filter(article_schema::stype.eq(stype))
+            .filter(article_schema::status.ne(2));
 
-        let res = _res.inner_join(all_rusers.on(article::author_id.eq(ruser::id)))
+        let res = _res.inner_join(ruser_table.on(article_schema::author_id.eq(ruser::id)))
             .select((
-                article::id,
-                article::title,
-                article::author_id,
-                article::tags,
-                article::created_time,
+                article_schema::id,
+                article_schema::title,
+                article_schema::author_id,
+                article_schema::tags,
+                article_schema::created_time,
                 ruser::nickname,
                 sql::<BigInt>("(select count(article_stats.id) from article_stats where article_stats.article_id = article.id)"),
                 sql::<BigInt>("(select count(comment.id) from comment where comment.status = 0 and comment.article_id = article.id)"),
             ))
-            .order(article::created_time.desc())
+            .order(article_schema::created_time.desc())
             .offset(page_size * (page - 1) as i64)
             .limit(page_size)
             .get_results::<BlogBrief>(conn);
@@ -428,8 +398,8 @@ impl Article {
     }
 
     pub fn delete_with_id(conn: &PgConnection, id: Uuid) -> Result<usize, String> {
-        let res = diesel::update(all_articles.filter(article::id.eq(id)))
-            .set(article::status.eq(2))
+        let res = diesel::update(article_table.filter(article_schema::id.eq(id)))
+            .set(article_schema::status.eq(2))
             .execute(conn);
         match res {
             Ok(data) => Ok(data),
@@ -438,20 +408,66 @@ impl Article {
     }
 }
 
+
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
-pub struct SimpleArticle {
+pub struct ArticleBriefDto {
+    pub id: Uuid,
+    pub title: String,
+    pub author_id: Uuid,
+    pub tags: String,
+    pub created_time: NaiveDateTime,
+
+    pub author_name: String,
+    pub view_count: i64,
+    pub comment_count: i64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BlogDto {
+    pub id: Uuid,
+    pub title: String,
+    pub author_id: Uuid,
+    pub section_id: Uuid,
+    pub tags: String,
+    pub content: String,
+    pub created_time: NaiveDateTime,
+}
+
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+pub struct BlogBriefDto {
+    pub id: Uuid,
+    pub title: String,
+    pub author_id: Uuid,
+    pub tags: String,
+    pub created_time: NaiveDateTime,
+    pub author_name: String,
+
+    pub view_count: i64,
+    pub comment_count: i64,
+}
+
+#[derive(Debug)]
+pub struct ArticlesWithTotalDto<T> {
+    pub articles: Vec<T>,
+    pub total: i64,
+    pub max_page: i64,
+}
+
+
+#[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
+pub struct SimpleArticleDto {
     pub id: Uuid,
     pub title: String,
     pub author_id: Uuid,
 }
 
-impl SimpleArticle {
+impl SimpleArticleDto {
     pub fn query_simple_article(conn: &PgConnection, id: Uuid) -> Result<SimpleArticle, String> {
-        let res = all_articles
-            .filter(article::status.ne(2))
-            .filter(article::id.eq(id))
-            .select((article::id, article::title, article::author_id))
-            .get_result::<SimpleArticle>(conn);
+        let res = article_table
+            .filter(article_schema::status.ne(2))
+            .filter(article_schema::id.eq(id))
+            .select((article_schema::id, article_schema::title, article_schema::author_id))
+            .get_result::<SimpleArticleDto>(conn);
         match res {
             Ok(data) => Ok(data),
             Err(err) => Err(format!("{}", err)),
@@ -461,7 +477,7 @@ impl SimpleArticle {
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "article"]
-struct InsertArticle {
+struct InsertArticleDmo {
     title: String,
     raw_content: String,
     content: String,
@@ -471,7 +487,7 @@ struct InsertArticle {
     tags: String,
 }
 
-impl InsertArticle {
+impl InsertArticleDmo {
     fn new(new_article: NewArticle, author_id: Uuid) -> Self {
         let content = markdown_render(&new_article.raw_content);
         InsertArticle {
@@ -486,7 +502,7 @@ impl InsertArticle {
     }
 
     fn insert(self, conn: &PgConnection) -> Result<usize, String> {
-        let res = diesel::insert_into(all_articles)
+        let res = diesel::insert_into(article_table)
             .values(&self)
             .execute(conn);
         match res {
@@ -497,7 +513,7 @@ impl InsertArticle {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct NewArticle {
+pub struct NewArticleDmo {
     pub title: String,
     pub raw_content: String,
     pub section_id: Uuid,
@@ -505,7 +521,7 @@ pub struct NewArticle {
     pub tags: String,
 }
 
-impl NewArticle {
+impl NewArticleDmo {
     pub fn insert(
         self,
         conn: &PgConnection,
@@ -531,7 +547,7 @@ impl NewArticle {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct EditArticle {
+pub struct EditArticleDmo {
     id: Uuid,
     title: String,
     raw_content: String,
@@ -539,7 +555,7 @@ pub struct EditArticle {
     author_id: Uuid,
 }
 
-impl EditArticle {
+impl EditArticleDmo {
     pub fn edit_article(
         self,
         conn: &PgConnection,
@@ -549,12 +565,12 @@ impl EditArticle {
         let info =
             serde_json::from_str::<RUser>(&redis_pool.hget::<String>(cookie, "info")).unwrap();
         if self.author_id == info.id {
-            let res = diesel::update(all_articles.filter(article::id.eq(self.id)))
+            let res = diesel::update(article_table.filter(article_schema::id.eq(self.id)))
                 .set((
-                    article::title.eq(self.title),
-                    article::content.eq(markdown_render(&self.raw_content)),
-                    article::raw_content.eq(self.raw_content),
-                    article::tags.eq(self.tags),
+                    article_schema::title.eq(self.title),
+                    article_schema::content.eq(markdown_render(&self.raw_content)),
+                    article_schema::raw_content.eq(self.raw_content),
+                    article_schema::tags.eq(self.tags),
                 ))
                 .execute(conn);
             match res {
@@ -568,12 +584,12 @@ impl EditArticle {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct DeleteArticle {
+pub struct DeleteArticleDmo {
     article_id: Uuid,
     user_id: Uuid,
 }
 
-impl DeleteArticle {
+impl DeleteArticleDmo {
     pub fn delete(
         self,
         conn: &PgConnection,

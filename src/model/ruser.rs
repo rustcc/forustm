@@ -13,6 +13,10 @@ use std::sync::Arc;
 use std::thread;
 use uuid::Uuid;
 
+//
+// MODEL
+//
+
 #[derive(Queryable)]
 struct RawUser {
     pub id: Uuid,
@@ -45,6 +49,76 @@ impl RawUser {
         }
     }
 }
+
+
+#[derive(Insertable, Debug, Clone, Deserialize, Serialize)]
+#[table_name = "ruser"]
+struct NewUser {
+    pub account: String,
+    pub password: String,
+    pub salt: String,
+    pub nickname: String,
+    pub github: Option<String>,
+}
+
+impl NewUser {
+    fn new(reg: RegisteredUser, salt: String) -> Self {
+        NewUser {
+            account: reg.account,
+            password: sha3_256_encode(&format!("{}{}", reg.password, salt)),
+            salt: salt,
+            nickname: reg.nickname,
+            github: None,
+        }
+    }
+
+    fn new_with_github(email: String, github: String, nickname: String) -> Self {
+        NewUser {
+            account: email,
+            password: sha3_256_encode(&random_string(8)),
+            salt: random_string(6),
+            nickname: nickname,
+            github: Some(github),
+        }
+    }
+
+    fn insert(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
+        match all_rusers
+            .filter(ruser::account.eq(&self.account))
+            .first::<RawUser>(conn)
+        {
+            Ok(_) => Err("Account already exists".to_string()),
+            Err(_) => match diesel::insert_into(ruser::table)
+                .values(self)
+                .get_result::<RawUser>(conn)
+            {
+                Ok(info) => {
+                    let section = InsertSection {
+                        title: info.nickname.clone(),
+                        description: format!("{}的博客", info.nickname),
+                        stype: 1,
+                        suser: Some(info.id),
+                    };
+                    section.insert(conn);
+                    self.set_cookies(redis_pool, &info.into_user_info())
+                }
+                Err(err) => Err(format!("{}", err)),
+            },
+        }
+    }
+
+    fn set_cookies(&self, redis_pool: &Arc<RedisPool>, info: &RUser) -> Result<String, String> {
+        let cookie = sha3_256_encode(&random_string(8));
+        redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
+        redis_pool.hset(&cookie, "info", json!(info).to_string());
+        redis_pool.expire(&cookie, 24 * 3600);
+        Ok(cookie)
+    }
+}
+
+//
+// DTOs
+//
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RUser {
@@ -157,6 +231,7 @@ impl RUser {
         }
     }
 }
+
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChangePermission {
@@ -352,70 +427,6 @@ impl ChangePassword {
     }
 }
 
-#[derive(Insertable, Debug, Clone, Deserialize, Serialize)]
-#[table_name = "ruser"]
-struct NewUser {
-    pub account: String,
-    pub password: String,
-    pub salt: String,
-    pub nickname: String,
-    pub github: Option<String>,
-}
-
-impl NewUser {
-    fn new(reg: RegisteredUser, salt: String) -> Self {
-        NewUser {
-            account: reg.account,
-            password: sha3_256_encode(&format!("{}{}", reg.password, salt)),
-            salt: salt,
-            nickname: reg.nickname,
-            github: None,
-        }
-    }
-
-    fn new_with_github(email: String, github: String, nickname: String) -> Self {
-        NewUser {
-            account: email,
-            password: sha3_256_encode(&random_string(8)),
-            salt: random_string(6),
-            nickname: nickname,
-            github: Some(github),
-        }
-    }
-
-    fn insert(&self, conn: &PgConnection, redis_pool: &Arc<RedisPool>) -> Result<String, String> {
-        match all_rusers
-            .filter(ruser::account.eq(&self.account))
-            .first::<RawUser>(conn)
-        {
-            Ok(_) => Err("Account already exists".to_string()),
-            Err(_) => match diesel::insert_into(ruser::table)
-                .values(self)
-                .get_result::<RawUser>(conn)
-            {
-                Ok(info) => {
-                    let section = InsertSection {
-                        title: info.nickname.clone(),
-                        description: format!("{}的博客", info.nickname),
-                        stype: 1,
-                        suser: Some(info.id),
-                    };
-                    section.insert(conn);
-                    self.set_cookies(redis_pool, &info.into_user_info())
-                }
-                Err(err) => Err(format!("{}", err)),
-            },
-        }
-    }
-
-    fn set_cookies(&self, redis_pool: &Arc<RedisPool>, info: &RUser) -> Result<String, String> {
-        let cookie = sha3_256_encode(&random_string(8));
-        redis_pool.hset(&cookie, "login_time", Local::now().timestamp());
-        redis_pool.hset(&cookie, "info", json!(info).to_string());
-        redis_pool.expire(&cookie, 24 * 3600);
-        Ok(cookie)
-    }
-}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisteredUser {

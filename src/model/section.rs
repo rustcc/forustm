@@ -12,6 +12,10 @@ use uuid::Uuid;
 
 use std::sync::Arc;
 
+//
+// MODEL
+//
+
 #[derive(Queryable, Debug, Clone, Deserialize, Serialize)]
 pub struct Section {
     pub id: Uuid,
@@ -125,6 +129,11 @@ impl InsertSection {
             .is_ok()
     }
 }
+
+//
+// DTOs
+//
+
 
 // for redis
 #[derive(Deserialize, Serialize)]

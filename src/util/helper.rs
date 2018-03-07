@@ -57,6 +57,3 @@ pub use proxy::ProxyModule;
 pub use util::{create_pg_pool, create_redis_pool, get_identity_and_web_context, Permissions,
                Postgresql, Redis, RedisPool, WebContext};
 
-pub fn page_size() -> i64 {
-    20
-}

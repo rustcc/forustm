@@ -1,5 +1,8 @@
 pub mod visitor_api;
 pub mod user_api;
+pub mod article_api;
+pub mod comment_api;
+
 pub mod admin_user_api;
 pub mod admin_section_api;
 

@@ -104,9 +104,7 @@ impl Index {
 impl SapperModule for Index {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
         router.get("/", Index::index);
-
         router.get("/login", Index::login);
-
         router.get("/reset_password/:cookie", Index::reset_password);
 
         Ok(())

@@ -159,3 +159,7 @@ pub struct WebContext;
 impl Key for WebContext {
     type Value = Context;
 }
+
+pub fn page_size() -> i64 {
+    20
+}

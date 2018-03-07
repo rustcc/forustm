@@ -85,7 +85,7 @@ impl WebArticle {
 
 impl SapperModule for WebArticle {
     fn router(&self, router: &mut SapperRouter) -> SapperResult<()> {
-        router.get("/user/article/edit", WebArticle::edit);
+        router.get("/article/edit", WebArticle::edit);
         router.get("/article/:id", WebArticle::article);
 
         Ok(())

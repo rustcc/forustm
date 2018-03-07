@@ -1,9 +1,11 @@
-pub mod articles;
-pub mod comments;
-pub mod sections;
-pub mod rusers;
-pub mod articles_stats;
-pub mod notifys;
+use schema;
+
+pub mod article;
+pub mod comment;
+pub mod section;
+pub mod ruser;
+pub mod articles_stat;
+pub mod notify;
 
 pub(crate) use self::articles::{Article, ArticleBrief, DeleteArticle, EditArticle, NewArticle,
                                 SimpleArticle};
