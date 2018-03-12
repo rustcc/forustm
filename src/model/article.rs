@@ -614,9 +614,3 @@ impl DeleteArticleDmo {
     }
 }
 
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ChangStatusDmo {
-    pub id: Uuid,
-    pub status: i16,
-}

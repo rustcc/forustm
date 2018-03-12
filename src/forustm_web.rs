@@ -99,7 +99,7 @@ impl SapperAppShell for WebApp {
 
 fn main() {
     let redis_pool = Arc::new(create_redis_pool(None));
-    let pg_pool = create_pg_pool();
+    let pg_pool = db::create_pg_pool();
     let mut app = SapperApp::new();
     let port = 8081;
     app.address("0.0.0.0")
