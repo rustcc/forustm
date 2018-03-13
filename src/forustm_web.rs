@@ -29,7 +29,9 @@ extern crate sapper_std;
 
 use std::sync::Arc;
 use sapper::{Request, Response, Result as SapperResult, SapperApp, SapperAppShell};
+use sapper_std::{SessionVal};
 
+mod enkey;
 mod schema;
 mod util;
 mod db;
@@ -38,17 +40,6 @@ mod model;
 mod web;
 
 
-pub struct Permissions;
-
-impl Key for Permissions {
-    type Value = Option<i16>;
-}
-
-pub struct WebContext;
-
-impl Key for WebContext {
-    type Value = Context;
-}
 
 struct WebApp;
 
@@ -62,13 +53,13 @@ pub fn get_identity_and_web_context(req: &Request) -> (Option<i16>, Context) {
     match cookie {
         Some(cookie) => {
             if redis_pool.exists(cookie) {
-                let info = serde_json::from_str::<RUser>(&redis_pool
+                let info = serde_json::from_str::<model::ruser::RUserDto>(&redis_pool
                     .hget::<String>(cookie, "info"))
                     .unwrap();
                 web.add("user", &info);
-                let user_notifys = UserNotify::get_notifys(info.id, &redis_pool);
+                let user_notifys = model::notify::UserNotify::get_notifys(info.id, &redis_pool);
                 web.add("user_notifys", &user_notifys);
-                let res = Section::query_with_user_id(&pg_conn, info.id);
+                let res = model::section::Section::query_with_user_id(&pg_conn, info.id);
                 if let Ok(r) = res {
                     web.add("user_blog_section", &r);
                 }
@@ -86,8 +77,8 @@ impl SapperAppShell for WebApp {
     fn before(&self, req: &mut Request) -> SapperResult<()> {
         sapper_std::init(req, Some("forustm_session"))?;
         let (identity, web) = get_identity_and_web_context(req);
-        req.ext_mut().insert::<Permissions>(identity);
-        req.ext_mut().insert::<WebContext>(web);
+        req.ext_mut().insert::<enkey::Permissions>(identity);
+        req.ext_mut().insert::<enkey::WebContext>(web);
         Ok(())
     }
 

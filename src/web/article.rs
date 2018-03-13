@@ -1,8 +1,18 @@
-use super::super::{Article, NewArticleStats, Permissions, RUser, UserNotify, WebContext};
-use super::super::{Postgresql, Redis};
-use super::super::models::CommentWithNickName;
-use super::super::page_size;
-use super::super::{get_real_ip_from_req, get_ruser_from_session, get_user_agent_from_req};
+use super::super::util::page_size;
+use super::super::enkey::{Permissions, WebContext};
+use super::super::db::{Postgresql, Redis};
+
+use super::super::model::ruser::RUserDto;
+use super::super::model::notify::UserNotify;
+use super::super::model::article_stats::NewArticleStatsDmo;
+use super::super::model::article::{ArticleDto, 
+    get_real_ip_from_req, 
+    get_ruser_from_session, 
+    get_user_agent_from_req};
+
+use super::super::model::comment::CommentWithNickNameDto;
+
+
 use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
 use sapper_std::{render, PathParams};
 use uuid::Uuid;
@@ -21,12 +31,12 @@ impl WebArticle {
         let redis_pool = req.ext().get::<Redis>().unwrap();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
         let id = id.unwrap();
-        let res = Article::query_article(&pg_conn, id);
+        let res = ArticleDto::query_article(&pg_conn, id);
         match res {
             Ok(r) => {
                 let session_user = get_ruser_from_session(req);
                 // create article view record
-                let article_stats = NewArticleStats {
+                let article_stats = NewArticleStatsDmo {
                     article_id: r.id,
                     ruser_id: session_user.clone().map(|user| user.id),
                     user_agent: get_user_agent_from_req(req),
@@ -45,12 +55,12 @@ impl WebArticle {
                 web.add("res", &r);
 
                 // author
-                let author = RUser::query_with_id(&pg_conn, r.author_id).unwrap();
+                let author = RUserDto::query_with_id(&pg_conn, r.author_id).unwrap();
                 web.add("author", &author);
 
                 // comments
                 let page = 1;
-                let comments = CommentWithNickName::comments_with_article_id_paging(
+                let comments = CommentWithNickNameDto::comments_with_article_id_paging(
                     &pg_conn,
                     id,
                     page,

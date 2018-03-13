@@ -1,4 +1,8 @@
-use super::super::{Permissions, PubNotice, Redis, WebContext};
+use super::super::{Permissions, WebContext};
+use super::super::model::section::PubNotice;
+use super::super::db::Redis;
+
+
 use sapper::{Error as SapperError, Request, Response, Result as SapperResult, SapperModule,
              SapperRouter};
 use sapper_std::render;

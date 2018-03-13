@@ -40,24 +40,6 @@ pub fn markdown_render(md: &str) -> String {
     clean(&markdown_to_html(md, &option))
 }
 
-
-/// get request's real ip when request proxyed by nginx or normal ip
-pub fn get_real_ip_from_req(req: &Request) -> Option<String> {
-    match req.headers().get_raw("X-Real-IP") {
-        Some(fip) => String::from_utf8((*fip)[0].clone()).ok(),
-        None => serde_json::to_string(&req.remote_addr().ip())
-            .ok()
-            .map(|s| String::from(&s[1..s.len() - 1])),
-    }
-}
-
-/// get request's user-agent
-pub fn get_user_agent_from_req(req: &Request) -> Option<String> {
-    req.headers()
-        .get::<UserAgent>()
-        .map(|user_agent| String::from(user_agent.trim()))
-}
-
 // define page size 
 pub fn page_size() -> i64 {
     20

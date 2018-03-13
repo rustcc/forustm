@@ -113,40 +113,7 @@ pub fn send_reset_password_email(cookie: &str, email: &str) {
     println!("{} reset the password", email)
 }
 
-/// get user if login or none
-pub fn get_ruser_from_session(req: &Request) -> Option<RUser> {
-    let redis_pool = req.ext().get::<Redis>().unwrap();
-    match req.ext().get::<SessionVal>() {
-        Some(cookie) => {
-            if redis_pool.exists(cookie) {
-                let redis_pool = req.ext().get::<Redis>().unwrap();
-                let user: RUser =
-                    serde_json::from_str(&RUser::view_with_cookie(redis_pool, cookie)).unwrap();
-                Some(user)
-            } else {
-                None
-            }
-        }
-        None => None,
-    }
-}
 
-/// get request's real ip when request proxyed by nginx or normal ip
-pub fn get_real_ip_from_req(req: &Request) -> Option<String> {
-    match req.headers().get_raw("X-Real-IP") {
-        Some(fip) => String::from_utf8((*fip)[0].clone()).ok(),
-        None => serde_json::to_string(&req.remote_addr().ip())
-            .ok()
-            .map(|s| String::from(&s[1..s.len() - 1])),
-    }
-}
-
-/// get request's user-agent
-pub fn get_user_agent_from_req(req: &Request) -> Option<String> {
-    req.headers()
-        .get::<UserAgent>()
-        .map(|user_agent| String::from(user_agent.trim()))
-}
 
 pub struct Permissions;
 
