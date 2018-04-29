@@ -162,6 +162,7 @@
         }
         
         $("button[name='submit']").text("正在Biu中...");
+		$("button[name='submit']").on("click", function(){});
         
         if ('id' in queryDict) {
             // update article
@@ -208,6 +209,7 @@
             });
         }
         $("button[name='submit']").text("Biu！发送！");
+		$("button[name='submit']").on("click", submit);
     }
 
     $(function () {
@@ -221,8 +223,6 @@
             $('.new_article').show();
         }
 
-        // new & edit article button event
-        // 我认为这个 on 是不必要的可以写成 .click(submit);
         $("button[name='submit']").on("click", submit);
 
         ctrlEnterThen($('textarea'), submit);
