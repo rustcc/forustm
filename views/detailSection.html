@@ -136,10 +136,10 @@
                 <div class="underline padding-rectangle">
                     <div>
                         <h3><span id="section_id" data-id={{ res.id }}
-                                onclick="javascript: window.location.reload()"
-                            title="刷新"
-                            style="cursor: pointer;"
-                            >{{ res.title }}</span></h3>
+                                onclick="javascript:window.location.reload()"
+                                  title="刷新"
+                                  style="cursor: pointer;">
+                            {{ res.title }}</span></h3>
                         {% if manager %}
                             <!--
                 <small>{% if res.stype == 0 %}管理员{% else %}
@@ -225,10 +225,13 @@
             <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
                 <div class="paginator right">
                     {% for _ in range(end=max_page) %}
-                        {% if loop.index == page %}
-                            <a data-page="{{ loop.index }}">{{ loop.index }}</a>
-                        {% else %}
-                            <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                        {% if loop.index < 5 or loop.index > max_page - 3 %}
+                            <a href="/blogs?page={{ loop.index }}"
+                                    {% if loop.index==page %} class="paging" {% endif %}>
+                                {{ loop.index }}
+                            </a>
+                        {% elif loop.index == 5 %}
+                            <span>.....</span>
                         {% endif %}
                     {% endfor %}
                     共 {{ total }} 篇, 共 {{ max_page }} 页
@@ -239,27 +242,6 @@
 
     <script type="application/javascript">
         "use strict";
-
-        // load new page
-        function loadPage(sectionID, page) {
-            if (PAGE.page === page) return;
-            var is_blog = {% if blog_planet  %} true {% else %} false {% endif %};
-            var url = is_blog ?
-                "/api/v1/blogs/paging?" + "&page=" + page :
-                "/api/v1/article/paging?id=" + sectionID + "&page=" + page;
-
-            $.getJSON(url, function (response) {
-                $("li.item").not("li.template").remove();
-
-                for (var i = 0, l = response.articles.length; i < l; i++) {
-                    var article = response.articles[i];
-                    updateItem(i, article, i === l - 1);
-                }
-                activePageBtn(page);
-                replaceTime();
-                addListeners();
-            });
-        }
 
         // delete article
         function deleteArticle(articleID, authorID, success) {
@@ -280,63 +262,6 @@
                     }
                 }
             });
-        }
-
-        // update one article DOM
-        function updateItem(index, content, isLast) {
-            // clone template
-            var $newNode = $("li.template").clone();
-            $newNode.removeClass("template");
-            $newNode.show();
-
-            // put data in
-            $newNode.data("index", index);
-            $newNode.find("a")
-                .attr("href", "/article/" + content.id)
-                .text(content.title);
-            $newNode.find(".show-count")
-                .attr("title", "浏览：" + (content.view_count || 0) + "，评论：" + (content.comment_count || 0))
-                .text("(" + (content.view_count || 0) + "," + (content.comment_count || 0) + ")");
-            $newNode.find(".tags")
-                .text(content.tags);
-            $newNode.find(".author")
-                .text(content.author_name);
-            $newNode.find(".createdTimePlaceholder")
-                .text(content.created_time);
-
-            var $meta = $(".meta");
-            var userID = $meta.data("user-id");
-            var role = $meta.data("role");
-            if (userID !== undefined) {
-                if (Number(role) <= 1 || userID === content.author_id) {
-                    $newNode.find(".delete")
-                        .data("user-id", userID)
-                        .data("id", content.id)
-                        .data("author-id", content.author_id)
-                        .removeClass("hide");
-                }
-
-                if (userID === content.author_id) {
-                    $newNode.find(".edit")
-                        .data("user-id", userID)
-                        .data("id", content.id)
-                        .data("author-id", content.author_id)
-                        .removeClass("hide");
-                }
-            }
-
-            if (isLast) {
-                $newNode.removeClass("underline");
-            }
-            $newNode.appendTo($("ul.items"));
-        }
-
-        // change activated page button
-        function activePageBtn(page) {
-            // transform pagination
-            $(".paginator a[data-page='" + PAGE.page + "']").addClass("paging");
-            $(".paging[data-page='" + page + "']").removeClass("paging");
-            PAGE.update(page);
         }
 
         function getSectionID() {
@@ -386,11 +311,6 @@
         $(function () {
                 replaceTime();
                 addListeners();
-
-                // page button click event
-                $(".paginator a").on("click", function () {
-                    loadPage(getSectionID(), $(this).data("page"));
-                });
 
                 // new article
                 $("button.new-article").on("click", function () {
