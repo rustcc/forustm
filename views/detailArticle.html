@@ -200,7 +200,7 @@
                     <a href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
                 {% endif %}
                 <div>
-                    <h3><span onclick="javascript: window.location.reload();" style="cursor: pointer;"
+                    <h3><span onclick="window.location.reload();" style="cursor: pointer;"
                               title="刷新">{{ res.title }}</span></h3>
                 </div>
                 <p class="vice-title">
@@ -283,10 +283,18 @@
             <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
                 <div class="paginator right">
                     {% for _ in range(end=max_page) %}
-                        {% if loop.index == page %}
-                            <a data-page="{{ loop.index }}">{{ loop.index }}</a>
-                        {% else %}
-                            <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                        {% if loop.index < 5 or loop.index > max_page - 3 %}
+                            {% if loop.index==page %}
+                                <a class="paging" href="/article/{{ res.id }}?page={{ loop.index }}">
+                                    {{ loop.index }}
+                                </a>
+                            {% else %}
+                                <a href="/article/{{ res.id }}?page={{ loop.index }}">
+                                    {{ loop.index }}
+                                </a>
+                            {% endif %}
+                        {% elif loop.index == 5 %}
+                            <span>.....</span>
                         {% endif %}
                     {% endfor %}
                     共 {{ total }} 评论, 共 {{ max_page }} 页
@@ -331,27 +339,6 @@
             );
         });
 
-        // load new page
-        function loadPage(id, page) {
-            var limit = Number($(".meta").data("page-size"));
-            var offset = limit * (page - 1);
-
-            if (PAGE.page === page) return;
-
-            $.getJSON("/api/v1/comment/query?id=" + id + "&offset=" + offset + "&limit=" + limit, function (response) {
-                $(".item").not(".template").remove();
-
-                for (var i = 0, l = response.comments.length; i < l; i++) {
-                    var comment = response.comments[i];
-                    updateItem(i, comment, i === l - 1);
-                }
-                hightlight($(".comment-content code"));
-                addListeners();
-            });
-
-            activePageBtn(page);
-        }
-
         // update one article DOM
         function updateItem(index, content, isLast) {
             // clone template
@@ -385,14 +372,6 @@
                 $newNode.removeClass("underline");
             }
             $newNode.appendTo($("#comments"));
-        }
-
-        // change activated page button
-        function activePageBtn(page) {
-            // transform pagination
-            $(".paginator a[data-page='" + PAGE.page + "']").addClass("paging");
-            $(".paging[data-page='" + page + "']").removeClass("paging");
-            PAGE.update(page);
         }
 
         function getArticleID() {
@@ -450,14 +429,14 @@
                 /* @current aaa @xx bbb @xx cc */
                 var originText = "@" + nickname + " "
                     + $this.closest(".item").find(".comment-content").text().trim();
-                var replies = originText.split('@')
+                var replies = originText.split('@');
                 var history = replies.map(function (rpl, index) {
                     return ("@" + rpl).trim().split("\n").map(function (line) {
                         return "> ".repeat(index) + line;
                     }).join("\n");
-                })
+                });
                 history.shift();
-                var markdown = "\n\n" + history.join("\n")
+                var markdown = "\n\n" + history.join("\n");
 
                 $(".hint").text("正在回复 @" + nickname).show();
                 $("div#new-comment")
@@ -516,11 +495,6 @@
 
 
         $(function () {
-            // page button click event
-            $(".paginator a").on("click", function () {
-                loadPage(getArticleID(), $(this).data("page"));
-            });
-
             // new comment
             $("button.new-comment").on("click", function () {
                 function run_if_logged_in() {
