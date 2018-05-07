@@ -1,546 +1,550 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ res.title }} - Rust语言中文社区
+    {{ res.title }} - Rust语言中文社区
 {% endblock title %}
 
 {% block content %}
-<!--<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css">-->
-<link rel="stylesheet" href="/css/gruvbox-light.css">
-<script src="/js/highlight.pack.js"></script>
-<script src="/js/tag.js"></script>
-<style>
-    
-    .delete {
-        color: red;
-    }
+    <!--<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css">-->
+    <link rel="stylesheet" href="/css/gruvbox-light.css">
+    <script src="/js/highlight.pack.js"></script>
+    <script src="/js/tag.js"></script>
+    <style>
 
-    .reply {
-        color: blue;
-    }
+        .delete {
+            color: red;
+        }
 
-    .edit {
-        color: green;
-    }
+        .reply {
+            color: blue;
+        }
 
-    .return {
-        font-size: 14px;
-        color: #228;
-    }
+        .edit {
+            color: green;
+        }
 
-    .detail {
-        padding: 10px;
-    }
+        .return {
+            font-size: 14px;
+            color: #228;
+        }
 
-    .detail .border {
-        border: gray 1px solid;
-        margin-top: 10px;
-    }
+        .detail {
+            padding: 10px;
+        }
 
-    .detail .padding-square {
-        padding: 15px;
-    }
+        .detail .border {
+            border: gray 1px solid;
+            margin-top: 10px;
+        }
 
-    .detail .padding-rectangle {
-        padding: 10px 15px;
-    }
+        .detail .padding-square {
+            padding: 15px;
+        }
 
-    .detail .margin-top {
-        margin-top: 15px;
-    }
+        .detail .padding-rectangle {
+            padding: 10px 15px;
+        }
 
-    .detail .margin-bottom {
-        margin-bottom: 15px;
-    }
+        .detail .margin-top {
+            margin-top: 15px;
+        }
 
-    .detail .underline {
-        border-bottom: gray 1px solid;
-    }
+        .detail .margin-bottom {
+            margin-bottom: 15px;
+        }
 
-    .detail .topline {
-        border-top: gray 1px solid;
-    }
+        .detail .underline {
+            border-bottom: gray 1px solid;
+        }
 
-    .detail .nodot {
-        list-style: none;
-    }
+        .detail .topline {
+            border-top: gray 1px solid;
+        }
 
-    .detail .edit {
-        color: green;
-    }
+        .detail .nodot {
+            list-style: none;
+        }
 
-    .detail .paging {
-        display: inline-block;
-        border: gray 1px solid;
-        margin: 0;
-        width: 22px;
-        height: 22px;
-        text-align: center;
-        vertical-align: middle;
-        cursor: pointer;
-    }
+        .detail .edit {
+            color: green;
+        }
 
-    .detail textarea {
-        width: 70%;
-        min-height: 220px;
-        min-width: 250px;
-        font-size: 15px;
-    }
+        .detail .paging {
+            display: inline-block;
+            border: gray 1px solid;
+            margin: 0;
+            width: 22px;
+            height: 22px;
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+        }
 
-    .detail hr {
-        border-top: gray dashed 1px;
-        border-bottom: none;
-    }
+        .detail textarea {
+            width: 70%;
+            min-height: 220px;
+            min-width: 250px;
+            font-size: 15px;
+        }
 
-    .detail * {
-        box-sizing: border-box;
-    }
+        .detail hr {
+            border-top: gray dashed 1px;
+            border-bottom: none;
+        }
 
-    .detail blockquote {
-        margin-left: 0;
-        padding: 10px 10px 2px 20px;
-        border-left: black solid 2px;
-        background: ghostwhite;
-        margin-bottom: 2px;
-        width: 100%;
-    }
+        .detail * {
+            box-sizing: border-box;
+        }
 
-    .detail-body {
-        word-wrap: break-word;
-    }
+        .detail blockquote {
+            margin-left: 0;
+            padding: 10px 10px 2px 20px;
+            border-left: black solid 2px;
+            background: ghostwhite;
+            margin-bottom: 2px;
+            width: 100%;
+        }
 
-    .detail-body p, #comments p {
-        line-height: 24px;
-	margin-top: 6px;
-	margin-bottom: 6px;
-    }
+        .detail-body {
+            word-wrap: break-word;
+        }
 
-    .detail-body a, .comment-content a {
-        text-decoration: underline;
-        color: blue;
-    }
+        .detail-body p, #comments p {
+            line-height: 24px;
+            margin-top: 6px;
+            margin-bottom: 6px;
+        }
 
-    .detail-body a:visited, .comment-content a:visited {
-        color: blueviolet;
-    }
+        .detail-body a, .comment-content a {
+            text-decoration: underline;
+            color: blue;
+        }
 
-    .detail-body img {
-        max-width: 100%;
-    }
+        .detail-body a:visited, .comment-content a:visited {
+            color: blueviolet;
+        }
 
-    pre {
-        background: #eee;
-        padding: 0px;
-        border-radius: 6px;
-        font-family: "Source Code Pro", Menlo, Monaco, Consolas, "DejaVu Sans Mono", Inconsolata, monospace;
-    }
+        .detail-body img {
+            max-width: 100%;
+        }
 
-    pre code {
-        border-radius: 4px;
-    }
+        pre {
+            background: #eee;
+            padding: 0px;
+            border-radius: 6px;
+            font-family: "Source Code Pro", Menlo, Monaco, Consolas, "DejaVu Sans Mono", Inconsolata, monospace;
+        }
 
-    div code,
-    p code,
-    ul code
-    {
-        border-radius: 4px;
-        background: pink;
-    }
+        pre code {
+            border-radius: 4px;
+        }
 
-    .detail-body h1,
-    .detail-body h2,
-    .detail-body h3,
-    .detail-body h4,
-    .detail-body h5
-    {
-        background: #eee;
-        padding: 10px 20px;
-        border-radius: 1px;
-    }
+        div code,
+        p code,
+        ul code {
+            border-radius: 4px;
+            background: pink;
+        }
 
-    .detail-body ul {
-        margin: 15px 0 15px 30px;
-    }
+        .detail-body h1,
+        .detail-body h2,
+        .detail-body h3,
+        .detail-body h4,
+        .detail-body h5 {
+            background: #eee;
+            padding: 10px 20px;
+            border-radius: 1px;
+        }
 
-    .detail-body ul li {
-        list-style-type: disc;
-    }
+        .detail-body ul {
+            margin: 15px 0 15px 30px;
+        }
 
-    .comment-title {
-        font-size: 14px;
-        background-color: #e8e8e8;
-    }
+        .detail-body ul li {
+            list-style-type: disc;
+        }
 
-    .vice-title {
-        font-size: 14px;
-    }
-    .created-time {
-        color: #555;
-        font-size: 13px;
-    }
-</style>
+        .comment-title {
+            font-size: 14px;
+            background-color: #e8e8e8;
+        }
 
-<div class="meta"
-     {% if user %}
-     data-role="{{ user.role }}"
-     {% else %}
-     data-role="-1"
-     {% endif %}
-     data-id="{{ res.id }}"
-     data-author-id="{{ author.id }}"
-     data-page-size="{{ page_size }}"
-     style="display: none;"></div>
+        .vice-title {
+            font-size: 14px;
+        }
 
-<div class="detail">
+        .created-time {
+            color: #555;
+            font-size: 13px;
+        }
+    </style>
 
-    <div class="border">
-        <div class="underline padding-rectangle">
-                {% if res.stype == 0 %}
-                <a href="/section/{{ res.section_id }}" class="return">&lt; 返回版块</a>
-                {% else %}
-                <a href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
-                {% endif %}
-            <div>
-                <h3><span onclick="javascript: window.location.reload();" style="cursor: pointer;" title="刷新">{{ res.title }}</span></h3>
-            </div>
-            <p class="vice-title">
-                {% if res.stype == 0 %}
-                <!--<a href="/user/{{ author.id }}">{{ author.nickname }}</a>-->
-                <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
-                {% else %}
-                <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
-                {% endif %}
-                发表于 <span class="article_created_time"></span>
-
-                {% if user %}
-                {% if user.role <= 1 or user.id == res.author_id %}
-                <a class="edit" href="#">编辑</a>
-                {% endif %}
-                {% endif %}
-            </p>
-            <p>
-                <!-- <small>标签：{{ res.tags }}</small> -->
-                {% if res.tags %}
-                    <div id="tags"></div>
-                {% endif %}
-            </p>
-        </div>
-        <div class="detail padding-square">
-            <div class="title">
-                <div class="detail-body">
-                    {{ res.content | safe }}
-                </div>
-            </div>
-        </div>
-
-        <div id="comments" class="padding-rectangle topline">
-            <div class="margin-bottom">
-                <h3>评论区
-                    <button class="right new-comment">发表新回复</button>
-                </h3>
-            </div>
-
-            {% if comments | length == 0 %}
-            <p class="useless">还没有评论</p>
+    <div class="meta"
+            {% if user %}
+         data-role="{{ user.role }}"
             {% else %}
-                {% for comment in comments %}
-                <div class="item border">
-                    <div class="comment-title padding-rectangle">
-                        {% if comment.author_id == author.id %}
-                        作者
-                        {% endif %}
-                        <a class="author-id" href="/blog/{{ comment.author_id }}">
-                            {{ comment.nickname }}
-                        </a> 
-                        <span class="created-time">{{ comment.created_time }}</span>
-                        {% if user %}
-                            {% if user.role <= 1 or user.id == comment.author_id %}
-                            <a class="delete" data-id="{{ comment.id }}" data-author-id="{{ comment.author_id }}" href="#">删除</a>
-                            {% endif %}
-                            <a class="reply" data-id="{{ comment.id }}"
-                               data-author-id="{{ comment.author_id }}" data-nickname="{{ comment.nickname }}" href="#">回复</a>
-                        {% endif %}
-                    </div>
-                    <div class="comment-content padding-rectangle">
-                        {{ comment.content | safe }}
-                    </div>
-                </div>
-                {% endfor %}
+         data-role="-1"
             {% endif %}
+         data-id="{{ res.id }}"
+         data-author-id="{{ author.id }}"
+         data-page-size="{{ page_size }}"
+         style="display: none;"></div>
 
-            <div class="template item border" style="display: none;">
-                <div class="comment-title padding-rectangle">
-                    <a class="author-id"></a> <span class="created-time"></span>
-                    <a class="delete" data-id="" data-author-id="" href="#" style="display: none;">删除</a>
-                    <a class="reply" data-id="" data-author-id="" href="#" style="display: none;">回复</a>
+    <div class="detail">
+
+        <div class="border">
+            <div class="underline padding-rectangle">
+                {% if res.stype == 0 %}
+                    <a href="/section/{{ res.section_id }}" class="return">&lt; 返回版块</a>
+                {% else %}
+                    <a href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
+                {% endif %}
+                <div>
+                    <h3><span onclick="javascript: window.location.reload();" style="cursor: pointer;"
+                              title="刷新">{{ res.title }}</span></h3>
                 </div>
-                <div class="comment-content padding-rectangle"></div>
-            </div>
-        </div>
-
-        <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
-            <div class="paginator right">
-                {% for _ in range(end=max_page) %}
-                    {% if loop.index == page %}
-                    <a data-page="{{ loop.index }}">{{ loop.index }}</a>
+                <p class="vice-title">
+                    {% if res.stype == 0 %}
+                        <!--<a href="/user/{{ author.id }}">{{ author.nickname }}</a>-->
+                        <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
                     {% else %}
-                    <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                        <a href="/blog/{{ author.id }}">{{ author.nickname }}</a>
                     {% endif %}
-                {% endfor %}
-                共 {{ total }} 评论, 共 {{ max_page }} 页
-            </div>
-        </div>
+                    发表于 <span class="article_created_time"></span>
 
-        <div id="new-comment" class="padding-rectangle topline" style="display: none;">
-            <div>
-                <h3>添加新评论</h3>
-                <p class="hint" style="display: none"></p>
-                <textarea name="content" placeholder="有何高见？"></textarea>
-                <br> <br>
-                <button name="submit" data-api="/api/v1/comment/new">Biu！发送！</button>
+                    {% if user %}
+                        {% if user.role <= 1 or user.id == res.author_id %}
+                            <a class="edit" href="#">编辑</a>
+                        {% endif %}
+                    {% endif %}
+                </p>
+                <p>
+                    <!-- <small>标签：{{ res.tags }}</small> -->
+                    {% if res.tags %}
+                        <div id="tags"></div>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="detail padding-square">
+                <div class="title">
+                    <div class="detail-body">
+                        {{ res.content | safe }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="comments" class="padding-rectangle topline">
+                <div class="margin-bottom">
+                    <h3>评论区
+                        <button class="right new-comment">发表新回复</button>
+                    </h3>
+                </div>
+
+                {% if comments | length == 0 %}
+                    <p class="useless">还没有评论</p>
+                {% else %}
+                    {% for comment in comments %}
+                        <div class="item border">
+                            <div class="comment-title padding-rectangle">
+                                {% if comment.author_id == author.id %}
+                                    作者
+                                {% endif %}
+                                <a class="author-id" href="/blog/{{ comment.author_id }}">
+                                    {{ comment.nickname }}
+                                </a>
+                                <span class="created-time">{{ comment.created_time }}</span>
+                                {% if user %}
+                                    {% if user.role <= 1 or user.id == comment.author_id %}
+                                        <a class="delete" data-id="{{ comment.id }}"
+                                           data-author-id="{{ comment.author_id }}" href="#">删除</a>
+                                    {% endif %}
+                                    <a class="reply" data-id="{{ comment.id }}"
+                                       data-author-id="{{ comment.author_id }}" data-nickname="{{ comment.nickname }}"
+                                       href="#">回复</a>
+                                {% endif %}
+                            </div>
+                            <div class="comment-content padding-rectangle">
+                                {{ comment.content | safe }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="template item border" style="display: none;">
+                    <div class="comment-title padding-rectangle">
+                        <a class="author-id"></a> <span class="created-time"></span>
+                        <a class="delete" data-id="" data-author-id="" href="#" style="display: none;">删除</a>
+                        <a class="reply" data-id="" data-author-id="" href="#" style="display: none;">回复</a>
+                    </div>
+                    <div class="comment-content padding-rectangle"></div>
+                </div>
+            </div>
+
+            <div style="width: 100%; height: 25px;" class="padding-square margin-bottom">
+                <div class="paginator right">
+                    {% for _ in range(end=max_page) %}
+                        {% if loop.index == page %}
+                            <a data-page="{{ loop.index }}">{{ loop.index }}</a>
+                        {% else %}
+                            <a class="paging" data-page="{{ loop.index }}">{{ loop.index }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    共 {{ total }} 评论, 共 {{ max_page }} 页
+                </div>
+            </div>
+
+            <div id="new-comment" class="padding-rectangle topline" style="display: none;">
+                <div>
+                    <h3>添加新评论</h3>
+                    <p class="hint" style="display: none"></p>
+                    <textarea name="content" placeholder="有何高见？"></textarea>
+                    <br> <br>
+                    <button name="submit" data-api="/api/v1/comment/new">Biu！发送！</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script type="application/javascript">
-    "use strict";
-    function hightlight($doms) {
-        $doms.each(function(i, block) {
-            hljs.highlightBlock(block);
-        });
-    }
-    hightlight($("pre code"));
+    <script type="application/javascript">
+        "use strict";
 
-    var tag = new Tag("tags");
-    tag.tagValue = "{{ res.tags }}";
-    tag.initView();
+        function hightlight($doms) {
+            $doms.each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
+        }
 
-    // format article date
-    var datetime_str = "{{ res.created_time }}";
-    $('.article_created_time').text(new Date(datetime_str).LocalFormat());
-    var mbody = $('#comments');
-    mbody.find('.comment-title').each(function (i) {
-        var that = $(this);
-        that.find('.created-time').text(
-            new Date(that.find('.created-time').text()).LocalFormat()
-        );
-    });
+        hightlight($("pre code"));
 
-    // load new page
-    function loadPage(id, page) {
-        var limit = Number($(".meta").data("page-size"));
-        var offset = limit * (page - 1);
+        var tag = new Tag("tags");
+        tag.tagValue = "{{ res.tags }}";
+        tag.initView();
 
-        if (PAGE.page === page) return;
-
-        $.getJSON("/api/v1/comment/query?id=" + id + "&offset=" + offset + "&limit=" + limit, function (response) {
-            $(".item").not(".template").remove();
-
-            for(var i=0, l=response.comments.length; i < l; i++) {
-                var comment = response.comments[i];
-                updateItem(i, comment, i === l-1);
-            }
-            hightlight($(".comment-content code"));
-            addListeners();
+        // format article date
+        var datetime_str = "{{ res.created_time }}";
+        $('.article_created_time').text(new Date(datetime_str).LocalFormat());
+        var mbody = $('#comments');
+        mbody.find('.comment-title').each(function (i) {
+            var that = $(this);
+            that.find('.created-time').text(
+                new Date(that.find('.created-time').text()).LocalFormat()
+            );
         });
 
-        activePageBtn(page);
-    }
+        // load new page
+        function loadPage(id, page) {
+            var limit = Number($(".meta").data("page-size"));
+            var offset = limit * (page - 1);
 
-    // update one article DOM
-    function updateItem(index, content, isLast) {
-        // clone template
-        var $newNode = $(".template").clone();
-        $newNode.removeClass("template");
-        $newNode.show();
+            if (PAGE.page === page) return;
 
-        // put data in
-        $newNode.data("index", index);
-        $newNode.find("a.author-id")
-            .attr("href", "/blog/"+content.author_id)
-            .text(content.nickname);
-        $newNode.find(".created-time")
-            .text((new Date(content.created_time)).LocalFormat());
-        $newNode.find(".comment-content")
-            .html(content.content);
-        $newNode.find(".delete")
-            .data("id", content.id)
-            .data("author-id", content.author_id)
-            .show();
+            $.getJSON("/api/v1/comment/query?id=" + id + "&offset=" + offset + "&limit=" + limit, function (response) {
+                $(".item").not(".template").remove();
 
-        if ($(".meta").data("role") !== -1) {
-            $newNode.find(".reply")
+                for (var i = 0, l = response.comments.length; i < l; i++) {
+                    var comment = response.comments[i];
+                    updateItem(i, comment, i === l - 1);
+                }
+                hightlight($(".comment-content code"));
+                addListeners();
+            });
+
+            activePageBtn(page);
+        }
+
+        // update one article DOM
+        function updateItem(index, content, isLast) {
+            // clone template
+            var $newNode = $(".template").clone();
+            $newNode.removeClass("template");
+            $newNode.show();
+
+            // put data in
+            $newNode.data("index", index);
+            $newNode.find("a.author-id")
+                .attr("href", "/blog/" + content.author_id)
+                .text(content.nickname);
+            $newNode.find(".created-time")
+                .text((new Date(content.created_time)).LocalFormat());
+            $newNode.find(".comment-content")
+                .html(content.content);
+            $newNode.find(".delete")
                 .data("id", content.id)
                 .data("author-id", content.author_id)
-                .data("nickname", content.nickname)
                 .show();
-        }
 
-        if (isLast) {
-            $newNode.removeClass("underline");
-        }
-        $newNode.appendTo($("#comments"));
-    }
-
-    // change activated page button
-    function activePageBtn(page) {
-        // transform pagination
-        $(".paginator a[data-page='"+PAGE.page+"']").addClass("paging");
-        $(".paging[data-page='"+page+"']").removeClass("paging");
-        PAGE.update(page);
-    }
-
-    function getArticleID() {
-        return window.location.pathname.split('/')[2];
-    }
-
-    function deleteComment(commentID, authorID, callback) {
-        $.ajax({
-            type: "POST",
-            url: "/api/v1/comment/delete",
-            contentType: 'application/json; charset=utf-8',
-            dataType: "json",
-            data: JSON.stringify({
-                comment_id: commentID,
-                author_id: authorID
-            }),
-            success: function (response) {
-                if (callback !== undefined) {
-                    callback(response);
-                }
+            if ($(".meta").data("role") !== -1) {
+                $newNode.find(".reply")
+                    .data("id", content.id)
+                    .data("author-id", content.author_id)
+                    .data("nickname", content.nickname)
+                    .show();
             }
-        })
-    }
 
-    function listenDeleteClick() {
-        $("a.delete").on("click", function(e) {
-            e.preventDefault();
-            var $this = $(this);
+            if (isLast) {
+                $newNode.removeClass("underline");
+            }
+            $newNode.appendTo($("#comments"));
+        }
 
-            var commentID = $this.data("id");
-            var authorID = $this.data("author-id");
+        // change activated page button
+        function activePageBtn(page) {
+            // transform pagination
+            $(".paginator a[data-page='" + PAGE.page + "']").addClass("paging");
+            $(".paging[data-page='" + page + "']").removeClass("paging");
+            PAGE.update(page);
+        }
 
-            if (!confirm("确认删除？")) return;
+        function getArticleID() {
+            return window.location.pathname.split('/')[2];
+        }
 
-            deleteComment(commentID, authorID, function(response) {
-                if (response.status === true) {
-                    alert("删除成功");
-                    $this.closest("div.item").remove();
-                } else {
-                    alert("删除失败");
+        function deleteComment(commentID, authorID, callback) {
+            $.ajax({
+                type: "POST",
+                url: "/api/v1/comment/delete",
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                data: JSON.stringify({
+                    comment_id: commentID,
+                    author_id: authorID
+                }),
+                success: function (response) {
+                    if (callback !== undefined) {
+                        callback(response);
+                    }
                 }
-            });
-        });
-    }
-
-    function listenReplyClick() {
-        $("a.reply").on("click", function(e) {
-            e.preventDefault();
-            var $this = $(this);
-
-            var nickname = $this.data("nickname");
-            // comment author id
-            var replyUserId = $this.data("author-id");
-
-            /* @current aaa @xx bbb @xx cc */
-            var originText = "@" + nickname + " "
-                + $this.closest(".item").find(".comment-content").text().trim();
-            var replies = originText.split('@')
-            var history = replies.map(function (rpl, index) {
-                return ("@" + rpl).trim().split("\n").map(function(line) {
-                    return "> ".repeat(index) + line;
-                }).join("\n");
             })
-            history.shift();
-            var markdown = "\n\n" + history.join("\n")
-
-            $(".hint").text("正在回复 @" + nickname).show();
-            $("div#new-comment")
-                .show()
-                .find("textarea")
-                .data("markdown", markdown)
-                .data("reply-user-id", replyUserId)
-                .focus();
-        });
-    }
-
-    function addListeners() {
-        listenDeleteClick();
-        listenReplyClick();
-    }
-
-    function submit() {
-        var $textarea = $("textarea[name='content']");
-        var content = $textarea.val();
-
-        if (content.trim().length === 0) {
-            alert("请输入评论内容！");
-            return;
         }
 
-        var markdown = $textarea.data("markdown");
-        if (markdown !== undefined && markdown.indexOf("@") > -1) {
-            content += markdown;
-            // clear reply hidden text
-            $textarea.data("markdown", "");
-        }
-        var replyData = {
-            content: content,
-            article_id: getArticleID()
-        };
-        var replyUserId = $textarea.data("reply-user-id");
-        if (replyUserId && replyUserId.length) {
-            replyData['reply_user_id'] = replyUserId;
+        function listenDeleteClick() {
+            $("a.delete").on("click", function (e) {
+                e.preventDefault();
+                var $this = $(this);
+
+                var commentID = $this.data("id");
+                var authorID = $this.data("author-id");
+
+                if (!confirm("确认删除？")) return;
+
+                deleteComment(commentID, authorID, function (response) {
+                    if (response.status === true) {
+                        alert("删除成功");
+                        $this.closest("div.item").remove();
+                    } else {
+                        alert("删除失败");
+                    }
+                });
+            });
         }
 
-        $.ajax({
-            type: "POST",
-            url: $("button[name='submit']").data("api"),
-            contentType: 'application/json; charset=utf-8',
-            dataType: "json",
-            data: JSON.stringify(replyData),
-            success: function (response) {
-                if (response.status === true) {
-                    window.location.reload();
-                } else {
-                    alert("发射失败...???");
+        function listenReplyClick() {
+            $("a.reply").on("click", function (e) {
+                e.preventDefault();
+                var $this = $(this);
+
+                var nickname = $this.data("nickname");
+                // comment author id
+                var replyUserId = $this.data("author-id");
+
+                /* @current aaa @xx bbb @xx cc */
+                var originText = "@" + nickname + " "
+                    + $this.closest(".item").find(".comment-content").text().trim();
+                var replies = originText.split('@')
+                var history = replies.map(function (rpl, index) {
+                    return ("@" + rpl).trim().split("\n").map(function (line) {
+                        return "> ".repeat(index) + line;
+                    }).join("\n");
+                })
+                history.shift();
+                var markdown = "\n\n" + history.join("\n")
+
+                $(".hint").text("正在回复 @" + nickname).show();
+                $("div#new-comment")
+                    .show()
+                    .find("textarea")
+                    .data("markdown", markdown)
+                    .data("reply-user-id", replyUserId)
+                    .focus();
+            });
+        }
+
+        function addListeners() {
+            listenDeleteClick();
+            listenReplyClick();
+        }
+
+        function submit() {
+            var $textarea = $("textarea[name='content']");
+            var content = $textarea.val();
+
+            if (content.trim().length === 0) {
+                alert("请输入评论内容！");
+                return;
+            }
+
+            var markdown = $textarea.data("markdown");
+            if (markdown !== undefined && markdown.indexOf("@") > -1) {
+                content += markdown;
+                // clear reply hidden text
+                $textarea.data("markdown", "");
+            }
+            var replyData = {
+                content: content,
+                article_id: getArticleID()
+            };
+            var replyUserId = $textarea.data("reply-user-id");
+            if (replyUserId && replyUserId.length) {
+                replyData['reply_user_id'] = replyUserId;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: $("button[name='submit']").data("api"),
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                data: JSON.stringify(replyData),
+                success: function (response) {
+                    if (response.status === true) {
+                        window.location.reload();
+                    } else {
+                        alert("发射失败...???");
+                    }
                 }
-            }
-        })
-    }
+            })
+        }
 
 
-    $(function() {
-        // page button click event
-        $(".paginator a").on("click", function() {
-            loadPage(getArticleID(), $(this).data("page"));
+        $(function () {
+            // page button click event
+            $(".paginator a").on("click", function () {
+                loadPage(getArticleID(), $(this).data("page"));
+            });
+
+            // new comment
+            $("button.new-comment").on("click", function () {
+                function run_if_logged_in() {
+                    // show DOM
+                    $("div#new-comment").show();
+                    $("textarea[name='content']").focus();
+                    // hide reply hint
+                    $(".hint").text("").hide();
+                }
+
+                checkLoggedIn(run_if_logged_in);
+            });
+
+            // new article button event
+            $("button[name='submit']").on("click", submit);
+
+            // edit article
+            $(".edit").on("click", function () {
+                var uri = '/user/article/edit?id=' + $('.meta').data("id");
+                window.location.href = uri;
+            });
+
+            addListeners();
+            ctrlEnterThen($('textarea'), submit);
         });
-
-        // new comment
-        $("button.new-comment").on("click", function () {
-            function run_if_logged_in() {
-                // show DOM
-                $("div#new-comment").show();
-                $("textarea[name='content']").focus();
-                // hide reply hint
-                $(".hint").text("").hide();
-            }
-
-            checkLoggedIn(run_if_logged_in);
-        });
-
-        // new article button event
-        $("button[name='submit']").on("click", submit);
-
-        // edit article
-        $(".edit").on("click", function () {
-            var uri = '/user/article/edit?id=' + $('.meta').data("id");
-            window.location.href = uri;
-        });
-
-        addListeners();
-        ctrlEnterThen($('textarea'), submit);
-    });
-</script>
+    </script>
 {% endblock content %}

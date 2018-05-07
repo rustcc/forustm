@@ -27,12 +27,12 @@ img.round-avatar {
 .navigation ul {
     display: inline-block;
     border-radius: 5px;
-    list-style-type:none;
-    margin:0;
+    list-style-type: none;
+    margin: 0;
     padding: 5px 0;
     font-size: 20px;
     width: 100%;
-    color:#337ab7;
+    color: #337ab7;
 }
 
 .navigation ul li {
@@ -41,9 +41,9 @@ img.round-avatar {
 
 .navigation ul a {
     display: block;
-    text-align:center;
+    text-align: center;
     padding: 10px 20px;
-    text-decoration:none;
+    text-decoration: none;
 }
 
 .navigation ul a:hover {
@@ -95,11 +95,11 @@ input, textarea {
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
 input {

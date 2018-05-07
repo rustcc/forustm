@@ -1,97 +1,98 @@
 {% extends "base.html" %}
 
 {% block title %}
-创建新公告
+    创建新公告
 {% endblock title %}
 
 {% block content %}
-<style>
-    .padding-rectangle {
-        padding: 10px 15px;
-    }
-</style>
-
-<div id="admin-section" class="padding-rectangle">
-  <b>当前公告</b>
-
-
-  <br>
-  {% if title and desc %}
-  <table border="0">
-      <tbody>
-      <tr>
-          <td>
-              标题: {{ title }}
-          </td>
-      </tr>
-      <tr>
-          <td>
-              内容: {{ desc }}
-          </td>
-      </tr>
-      </tbody>
-  </table>
-  {% else %}
-    无
-  {% endif %}
-  <br>
-
-
-    <b>创建新公告</b>
-    <br>
-    <br>
-    <form>
-        <table border="0">
-            <tbody>
-            <tr>
-                <td>
-                    <input type="text" size="20" autofocus="autofocus" placeholder="公告标题" id="title">
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <textarea rows="4" cols="50" placeholder="公告内容" id="desc"></textarea>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <input type="button" id="submit" data-type="" data-uid="{{ user.id }}" data-api="/api/v1/pub_notice/new" value="创建"/>
-    </form>
-    <br/>
-    <br>
-</div>
-
-<script type="application/javascript">
-    $("#submit").on("click", function () {
-        var title = $("input#title").val();
-        var desc = $("textarea#desc").val();
-        var uid = $(this).data("uid");
-        var type = 0;
-
-        if (title.trim().length === 0 || desc.trim().length === 0) {
-            alert("请填写标题和描述");
-            return
+    <style>
+        .padding-rectangle {
+            padding: 10px 15px;
         }
+    </style>
 
-        $.ajax({
-            type: "POST",
-            url: $("#submit").data("api"),
-            contentType: 'application/json; charset=utf-8',
-            dataType: "json",
-            data: JSON.stringify({
-                title: title,
-                desc: desc
-            }),
-            success: function (response) {
-                if (response.status === true) {
-                    alert("创建成功!")
-                    window.location.reload();
-                } else {
-                    alert("创建失败...???");
-                }
+    <div id="admin-section" class="padding-rectangle">
+        <b>当前公告</b>
+
+
+        <br>
+        {% if title and desc %}
+            <table border="0">
+                <tbody>
+                <tr>
+                    <td>
+                        标题: {{ title }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        内容: {{ desc }}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        {% else %}
+            无
+        {% endif %}
+        <br>
+
+
+        <b>创建新公告</b>
+        <br>
+        <br>
+        <form>
+            <table border="0">
+                <tbody>
+                <tr>
+                    <td>
+                        <input type="text" size="20" autofocus="autofocus" placeholder="公告标题" id="title">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <textarea rows="4" cols="50" placeholder="公告内容" id="desc"></textarea>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <br>
+            <input type="button" id="submit" data-type="" data-uid="{{ user.id }}" data-api="/api/v1/pub_notice/new"
+                   value="创建"/>
+        </form>
+        <br/>
+        <br>
+    </div>
+
+    <script type="application/javascript">
+        $("#submit").on("click", function () {
+            var title = $("input#title").val();
+            var desc = $("textarea#desc").val();
+            var uid = $(this).data("uid");
+            var type = 0;
+
+            if (title.trim().length === 0 || desc.trim().length === 0) {
+                alert("请填写标题和描述");
+                return
             }
-        });
-    })
-</script>
+
+            $.ajax({
+                type: "POST",
+                url: $("#submit").data("api"),
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                data: JSON.stringify({
+                    title: title,
+                    desc: desc
+                }),
+                success: function (response) {
+                    if (response.status === true) {
+                        alert("创建成功!")
+                        window.location.reload();
+                    } else {
+                        alert("创建失败...???");
+                    }
+                }
+            });
+        })
+    </script>
 {% endblock content %}

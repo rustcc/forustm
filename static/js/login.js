@@ -5,7 +5,7 @@ $().ready(function () {
         if (ev.keyCode === 13) {
             if ($("#login_form").css("display") === 'block') {
                 login()
-            } else if ($("#register_form").css("display") === 'block'){
+            } else if ($("#register_form").css("display") === 'block') {
                 register()
             } else {
                 reset_account()
@@ -68,8 +68,8 @@ function login() {
             url: "/api/v1/user/login",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "account": account, "password": password, "remember": remember }),
-            headers: { 'Content-Type': 'application/json' },
+            data: JSON.stringify({"account": account, "password": password, "remember": remember}),
+            headers: {'Content-Type': 'application/json'},
             success: function (res) {
                 if (res.status) {
                     var redirect = localStorage.getItem("redirect");
@@ -103,8 +103,8 @@ function register() {
             url: "/api/v1/user/sign_up",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "account": account, "password": password, "nickname": nickname }),
-            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"account": account, "password": password, "nickname": nickname}),
+            headers: {"Content-Type": "application/json"},
             success: function (res) {
                 if (res.status) {
                     window.location = "/home"
@@ -126,8 +126,8 @@ function reset_account() {
             url: "/api/v1/user/send_reset_pwd_email",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "account": account }),
-            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"account": account}),
+            headers: {"Content-Type": "application/json"},
             success: function (res) {
                 if (res.status) {
                     window.location = "/login"

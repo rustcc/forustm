@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
@@ -19,22 +20,28 @@
             margin: auto;
             padding: 0;
         }
+
         p, ul {
             margin: 0;
             padding: 0;
         }
-	    ul li {
+
+        ul li {
             list-style-type: none;
-	    }
+        }
+
         .right {
             float: right;
         }
+
         .left {
             float: left
         }
+
         .hide {
             display: none;
         }
+
         button {
             display: inline-block;
             min-height: 16px;
@@ -43,22 +50,25 @@
             border-radius: 3px;
             background: #eee;
         }
+
         button:hover {
             background: #ccc;
         }
+
         a {
             text-decoration: none;
             color: black;
         }
+
         h1,
         h2,
         h3,
         h4,
-        h5
-        {   
+        h5 {
             margin: 4px 0;
             padding: 10px 0;
         }
+
         /*
         * {
             font-family: -apple-system, "Helvetica Neue", Helvetica, "Nimbus Sans L", Arial, "Liberation Sans", "PingFang SC", "Hiragino Sans GB", "Source Han Sans CN", "Source Han Sans SC", "Microsoft YaHei", "Wenquanyi Micro Hei", "WenQuanYi Zen Hei", "ST Heiti", SimHei, "WenQuanYi Zen Hei Sharp", sans-serif;;
@@ -67,16 +77,16 @@
     </style>
 </head>
 <body>
-    <div id="header">
-        {% include "header.html" %}
-    </div>
-    <div id="content">
-        {% block content %}{% endblock content %}
-    </div>
-    <div id="footer">
-        {% include "footer.html" %}
-    </div>
-    {% block script %}{% endblock script %}
+<div id="header">
+    {% include "header.html" %}
+</div>
+<div id="content">
+    {% block content %}{% endblock content %}
+</div>
+<div id="footer">
+    {% include "footer.html" %}
+</div>
+{% block script %}{% endblock script %}
 </body>
 
 </html>
