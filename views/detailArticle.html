@@ -284,15 +284,10 @@
                 <div class="paginator right">
                     {% for _ in range(end=max_page) %}
                         {% if loop.index < 5 or loop.index > max_page - 3 %}
-                            {% if loop.index==page %}
-                                <a class="paging" href="/article/{{ res.id }}?page={{ loop.index }}">
-                                    {{ loop.index }}
-                                </a>
-                            {% else %}
-                                <a href="/article/{{ res.id }}?page={{ loop.index }}">
-                                    {{ loop.index }}
-                                </a>
-                            {% endif %}
+                            <a href="/article/{{ res.id }}?page={{ loop.index }}"
+                                    {% if loop.index==page %} class="paging" {% endif %}>
+                                {{ loop.index }}
+                            </a>
                         {% elif loop.index == 5 %}
                             <span>.....</span>
                         {% endif %}
