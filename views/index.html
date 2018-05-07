@@ -124,7 +124,8 @@
                     <ul>
                         {% for blog in blogs %}
                             <li>
-                                <a href="/article/{{ blog.id }}">{{ blog.author_name }}：{{ blog.title }}</a>
+                                <a data-node-type="child"
+                                   href="/article/{{ blog.id }}">{{ blog.author_name }}：{{ blog.title }}</a>
                                 <!--
                     <span class="right">
                         <span class="tags">{{ blog.tags }}</span>
@@ -151,7 +152,7 @@
                             <ul>
                                 {% for s in section.2 %}
                                     <li>
-                                        <a href="/article/{{ s.id }}">{{ s.title }}</a>
+                                        <a data-node-type="child" href="/article/{{ s.id }}">{{ s.title }}</a>
                                     </li>
                                 {% endfor %}
                             </ul>

@@ -171,7 +171,8 @@
                                 {% for article in articles %}
                                     <li class="item padding-small-rectangle {% if not loop.last %} underline {% else %} last {% endif %}"
                                         data-index="{{ loop.index0 }}">
-                                        <a href="/article/{{ article.id }}">{{ article.title }}</a>
+                                        <a data-node-type="child"
+                                           href="/article/{{ article.id }}">{{ article.title }}</a>
                                         <span class="show-count"
                                               title="浏览：{{ article.view_count }}，评论：{{ article.comment_count }}">({{ article.view_count }},{{ article.comment_count }})</span>
                                         <span class="right">
@@ -226,10 +227,22 @@
                 <div class="paginator right">
                     {% for _ in range(end=max_page) %}
                         {% if loop.index < 5 or loop.index > max_page - 3 %}
-                            <a href="/blogs?page={{ loop.index }}"
-                                    {% if loop.index==page %} class="paging" {% endif %}>
-                                {{ loop.index }}
-                            </a>
+                            {% if blog_planet %}
+                                <a data-node-type="brother" href="/blogs?page={{ loop.index }}"
+                                        {% if loop.index==page %} class="paging" {% endif %}>
+                                    {{ loop.index }}
+                                </a>
+                            {% elif user_blogs %}
+                                <a data-node-type="brother" href="/blog/{{ user.id }}?page={{ loop.index }}"
+                                        {% if loop.index==page %} class="paging" {% endif %}>
+                                    {{ loop.index }}
+                                </a>
+                            {% else %}
+                                <a data-node-type="brother" href="/section/{{ res.id }}?page={{ loop.index }}"
+                                        {% if loop.index==page %} class="paging" {% endif %}>
+                                    {{ loop.index }}
+                                </a>
+                            {% endif %}
                         {% elif loop.index == 5 %}
                             <span>.....</span>
                         {% endif %}

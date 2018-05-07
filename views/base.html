@@ -88,6 +88,35 @@
 </div>
 {% block script %}{% endblock script %}
 </body>
+<script type="module">
+    const parent_url_key = 'parent_url';
 
+    document
+        .querySelectorAll('a[data-node-type=child]')
+        .forEach(element => {
+                let element_url = new URL(element.href);
+                element_url.searchParams.set(parent_url_key, location.href);
+                element.href = element_url.toString();
+            }
+        );
+
+    let current_parent_url = new URL(window.location.href)
+        .searchParams
+        .get(parent_url_key);
+
+    if (current_parent_url) {
+        document
+            .querySelectorAll('a[data-node-type=parent]')
+            .forEach(element => element.href = current_parent_url);
+
+        document
+            .querySelectorAll('a[data-node-type=brother]')
+            .forEach(element => {
+                let element_url = new URL(element.href);
+                element_url.searchParams.set(parent_url_key, current_parent_url);
+                element.href = element_url.toString();
+            });
+    }
+</script>
 </html>
 

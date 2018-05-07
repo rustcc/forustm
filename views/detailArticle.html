@@ -130,7 +130,7 @@
 
         pre {
             background: #eee;
-            padding: 0px;
+            padding: 0;
             border-radius: 6px;
             font-family: "Source Code Pro", Menlo, Monaco, Consolas, "DejaVu Sans Mono", Inconsolata, monospace;
         }
@@ -195,9 +195,9 @@
         <div class="border">
             <div class="underline padding-rectangle">
                 {% if res.stype == 0 %}
-                    <a href="/section/{{ res.section_id }}" class="return">&lt; 返回版块</a>
+                    <a data-node-type="parent" href="/section/{{ res.section_id }}" class="return">&lt; 返回版块</a>
                 {% else %}
-                    <a href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
+                    <a data-node-type="parent" href="/blog/{{ author.id }}" class="return">&lt; 返回博客</a>
                 {% endif %}
                 <div>
                     <h3><span onclick="window.location.reload();" style="cursor: pointer;"
@@ -284,7 +284,7 @@
                 <div class="paginator right">
                     {% for _ in range(end=max_page) %}
                         {% if loop.index < 5 or loop.index > max_page - 3 %}
-                            <a href="/article/{{ res.id }}?page={{ loop.index }}"
+                            <a data-node-type="brother" href="/article/{{ res.id }}?page={{ loop.index }}"
                                     {% if loop.index==page %} class="paging" {% endif %}>
                                 {{ loop.index }}
                             </a>
@@ -333,41 +333,6 @@
                 new Date(that.find('.created-time').text()).LocalFormat()
             );
         });
-
-        // update one article DOM
-        function updateItem(index, content, isLast) {
-            // clone template
-            var $newNode = $(".template").clone();
-            $newNode.removeClass("template");
-            $newNode.show();
-
-            // put data in
-            $newNode.data("index", index);
-            $newNode.find("a.author-id")
-                .attr("href", "/blog/" + content.author_id)
-                .text(content.nickname);
-            $newNode.find(".created-time")
-                .text((new Date(content.created_time)).LocalFormat());
-            $newNode.find(".comment-content")
-                .html(content.content);
-            $newNode.find(".delete")
-                .data("id", content.id)
-                .data("author-id", content.author_id)
-                .show();
-
-            if ($(".meta").data("role") !== -1) {
-                $newNode.find(".reply")
-                    .data("id", content.id)
-                    .data("author-id", content.author_id)
-                    .data("nickname", content.nickname)
-                    .show();
-            }
-
-            if (isLast) {
-                $newNode.removeClass("underline");
-            }
-            $newNode.appendTo($("#comments"));
-        }
 
         function getArticleID() {
             return window.location.pathname.split('/')[2];

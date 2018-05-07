@@ -24,7 +24,10 @@ impl WebSection {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
-        let page = 1i64;
+        let page = get_query_param_value(req, "page")
+            .unwrap_or("1")
+            .parse::<i64>()
+            .unwrap_or(1);
         web.add("id", &id);
         web.add("page", &page);
 
@@ -74,7 +77,10 @@ impl WebSection {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
-        let page = 1i64;
+        let page = get_query_param_value(req, "page")
+            .unwrap_or("1")
+            .parse::<i64>()
+            .unwrap_or(1);
         web.add("id", &id);
         web.add("page", &page);
 
@@ -100,6 +106,7 @@ impl WebSection {
                         web.add("articles", &arts.articles);
                         web.add("total", &arts.total);
                         web.add("max_page", &arts.max_page);
+                        web.add("user_blogs", &"true");
 
                         if let Some(suid) = r.suser {
                             let manager = RUser::query_with_id(&pg_conn, suid).unwrap();
