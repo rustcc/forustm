@@ -1,8 +1,9 @@
+use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
+use sapper_ntd::params_getter::get_query_param_value;
+use sapper_std::{PathParams, render};
 use super::super::{Article, RUser, Section};
 use super::super::{Postgresql, WebContext};
 use super::super::page_size;
-use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
-use sapper_std::{render, PathParams};
 use uuid::Uuid;
 
 pub struct WebSection;
@@ -23,7 +24,10 @@ impl WebSection {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
-        let page = 1i64;
+        let page = get_query_param_value(req, "page")
+            .unwrap_or("1")
+            .parse::<i64>()
+            .unwrap_or(1);
         web.add("id", &id);
         web.add("page", &page);
 
@@ -73,7 +77,10 @@ impl WebSection {
             Ok(i) => i,
             Err(err) => return res_400!(format!("UUID invalid: {}", err)),
         };
-        let page = 1i64;
+        let page = get_query_param_value(req, "page")
+            .unwrap_or("1")
+            .parse::<i64>()
+            .unwrap_or(1);
         web.add("id", &id);
         web.add("page", &page);
 
@@ -99,6 +106,7 @@ impl WebSection {
                         web.add("articles", &arts.articles);
                         web.add("total", &arts.total);
                         web.add("max_page", &arts.max_page);
+                        web.add("user_blogs", &"true");
 
                         if let Some(suid) = r.suser {
                             let manager = RUser::query_with_id(&pg_conn, suid).unwrap();
@@ -116,7 +124,10 @@ impl WebSection {
     fn blogs(req: &mut Request) -> SapperResult<Response> {
         let mut web = req.ext().get::<WebContext>().unwrap().clone();
         let pg_conn = req.ext().get::<Postgresql>().unwrap().get().unwrap();
-        let page = 1;
+        let page = get_query_param_value(req, "page")
+            .unwrap_or("1")
+            .parse::<i64>()
+            .unwrap_or(1);
         let res = Article::query_blogs_paging(&pg_conn, 1, page, page_size());
 
         match res {

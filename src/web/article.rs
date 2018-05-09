@@ -6,6 +6,7 @@ use super::super::{get_real_ip_from_req, get_ruser_from_session, get_user_agent_
 use sapper::{Request, Response, Result as SapperResult, SapperModule, SapperRouter};
 use sapper_std::{render, PathParams};
 use uuid::Uuid;
+use sapper_ntd::get_query_param_value;
 
 pub struct WebArticle;
 
@@ -49,7 +50,11 @@ impl WebArticle {
                 web.add("author", &author);
 
                 // comments
-                let page = 1;
+                let page = get_query_param_value(req, "page")
+                    .unwrap_or("1")
+                    .parse::<i64>()
+                    .unwrap_or(1);
+
                 let comments = CommentWithNickName::comments_with_article_id_paging(
                     &pg_conn,
                     id,

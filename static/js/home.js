@@ -5,7 +5,7 @@ function changeActive($node) {
     $node.addClass("active");
 }
 
-$("#information_btn").click(function() {
+$("#information_btn").click(function () {
     changeActive($(this));
     $(".information").css("display", "block");
     $(".modify").css("display", "none");
@@ -45,8 +45,8 @@ $(".change_password :button").click(function (event) {
             url: "/api/v1/user/change_pwd",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "old_password": old_password, "new_password": new_password }),
-            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"old_password": old_password, "new_password": new_password}),
+            headers: {"Content-Type": "application/json"},
             success: function (res) {
                 if (res.status) {
                     window.location = "/home"
@@ -70,8 +70,8 @@ $(".modify :button").click(function (event) {
             url: "/api/v1/user/edit",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "nickname": nickname, "say": say, "avatar": avatar, "wx_openid": wx_openid }),
-            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"nickname": nickname, "say": say, "avatar": avatar, "wx_openid": wx_openid}),
+            headers: {"Content-Type": "application/json"},
             success: function (res) {
                 if (res.status) {
                     window.location = "/home"

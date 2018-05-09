@@ -28,6 +28,7 @@ extern crate serde_json;
 extern crate serde_urlencoded;
 extern crate tiny_keccak;
 extern crate uuid;
+extern crate sapper_ntd;
 
 pub mod api;
 pub mod schema;

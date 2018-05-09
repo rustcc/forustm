@@ -1,5 +1,5 @@
 // TAB in <textarea>
-$(document).delegate('textarea', 'keydown', function(e) {
+$(document).delegate('textarea', 'keydown', function (e) {
     var keyCode = e.keyCode || e.which;
 
     if (keyCode == 9) {
@@ -26,7 +26,7 @@ function Page() {
 
 var PAGE = new Page();
 
-function checkLoggedIn(run_if_logged_in){
+function checkLoggedIn(run_if_logged_in) {
     var role = $(".role").data("role");
     if (role !== undefined && role === -1) {
         localStorage.setItem("redirect", location.pathname);
@@ -39,7 +39,7 @@ function checkLoggedIn(run_if_logged_in){
         return;
     }
 
-    $.getJSON("/api/v1/user/view", function(response){
+    $.getJSON("/api/v1/user/view", function (response) {
         if (response.status === false) {
             // need login
             localStorage.setItem("redirect", location.pathname);
@@ -65,7 +65,7 @@ function parseQueryStringToDictionary(queryString) {
     // Step 1: separate out each key/value pair
     var parts = queryString.split('&');
 
-    for(var i = 0; i < parts.length; i++) {
+    for (var i = 0; i < parts.length; i++) {
         var p = parts[i];
         // Step 2: Split Key/Value pair
         var keyValuePair = p.split('=');
@@ -122,7 +122,7 @@ Date = function () {
     var args = [].slice.call(arguments);
     args.unshift(_Date);
     if (this instanceof Date) {
-        return new(_Date.bind.apply(_Date, args))();
+        return new (_Date.bind.apply(_Date, args))();
     }
     return (_Date.bind.apply(_Date, args))();
 }
