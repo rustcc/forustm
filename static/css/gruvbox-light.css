@@ -111,9 +111,8 @@ Gruvbox style (light) (c) Pavel Pertsev (original style at https://github.com/mo
     margin: .75rem 1.2rem 0 0;
     padding: .3rem .4rem;
     display: inline-block;
-    background-color: #ededed;
     font-size: .7rem;
     color: #333;
     border-radius: .2rem;
-    box-shadow: 2px 2px 2px #c1c1c1;
+    border: 1px solid #000000; 
 }
