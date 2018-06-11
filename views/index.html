@@ -1,194 +1,195 @@
 {% extends "base.html" %}
 
 {% block title %}
-Rust语言中文社区-首页
+    Rust语言中文社区-首页
 {% endblock title %}
 
 {% block content %}
-<style>
-.body-content {
-    padding: 10px;
-}
+    <style>
+        .body-content {
+            padding: 10px;
+        }
 
-.desc {
-    font-size: 14px;
-    margin-top: 8px;
-}
+        .desc {
+            font-size: 14px;
+            margin-top: 8px;
+        }
 
-.head {
-    border-bottom: gray 1px solid;
-    height: 24px;
-    line-height: 24px;
-}
+        .head {
+            border-bottom: gray 1px solid;
+            height: 24px;
+            line-height: 24px;
+        }
 
-.head a {
-    text-decoration: none;
-    color: #222;
-}
+        .head a {
+            text-decoration: none;
+            color: #222;
+        }
 
-.container {
-    padding: 8px 0;
-}
+        .container {
+            padding: 8px 0;
+        }
 
-.container a {
-    text-decoration: underline;
-    color: blue;
-}
+        .container a {
+            text-decoration: underline;
+            color: blue;
+        }
 
-.container a:visited {
-    color: blueviolet;
-}
+        .container a:visited {
+            color: blueviolet;
+        }
 
-.planet-space .container {
-    padding: 8px;
-}
+        .planet-space .container {
+            padding: 8px;
+        }
 
-ul li {
-    list-style-type: none;
-    height: 24px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-}
+        ul li {
+            list-style-type: none;
+            height: 24px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
-.body-content .notice {
-    /* border: gray 1px solid; */
-    padding: 4px;
-    min-height: 50px;
-    text-align: center;
-    margin-top: 5px;
-}
+        .body-content .notice {
+            /* border: gray 1px solid; */
+            padding: 4px;
+            min-height: 50px;
+            text-align: center;
+            margin-top: 5px;
+        }
 
-.body-content .planet-space {
-    border: gray 1px solid;
-    padding-bottom: 4px;
-    height: 108px;
-    text-align: center;
-    margin-top: 15px;
-}
+        .body-content .planet-space {
+            border: gray 1px solid;
+            padding-bottom: 4px;
+            height: 108px;
+            text-align: center;
+            margin-top: 15px;
+        }
 
-.body-content .category-section {
-    margin-top: 15px;
-    margin-right: -15px;
-}
+        .body-content .category-section {
+            margin-top: 15px;
+            margin-right: -15px;
+        }
 
-.one-section {
-    width: calc(31% - 15px);
-    margin-right: 15px;
-    margin-bottom: 15px;
-    padding: 10px;
-    border: gray 1px solid;
-    height: 104px;
-    float: left;
-    min-width: 276px;
-}
+        .one-section {
+            width: calc(31% - 15px);
+            margin-right: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: gray 1px solid;
+            height: 104px;
+            float: left;
+            min-width: 276px;
+        }
 
-@media screen and (max-width: 960px) {
-    .one-section {
-        width: calc(100% - 50px);
-    }
-}
+        @media screen and (max-width: 960px) {
+            .one-section {
+                width: calc(100% - 50px);
+            }
+        }
 
-.body-content .incubation-area .incubation-area-container {
-    margin-top: 15px;
-    margin-right: -15px;
-}
+        .body-content .incubation-area .incubation-area-container {
+            margin-top: 15px;
+            margin-right: -15px;
+        }
 
-.body-content .incubation-area .incubation-area-head {
-    height: 24px;
-    line-height: 24px;
-    border: gray 1px solid;
-    text-align: center;
-}
-</style>
+        .body-content .incubation-area .incubation-area-head {
+            height: 24px;
+            line-height: 24px;
+            border: gray 1px solid;
+            text-align: center;
+        }
+    </style>
 
 
 
-<div class="body-content">
-    
-    <div class="notice">
-      {% if title and desc %}
-        <p class="title">{{ title }}</p>
-        <p class="desc">{{ desc }}</p>
-      {% endif %}
-    </div>
+    <div class="body-content">
 
-    <div class="planet-space">
-        <div class="planet-space-head head">
-            <a href="/blogs">Rust 博客星球</a>
+        <div class="notice">
+            {% if title and desc %}
+                <p class="title">{{ title }}</p>
+                <p class="desc">{{ desc }}</p>
+            {% endif %}
         </div>
-        <div class="planet-space-container container">
-        {% if blogs | length == 0 %}
-            <p>这里还没有内容哦……</p>
-        {% else %}
-            <ul>
-            {% for blog in blogs %} 
-                <li>
-			<a href="/article/{{ blog.id }}">{{ blog.author_name }}：{{ blog.title }}</a>
-                    <!--
+
+        <div class="planet-space">
+            <div class="planet-space-head head">
+                <a href="/blogs">Rust 博客星球</a>
+            </div>
+            <div class="planet-space-container container">
+                {% if blogs | length == 0 %}
+                    <p>这里还没有内容哦……</p>
+                {% else %}
+                    <ul>
+                        {% for blog in blogs %}
+                            <li>
+                                <a data-node-type="child"
+                                   href="/article/{{ blog.id }}">{{ blog.author_name }}：{{ blog.title }}</a>
+                                <!--
                     <span class="right">
                         <span class="tags">{{ blog.tags }}</span>
                         <span class="createdTime">{{ blog.created_time }}</span>
                     </span>
                     -->
-                </li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-        </div>
-    </div>
-
-    <div class="category-section">
-    {% if cate_sections_len  == 0 %}
-        <p>这里还没有内容哦……</p>
-    {% else %}
-        {% for key, section in sections_hash %}
-        <div class="one-section">
-            <div class="one-section-head head">
-                <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
-            </div>
-            <div class="one-section-container container">
-                <ul>
-                    {% for s in section.2 %}
-                    <li>
-                        <a href="/article/{{ s.id }}">{{ s.title }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endfor %}
-    {% endif %}
-        <div style="clear:both;"></div>
-    </div>
-
-    <div class="incubation-area">
-        <div class="incubation-area-head">
-            <p>Rust 项目专题</p>
-        </div>
-        {% if proj_sections_len == 0 %}
-        <p>这里还没有内容哦……</p>
-        {% else %}
-        <div class="incubation-area-container">
-            {% for key, section in projects_hash %}
-            <div class="one-section">
-                <div class="one-section-head head">
-                    <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
-                </div>
-                <div class="one-section-container container">
-                    <ul>
-                        {% for s in section.2 %}
-                        <li>
-                            <a href="/article/{{ s.id }}">{{ s.title }}</a>
-                        </li>
+                            </li>
                         {% endfor %}
                     </ul>
-                </div>
+                {% endif %}
             </div>
-            {% endfor %}
-        {% endif %}
+        </div>
+
+        <div class="category-section">
+            {% if cate_sections_len  == 0 %}
+                <p>这里还没有内容哦……</p>
+            {% else %}
+                {% for key, section in sections_hash %}
+                    <div class="one-section">
+                        <div class="one-section-head head">
+                            <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
+                        </div>
+                        <div class="one-section-container container">
+                            <ul>
+                                {% for s in section.2 %}
+                                    <li>
+                                        <a data-node-type="child" href="/article/{{ s.id }}">{{ s.title }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
             <div style="clear:both;"></div>
         </div>
+
+        <div class="incubation-area">
+            <div class="incubation-area-head">
+                <p>Rust 项目专题</p>
+            </div>
+            {% if proj_sections_len == 0 %}
+                <p>这里还没有内容哦……</p>
+            {% else %}
+                <div class="incubation-area-container">
+                {% for key, section in projects_hash %}
+                    <div class="one-section">
+                        <div class="one-section-head head">
+                            <a href="/section/{{ section.0 }}">{{ section.1 }}</a>
+                        </div>
+                        <div class="one-section-container container">
+                            <ul>
+                                {% for s in section.2 %}
+                                    <li>
+                                        <a href="/article/{{ s.id }}">{{ s.title }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div style="clear:both;"></div>
+            </div>
+        </div>
     </div>
-</div>
 {% endblock content %}

@@ -20,6 +20,7 @@ authors = ["Mike Tang <miketang84@outlook.com>"]
  ammonia = "^1.0.1"
  hyper-native-tls = "^0.2.4"
  hyper = "^0.10.13"
+ sapper_ntd = {git = "https://github.com/DCjanus/sapper_ntd.git" }
 
 [dependencies.diesel]
 features = ["postgres", "chrono", "uuid", "r2d2"]
@@ -35,12 +36,13 @@ version = "^1.1.0"
 
 [dependencies.uuid]
 features = ["serde", "v4"]
-version = "^0.5.1"
+version = "^0.6.3" # 需要注意的是，此处依赖的UUID版本号应与diesel相同，否则会出现编译错误，后期升级diesel版本时应注意修改此处
 
 [dependencies.clippy]
 optional = true
 version = "^0.0.177"
 
-#[patch.crates-io]
+[patch.crates-io]
+sapper = { git = "https://github.com/DCjanus/sapper.git" } # for some feature
 #sapper_std = { git = 'https://github.com/sappworks/sapper_std.git'}
 #sapper = { git = 'https://github.com/sappworks/sapper.git' }

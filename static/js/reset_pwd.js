@@ -13,13 +13,13 @@ $(".change_password :button").click(function (event) {
             url: "/api/v1/user/reset_pwd",
             type: "post",
             dataType: "json",
-            data: JSON.stringify({ "password": new_password, "cookie": cookie }),
-            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"password": new_password, "cookie": cookie}),
+            headers: {"Content-Type": "application/json"},
             success: function (res) {
                 if (res.status) {
                     window.location = "/home"
                 } else {
-                    $("#re_password").after("<span class='text-danger' style='display: block'>"+ res.error +"</span>")
+                    $("#re_password").after("<span class='text-danger' style='display: block'>" + res.error + "</span>")
                 }
             }
         });

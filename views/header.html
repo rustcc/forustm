@@ -1,71 +1,74 @@
 <style>
-.header {
-    height: 40px;
-    line-height: 40px;
-    border-bottom: gray 1px solid;
-    padding: 0 10px;
-}
-.header .logo img {
-    width: 40px;
-}
+    .header {
+        height: 40px;
+        line-height: 40px;
+        border-bottom: gray 1px solid;
+        padding: 0 10px;
+    }
 
-/* The container <div> - needed to position the dropdown content */
-.userinfo-text {
-    position: relative;
-    display: inline-block;
-    padding: 0 6px;
-}
+    .header .logo img {
+        width: 40px;
+    }
 
-.dropbtn {
-    text-decoration: none;
-    color: #333;
-}
+    /* The container <div> - needed to position the dropdown content */
+    .userinfo-text {
+        position: relative;
+        display: inline-block;
+        padding: 0 6px;
+    }
 
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: #f9f9f9;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-}
+    .dropbtn {
+        text-decoration: none;
+        color: #333;
+    }
 
-/* Links inside the dropdown */
-.dropdown-content a {
-    color: #333;
-    padding: 6px 16px;
-    text-decoration: none;
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-}
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
 
-/* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: #fff;}
+    /* Links inside the dropdown */
+    .dropdown-content a {
+        color: #333;
+        padding: 6px 16px;
+        text-decoration: none;
+        display: block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
 
-/* Show the dropdown menu on hover */
-.userinfo-text:hover .dropdown-content {
-    display: block;
-}
+    /* Change color of dropdown links on hover */
+    .dropdown-content a:hover {
+        background-color: #fff;
+    }
 
-.user-notifys {
-    float: left;
-    font-size: 14px;
-    position: relative;
-    display: inline-block;
-    padding: 0 6px;
-    line-height: 42px;
-}
+    /* Show the dropdown menu on hover */
+    .userinfo-text:hover .dropdown-content {
+        display: block;
+    }
 
-.user-notifys .dropdown-content {
-    max-width: 315px;
-}
+    .user-notifys {
+        float: left;
+        font-size: 14px;
+        position: relative;
+        display: inline-block;
+        padding: 0 6px;
+        line-height: 42px;
+    }
 
-.user-notifys:hover .dropdown-content {
-    display: block;
-}
+    .user-notifys .dropdown-content {
+        max-width: 315px;
+    }
+
+    .user-notifys:hover .dropdown-content {
+        display: block;
+    }
 
 </style>
 
@@ -79,36 +82,36 @@
     </div>
 
     <div class="userinfo right">
-      {% if user %}
-        {% if user_notifys | length != 0 %}
-        <div class="user-notifys">
-            <a href="#">消息({{ user_notifys | length }})</a>
-            <div class="dropdown-content">
-                {% for notify in user_notifys %}
-                <a href="/article/{{ notify.article_id }}"
-                    target="_blank"
-                    title="{{ notify.send_user_name }} {% if notify.notify_type == "reply" %} 回复 {% elif notify.notify_type == "comment" %} 评论 {%else %} 搞事情！{% endif %} 了你，帖子: {{ notify.article_title }}">
-                    {{ notify.send_user_name }}
-                    {% if notify.notify_type == "reply" %} 回复
-                    {% elif notify.notify_type == "comment" %} 评论
-                    {% else %} 搞事情！{% endif %}
-                    了你，帖子: {{ notify.article_title }}
-                </a>
-                {% endfor %}
+        {% if user %}
+            {% if user_notifys | length != 0 %}
+                <div class="user-notifys">
+                    <a href="#">消息({{ user_notifys | length }})</a>
+                    <div class="dropdown-content">
+                        {% for notify in user_notifys %}
+                            <a href="/article/{{ notify.article_id }}"
+                               target="_blank"
+                               title="{{ notify.send_user_name }} {% if notify.notify_type == "reply" %} 回复 {% elif notify.notify_type == "comment" %} 评论 {% else %} 搞事情！{% endif %} 了你，帖子: {{ notify.article_title }}">
+                                {{ notify.send_user_name }}
+                                {% if notify.notify_type == "reply" %} 回复
+                                {% elif notify.notify_type == "comment" %} 评论
+                                {% else %} 搞事情！{% endif %}
+                                了你，帖子: {{ notify.article_title }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="userinfo-text">
+                <a class="dropbtn" href="#">{{ user.nickname }}</a>
+                <div class="dropdown-content">
+                    <a href="/home">个人主页</a>
+                    <a href="/blog/{{ user.id }}">我的博客</a>
+                    {% if user_blog_section %}
+                        <a href="/user/article/edit?sectionID={{ user_blog_section.id }}&stype=1">写博客</a>
+                    {% endif %}
+                    <a id="sign_out" href="/api/v1/user/sign_out">退出</a>
+                </div>
             </div>
-        </div>
-        {% endif %}
-        <div class="userinfo-text">
-            <a class="dropbtn" href="#">{{ user.nickname }}</a>
-            <div class="dropdown-content">
-                <a href="/home">个人主页</a>
-                <a href="/blog/{{ user.id }}">我的博客</a>
-                {% if user_blog_section %}
-                <a href="/user/article/edit?sectionID={{user_blog_section.id}}&stype=1">写博客</a>
-                {% endif %}
-                <a id="sign_out" href="/api/v1/user/sign_out">退出</a>
-            </div>
-        </div>
         {% else %}
             <span class="userinfo-text"><a href="/login">登录</a></span>
         {% endif %}
@@ -116,21 +119,21 @@
     <div style="clear:both;"></div>
 </div>
 <script type="application/javascript">
-$('#sign_out').click(function(event) {
-    event.preventDefault();
+    $('#sign_out').click(function (event) {
+        event.preventDefault();
 
-    $.ajax({
-        url: $(this).attr('href'),
-        type: "get",
-        success: function (res) {
-            if (res.status) {
-                console.log(res.status);
-                window.location = "/"
-            } else {
-                console.log("sign_out error");
+        $.ajax({
+            url: $(this).attr('href'),
+            type: "get",
+            success: function (res) {
+                if (res.status) {
+                    console.log(res.status);
+                    window.location = "/"
+                } else {
+                    console.log("sign_out error");
+                }
             }
-        }
-    })
-    return false; // for good measure
-});
+        })
+        return false; // for good measure
+    });
 </script>
