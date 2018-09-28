@@ -1,4 +1,3 @@
--- Your SQL goes here
 
 create extension pgcrypto;
 
