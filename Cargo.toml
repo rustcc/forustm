@@ -2,6 +2,8 @@
 name = "forustm"
 version = "0.1.0"
 authors = ["Mike Tang <miketang84@outlook.com>"]
+edition = "2018"
+
 
 [dependencies]
  dotenv = "^0.10.0"

@@ -3,7 +3,8 @@
 //! same as db table schema definitions.
 //! =============================================================
 
-
+use uuid::Uuid;
+use chrono::NaiveDateTime;
 
 ///
 /// Model: User
