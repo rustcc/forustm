@@ -1,6 +1,6 @@
 # Forustm
 
-Forum for Rust Community, developed in Rust, with [Sapper](https://github.com/sappworks/sapper).
+Forustm for Rust Community, developed in Rust, with [Sapper](https://github.com/sappworks/sapper).
 
 Now works on [Rust.cc](https://rust.cc)
 
